@@ -1,0 +1,1243 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXAggregateTarget section */
+		06A4D51919E83A69007D332D /* STKitPackage */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 06A4D51C19E83A69007D332D /* Build configuration list for PBXAggregateTarget "STKitPackage" */;
+			buildPhases = (
+				06A4D51F19E83A76007D332D /* ShellScript */,
+			);
+			dependencies = (
+			);
+			name = STKitPackage;
+			productName = STKitBuild;
+		};
+/* End PBXAggregateTarget section */
+
+/* Begin PBXBuildFile section */
+		060164931A03E63800B7B790 /* STResourceManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 0601648D1A03E63800B7B790 /* STResourceManager.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		060164941A03E63800B7B790 /* STResourceManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 0601648E1A03E63800B7B790 /* STResourceManager.m */; };
+		060164951A03E63800B7B790 /* STVisualBlurView.h in Headers */ = {isa = PBXBuildFile; fileRef = 0601648F1A03E63800B7B790 /* STVisualBlurView.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		060164961A03E63800B7B790 /* STVisualBlurView.m in Sources */ = {isa = PBXBuildFile; fileRef = 060164901A03E63800B7B790 /* STVisualBlurView.m */; };
+		06038C0019B18D22006971E3 /* STObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 06038BFE19B18D22006971E3 /* STObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		06038C0119B18D22006971E3 /* STObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 06038BFF19B18D22006971E3 /* STObject.m */; };
+		0604498F1A1F0C9B00D0DAF9 /* STSOAPNetwork.h in Headers */ = {isa = PBXBuildFile; fileRef = 0604498D1A1F0C9B00D0DAF9 /* STSOAPNetwork.h */; };
+		060449901A1F0C9B00D0DAF9 /* STSOAPNetwork.m in Sources */ = {isa = PBXBuildFile; fileRef = 0604498E1A1F0C9B00D0DAF9 /* STSOAPNetwork.m */; };
+		0606EB72191B78B300FA9FB0 /* STCollectionViewFlowLayout.h in Headers */ = {isa = PBXBuildFile; fileRef = 0606EB70191B78B300FA9FB0 /* STCollectionViewFlowLayout.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0606EB73191B78B300FA9FB0 /* STCollectionViewFlowLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 0606EB71191B78B300FA9FB0 /* STCollectionViewFlowLayout.m */; };
+		0621CA011A03634400CB0715 /* UIAlertView+STBlock.h in Headers */ = {isa = PBXBuildFile; fileRef = 0621C9FF1A03634400CB0715 /* UIAlertView+STBlock.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0621CA021A03634400CB0715 /* UIAlertView+STBlock.m in Sources */ = {isa = PBXBuildFile; fileRef = 0621CA001A03634400CB0715 /* UIAlertView+STBlock.m */; };
+		0621CA041A03635C00CB0715 /* STCategories.h in Headers */ = {isa = PBXBuildFile; fileRef = 0621CA031A03635C00CB0715 /* STCategories.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0623952919B6D3F500FFDD96 /* STPayManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 0623952719B6D3F500FFDD96 /* STPayManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0623952A19B6D3F500FFDD96 /* STPayManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 0623952819B6D3F500FFDD96 /* STPayManager.m */; };
+		0623952D19B6D49B00FFDD96 /* STPayViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 0623952B19B6D49B00FFDD96 /* STPayViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0623952E19B6D49B00FFDD96 /* STPayViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0623952C19B6D49B00FFDD96 /* STPayViewController.m */; };
+		0626CDA519A0FAFD00B84A8C /* fft.c in Sources */ = {isa = PBXBuildFile; fileRef = 0626CD9B19A0FAFD00B84A8C /* fft.c */; };
+		0626CDA619A0FAFD00B84A8C /* fft.h in Headers */ = {isa = PBXBuildFile; fileRef = 0626CD9C19A0FAFD00B84A8C /* fft.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0626CDA719A0FAFD00B84A8C /* STAudioCenter.h in Headers */ = {isa = PBXBuildFile; fileRef = 0626CD9D19A0FAFD00B84A8C /* STAudioCenter.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0626CDA819A0FAFD00B84A8C /* STAudioCenter.m in Sources */ = {isa = PBXBuildFile; fileRef = 0626CD9E19A0FAFD00B84A8C /* STAudioCenter.m */; };
+		0626CDAB19A0FAFD00B84A8C /* STAudioRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 0626CDA119A0FAFD00B84A8C /* STAudioRecorder.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0626CDAC19A0FAFD00B84A8C /* STAudioRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = 0626CDA219A0FAFD00B84A8C /* STAudioRecorder.m */; };
+		0626CDAD19A0FAFD00B84A8C /* STWaveAnalysis.h in Headers */ = {isa = PBXBuildFile; fileRef = 0626CDA319A0FAFD00B84A8C /* STWaveAnalysis.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0626CDAE19A0FAFD00B84A8C /* STWaveAnalysis.m in Sources */ = {isa = PBXBuildFile; fileRef = 0626CDA419A0FAFD00B84A8C /* STWaveAnalysis.m */; };
+		0626CDB819A0FB9800B84A8C /* STHTTPNetwork.h in Headers */ = {isa = PBXBuildFile; fileRef = 0626CDB019A0FB9800B84A8C /* STHTTPNetwork.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0626CDB919A0FB9800B84A8C /* STHTTPNetwork.m in Sources */ = {isa = PBXBuildFile; fileRef = 0626CDB119A0FB9800B84A8C /* STHTTPNetwork.m */; };
+		0626CDBE19A0FB9800B84A8C /* STReachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 0626CDB619A0FB9800B84A8C /* STReachability.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0626CDBF19A0FB9800B84A8C /* STReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 0626CDB719A0FB9800B84A8C /* STReachability.m */; };
+		0626CDC719A0FBDA00B84A8C /* STImageCache.h in Headers */ = {isa = PBXBuildFile; fileRef = 0626CDC119A0FBD900B84A8C /* STImageCache.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0626CDC819A0FBDA00B84A8C /* STImageCache.m in Sources */ = {isa = PBXBuildFile; fileRef = 0626CDC219A0FBD900B84A8C /* STImageCache.m */; };
+		0626CDC919A0FBDA00B84A8C /* STImageLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = 0626CDC319A0FBD900B84A8C /* STImageLoader.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0626CDCA19A0FBDA00B84A8C /* STImageLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = 0626CDC419A0FBDA00B84A8C /* STImageLoader.m */; };
+		0626CDCB19A0FBDA00B84A8C /* UIImageView+STImageLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = 0626CDC519A0FBDA00B84A8C /* UIImageView+STImageLoader.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0626CDCC19A0FBDA00B84A8C /* UIImageView+STImageLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = 0626CDC619A0FBDA00B84A8C /* UIImageView+STImageLoader.m */; };
+		0626CDD019A0FBFD00B84A8C /* STSideBarController.h in Headers */ = {isa = PBXBuildFile; fileRef = 0626CDCE19A0FBFD00B84A8C /* STSideBarController.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0626CDD119A0FBFD00B84A8C /* STSideBarController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0626CDCF19A0FBFD00B84A8C /* STSideBarController.m */; };
+		0628B962192235BD00E17578 /* STLocationManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 0628B960192235BD00E17578 /* STLocationManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0628B963192235BD00E17578 /* STLocationManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 0628B961192235BD00E17578 /* STLocationManager.m */; };
+		0628B98D19233DCD00E17578 /* STTableViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 0628B98B19233DCD00E17578 /* STTableViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0628B98E19233DCD00E17578 /* STTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0628B98C19233DCD00E17578 /* STTableViewController.m */; };
+		0628B991192342A500E17578 /* STTableView.h in Headers */ = {isa = PBXBuildFile; fileRef = 0628B98F192342A500E17578 /* STTableView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0628B992192342A500E17578 /* STTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0628B990192342A500E17578 /* STTableView.m */; };
+		062E9AB319CAEAE600ADB552 /* STRateControl.h in Headers */ = {isa = PBXBuildFile; fileRef = 062E9AB119CAEAE600ADB552 /* STRateControl.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		062E9AB419CAEAE600ADB552 /* STRateControl.m in Sources */ = {isa = PBXBuildFile; fileRef = 062E9AB219CAEAE600ADB552 /* STRateControl.m */; };
+		062E9AF519CC22A100ADB552 /* STAESCryptor.h in Headers */ = {isa = PBXBuildFile; fileRef = 062E9AF319CC22A100ADB552 /* STAESCryptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		062E9AF619CC22A100ADB552 /* STAESCryptor.m in Sources */ = {isa = PBXBuildFile; fileRef = 062E9AF419CC22A100ADB552 /* STAESCryptor.m */; };
+		062E9AF919CC292200ADB552 /* STRSACryptor.h in Headers */ = {isa = PBXBuildFile; fileRef = 062E9AF719CC292200ADB552 /* STRSACryptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		062E9AFA19CC292200ADB552 /* STRSACryptor.m in Sources */ = {isa = PBXBuildFile; fileRef = 062E9AF819CC292200ADB552 /* STRSACryptor.m */; };
+		063DF322191CE2560009B947 /* STZipArchive.h in Headers */ = {isa = PBXBuildFile; fileRef = 063DF320191CE2560009B947 /* STZipArchive.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		063DF323191CE2560009B947 /* STZipArchive.m in Sources */ = {isa = PBXBuildFile; fileRef = 063DF321191CE2560009B947 /* STZipArchive.m */; };
+		065D78E31A835D3E0083D058 /* STHTTPRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 065D78C31A820C420083D058 /* STHTTPRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		065D78E71A848C0C0083D058 /* STHTTPRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 065D78C41A820C420083D058 /* STHTTPRequest.m */; };
+		065D78EA1A84BCB20083D058 /* STHTTPOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 065D78C21A820C420083D058 /* STHTTPOperation.m */; };
+		065D78EB1A84BCB50083D058 /* STHTTPOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = 065D78C11A820C420083D058 /* STHTTPOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		065D78F01A84C6410083D058 /* STHTTPConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 065D78EE1A84C6410083D058 /* STHTTPConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		065D78F11A84C6410083D058 /* STHTTPConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 065D78EF1A84C6410083D058 /* STHTTPConfiguration.m */; };
+		066D4700196583DC003FEF40 /* STIndicatorView.h in Headers */ = {isa = PBXBuildFile; fileRef = 066D46FE196583DC003FEF40 /* STIndicatorView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		066D4701196583DC003FEF40 /* STIndicatorView.m in Sources */ = {isa = PBXBuildFile; fileRef = 066D46FF196583DC003FEF40 /* STIndicatorView.m */; };
+		0672CD5819D7F6850055189C /* STAlbumManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 0672CD5619D7F6850055189C /* STAlbumManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0672CD5919D7F6850055189C /* STAlbumManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 0672CD5719D7F6850055189C /* STAlbumManager.m */; };
+		0675CFEB19AAF11300AD8B32 /* STImageCollectionView.h in Headers */ = {isa = PBXBuildFile; fileRef = 0675CFE919AAF11300AD8B32 /* STImageCollectionView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0675CFEC19AAF11300AD8B32 /* STImageCollectionView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0675CFEA19AAF11300AD8B32 /* STImageCollectionView.m */; };
+		0682B2E419F378EE001C175E /* STCryptorTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 0682B2E319F378EE001C175E /* STCryptorTestCase.m */; };
+		0688662E19B8531100E2764F /* STSearchBar.h in Headers */ = {isa = PBXBuildFile; fileRef = 0688662C19B8531100E2764F /* STSearchBar.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0688662F19B8531100E2764F /* STSearchBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 0688662D19B8531100E2764F /* STSearchBar.m */; };
+		0688663219B8543500E2764F /* STSearchDisplayController.h in Headers */ = {isa = PBXBuildFile; fileRef = 0688663019B8543500E2764F /* STSearchDisplayController.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0688663319B8543500E2764F /* STSearchDisplayController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0688663119B8543500E2764F /* STSearchDisplayController.m */; };
+		069113B7191E81E300211D74 /* STScrollDirector.h in Headers */ = {isa = PBXBuildFile; fileRef = 069113B5191E81E300211D74 /* STScrollDirector.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		069113B8191E81E300211D74 /* STScrollDirector.m in Sources */ = {isa = PBXBuildFile; fileRef = 069113B6191E81E300211D74 /* STScrollDirector.m */; };
+		069BC15519F23070005906BF /* STNetworkConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 069BC15319F23070005906BF /* STNetworkConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		069BC15619F23070005906BF /* STNetworkConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 069BC15419F23070005906BF /* STNetworkConfiguration.m */; };
+		06A3074A19B3615B00B53144 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 06A3074819B3615B00B53144 /* InfoPlist.strings */; };
+		06A3074C19B3615B00B53144 /* STKitTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 06A3074B19B3615B00B53144 /* STKitTests.m */; };
+		06A3075419B3624E00B53144 /* STObjectTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 06A3075319B3624E00B53144 /* STObjectTestCase.m */; };
+		06A3075619B36B0300B53144 /* STKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06A3075519B36B0300B53144 /* STKit.framework */; };
+		06A3736B192F8DC700DC7E56 /* STPopoverView.h in Headers */ = {isa = PBXBuildFile; fileRef = 06A37369192F8DC700DC7E56 /* STPopoverView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		06A3736C192F8DC700DC7E56 /* STPopoverView.m in Sources */ = {isa = PBXBuildFile; fileRef = 06A3736A192F8DC700DC7E56 /* STPopoverView.m */; };
+		06A4A69B19EF76710020CA40 /* STJavaScriptBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 06A4A69919EF76710020CA40 /* STJavaScriptBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		06A4A69C19EF76710020CA40 /* STJavaScriptBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 06A4A69A19EF76710020CA40 /* STJavaScriptBridge.m */; };
+		06A6FEB919CEDD85005263D7 /* STImagePresent.h in Headers */ = {isa = PBXBuildFile; fileRef = 06A6FEB719CEDD85005263D7 /* STImagePresent.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		06A6FEBA19CEDD85005263D7 /* STImagePresent.m in Sources */ = {isa = PBXBuildFile; fileRef = 06A6FEB819CEDD85005263D7 /* STImagePresent.m */; };
+		06A75901199C982D00AE98A2 /* STApplicationContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 06A758FF199C982D00AE98A2 /* STApplicationContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		06A75902199C982D00AE98A2 /* STApplicationContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 06A75900199C982D00AE98A2 /* STApplicationContext.m */; };
+		06C089C21A00F9120088C4C0 /* STSymmetricCryptor.h in Headers */ = {isa = PBXBuildFile; fileRef = 06C089C01A00F9120088C4C0 /* STSymmetricCryptor.h */; };
+		06C089C31A00F9120088C4C0 /* STSymmetricCryptor.m in Sources */ = {isa = PBXBuildFile; fileRef = 06C089C11A00F9120088C4C0 /* STSymmetricCryptor.m */; };
+		06C565AA1A6F511B00A4F8AF /* UIView+STConstraint.h in Headers */ = {isa = PBXBuildFile; fileRef = 06C565A81A6F511B00A4F8AF /* UIView+STConstraint.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		06C565AB1A6F511B00A4F8AF /* UIView+STConstraint.m in Sources */ = {isa = PBXBuildFile; fileRef = 06C565A91A6F511B00A4F8AF /* UIView+STConstraint.m */; };
+		06C6F9C71920A3B30028B2B3 /* STStringTokenizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 06C6F9C51920A3B30028B2B3 /* STStringTokenizer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		06C6F9C81920A3B30028B2B3 /* STStringTokenizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 06C6F9C61920A3B30028B2B3 /* STStringTokenizer.m */; };
+		06E6EAD71A6D60A800DC84A0 /* STTableViewCell.h in Headers */ = {isa = PBXBuildFile; fileRef = 06E6EAD51A6D60A800DC84A0 /* STTableViewCell.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		06E6EAD81A6D60A800DC84A0 /* STTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 06E6EAD61A6D60A800DC84A0 /* STTableViewCell.m */; };
+		06E9524619C93977001762A5 /* STRefreshControl.h in Headers */ = {isa = PBXBuildFile; fileRef = 06E9524419C93977001762A5 /* STRefreshControl.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		06E9524719C93977001762A5 /* STRefreshControl.m in Sources */ = {isa = PBXBuildFile; fileRef = 06E9524519C93977001762A5 /* STRefreshControl.m */; };
+		06E9524A19C968DF001762A5 /* STPaginationControl.h in Headers */ = {isa = PBXBuildFile; fileRef = 06E9524819C968DF001762A5 /* STPaginationControl.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		06E9524B19C968DF001762A5 /* STPaginationControl.m in Sources */ = {isa = PBXBuildFile; fileRef = 06E9524919C968DF001762A5 /* STPaginationControl.m */; };
+		06FE37B71A0DF998002CF174 /* STGIFGenerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 06FE37B51A0DF998002CF174 /* STGIFGenerator.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		06FE37B81A0DF998002CF174 /* STGIFGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = 06FE37B61A0DF998002CF174 /* STGIFGenerator.m */; };
+		06FE37C51A0E60BE002CF174 /* STImage.h in Headers */ = {isa = PBXBuildFile; fileRef = 06FE37C31A0E60BE002CF174 /* STImage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		06FE37C61A0E60BE002CF174 /* STImage.m in Sources */ = {isa = PBXBuildFile; fileRef = 06FE37C41A0E60BE002CF174 /* STImage.m */; };
+		06FEC33319C9DE920093EC69 /* STControlDefines.h in Headers */ = {isa = PBXBuildFile; fileRef = 06FEC33219C9DE270093EC69 /* STControlDefines.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F61DD2A9186D31FD008D0268 /* STTheme.h in Headers */ = {isa = PBXBuildFile; fileRef = F61DD2A5186D31FD008D0268 /* STTheme.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F61DD2AA186D31FD008D0268 /* STTheme.m in Sources */ = {isa = PBXBuildFile; fileRef = F61DD2A6186D31FD008D0268 /* STTheme.m */; };
+		F61DD2AB186D31FD008D0268 /* STThemeManager.h in Headers */ = {isa = PBXBuildFile; fileRef = F61DD2A7186D31FD008D0268 /* STThemeManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F61DD2AC186D31FD008D0268 /* STThemeManager.m in Sources */ = {isa = PBXBuildFile; fileRef = F61DD2A8186D31FD008D0268 /* STThemeManager.m */; };
+		F61E22D01857F3B00013A6D5 /* STNotificationWindow.h in Headers */ = {isa = PBXBuildFile; fileRef = F61E22CE1857F3B00013A6D5 /* STNotificationWindow.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F61E22D11857F3B00013A6D5 /* STNotificationWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = F61E22CF1857F3B00013A6D5 /* STNotificationWindow.m */; };
+		F620E55B186A88B00024A854 /* STImageViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = F620E559186A88B00024A854 /* STImageViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F620E55C186A88B00024A854 /* STImageViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F620E55A186A88B00024A854 /* STImageViewController.m */; };
+		F620E568186A9A2B0024A854 /* STImageScrollView.h in Headers */ = {isa = PBXBuildFile; fileRef = F620E566186A9A2B0024A854 /* STImageScrollView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F620E569186A9A2B0024A854 /* STImageScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = F620E567186A9A2B0024A854 /* STImageScrollView.m */; };
+		F625F9EE18462D52008EBA3F /* STLinkLabel.h in Headers */ = {isa = PBXBuildFile; fileRef = F625F9EC18462D52008EBA3F /* STLinkLabel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F625F9EF18462D52008EBA3F /* STLinkLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = F625F9ED18462D52008EBA3F /* STLinkLabel.m */; };
+		F62DEF7E187BEF4E00C7A1D8 /* STTextView.h in Headers */ = {isa = PBXBuildFile; fileRef = F62DEF7C187BEF4E00C7A1D8 /* STTextView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F62DEF7F187BEF4E00C7A1D8 /* STTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = F62DEF7D187BEF4E00C7A1D8 /* STTextView.m */; };
+		F635D82C187689DE00D2E939 /* STImagePickerController.h in Headers */ = {isa = PBXBuildFile; fileRef = F635D82A187689DE00D2E939 /* STImagePickerController.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F635D82D187689DE00D2E939 /* STImagePickerController.m in Sources */ = {isa = PBXBuildFile; fileRef = F635D82B187689DE00D2E939 /* STImagePickerController.m */; };
+		F655CABF18B3AA5F00237496 /* STNavigationBar.h in Headers */ = {isa = PBXBuildFile; fileRef = F655CABD18B3AA5F00237496 /* STNavigationBar.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F655CAC018B3AA5F00237496 /* STNavigationBar.m in Sources */ = {isa = PBXBuildFile; fileRef = F655CABE18B3AA5F00237496 /* STNavigationBar.m */; };
+		F65A3F1A18ACCAF60084D96E /* STTabBarController.h in Headers */ = {isa = PBXBuildFile; fileRef = F65A3F1818ACCAF60084D96E /* STTabBarController.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F65A3F1B18ACCAF60084D96E /* STTabBarController.m in Sources */ = {isa = PBXBuildFile; fileRef = F65A3F1918ACCAF60084D96E /* STTabBarController.m */; };
+		F65A3F2B18ACCB520084D96E /* STNavigationController.h in Headers */ = {isa = PBXBuildFile; fileRef = F65A3F2518ACCB520084D96E /* STNavigationController.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F65A3F2C18ACCB520084D96E /* STNavigationController.m in Sources */ = {isa = PBXBuildFile; fileRef = F65A3F2618ACCB520084D96E /* STNavigationController.m */; };
+		F65A3F2F18ACCD530084D96E /* STTabBar.h in Headers */ = {isa = PBXBuildFile; fileRef = F65A3F2D18ACCD530084D96E /* STTabBar.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F65A3F3018ACCD530084D96E /* STTabBar.m in Sources */ = {isa = PBXBuildFile; fileRef = F65A3F2E18ACCD530084D96E /* STTabBar.m */; };
+		F65A3F3318ACD08A0084D96E /* STTabBarItem.h in Headers */ = {isa = PBXBuildFile; fileRef = F65A3F3118ACD08A0084D96E /* STTabBarItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F65A3F3418ACD08A0084D96E /* STTabBarItem.m in Sources */ = {isa = PBXBuildFile; fileRef = F65A3F3218ACD08A0084D96E /* STTabBarItem.m */; };
+		F65D3EF11845E2C3007DF355 /* Foundation+STKit.m in Sources */ = {isa = PBXBuildFile; fileRef = F65D3ECD1845E2C3007DF355 /* Foundation+STKit.m */; };
+		F65D3EF51845E2C3007DF355 /* STCoreDataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = F65D3ED51845E2C3007DF355 /* STCoreDataManager.m */; };
+		F65D3EF81845E2C3007DF355 /* STImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = F65D3EDB1845E2C3007DF355 /* STImageView.m */; };
+		F65D3EFA1845E2C3007DF355 /* STLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = F65D3EE01845E2C3007DF355 /* STLabel.m */; };
+		F65D3EFD1845E2C3007DF355 /* STRoundProgressView.m in Sources */ = {isa = PBXBuildFile; fileRef = F65D3EE61845E2C3007DF355 /* STRoundProgressView.m */; };
+		F65D3EFF1845E2C3007DF355 /* STViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F65D3EEA1845E2C3007DF355 /* STViewController.m */; };
+		F65D3F001845E2C3007DF355 /* STWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F65D3EEC1845E2C3007DF355 /* STWebViewController.m */; };
+		F65D3F021845E2C3007DF355 /* UIKit+STKit.m in Sources */ = {isa = PBXBuildFile; fileRef = F65D3EF01845E2C3007DF355 /* UIKit+STKit.m */; };
+		F65D3F051845E718007DF355 /* STKit.h in Headers */ = {isa = PBXBuildFile; fileRef = F65D3EDE1845E2C3007DF355 /* STKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F65D3F061845E718007DF355 /* STDefines.h in Headers */ = {isa = PBXBuildFile; fileRef = F65D3F031845E41B007DF355 /* STDefines.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F65D3F071845E718007DF355 /* Foundation+STKit.h in Headers */ = {isa = PBXBuildFile; fileRef = F65D3ECC1845E2C3007DF355 /* Foundation+STKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F65D3F0F1845E718007DF355 /* STCoreDataManager.h in Headers */ = {isa = PBXBuildFile; fileRef = F65D3ED41845E2C3007DF355 /* STCoreDataManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F65D3F111845E718007DF355 /* UIKit+STKit.h in Headers */ = {isa = PBXBuildFile; fileRef = F65D3EEF1845E2C3007DF355 /* UIKit+STKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F65D3F131845E718007DF355 /* STLabel.h in Headers */ = {isa = PBXBuildFile; fileRef = F65D3EDF1845E2C3007DF355 /* STLabel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F65D3F151845E718007DF355 /* STImageView.h in Headers */ = {isa = PBXBuildFile; fileRef = F65D3EDA1845E2C3007DF355 /* STImageView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F65D3F191845E718007DF355 /* STRoundProgressView.h in Headers */ = {isa = PBXBuildFile; fileRef = F65D3EE51845E2C3007DF355 /* STRoundProgressView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F65D3F251845E718007DF355 /* STViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = F65D3EE91845E2C3007DF355 /* STViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F65D3F291845E718007DF355 /* STWebViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = F65D3EEB1845E2C3007DF355 /* STWebViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F66A09ED1854A5AC002D0597 /* STPersistence.h in Headers */ = {isa = PBXBuildFile; fileRef = F66A09EB1854A5AC002D0597 /* STPersistence.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F66A09EE1854A5AC002D0597 /* STPersistence.m in Sources */ = {isa = PBXBuildFile; fileRef = F66A09EC1854A5AC002D0597 /* STPersistence.m */; };
+		F69816321860518C004C5B64 /* STModel.h in Headers */ = {isa = PBXBuildFile; fileRef = F69816301860518C004C5B64 /* STModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F69816331860518C004C5B64 /* STModel.m in Sources */ = {isa = PBXBuildFile; fileRef = F69816311860518C004C5B64 /* STModel.m */; };
+		F6981636186051E1004C5B64 /* STModelViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = F6981634186051E1004C5B64 /* STModelViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F6981637186051E1004C5B64 /* STModelViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F6981635186051E1004C5B64 /* STModelViewController.m */; };
+		F6D65A5518E169E20026294F /* STButton.h in Headers */ = {isa = PBXBuildFile; fileRef = F6D65A5318E169E20026294F /* STButton.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		F6D65A5618E169E20026294F /* STButton.m in Sources */ = {isa = PBXBuildFile; fileRef = F6D65A5418E169E20026294F /* STButton.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		06A3074E19B3615B00B53144 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F65D3E891845E0C5007DF355 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F65D3EBD1845E173007DF355;
+			remoteInfo = STKit;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0601648D1A03E63800B7B790 /* STResourceManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STResourceManager.h; sourceTree = "<group>"; };
+		0601648E1A03E63800B7B790 /* STResourceManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STResourceManager.m; sourceTree = "<group>"; };
+		0601648F1A03E63800B7B790 /* STVisualBlurView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STVisualBlurView.h; sourceTree = "<group>"; };
+		060164901A03E63800B7B790 /* STVisualBlurView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STVisualBlurView.m; sourceTree = "<group>"; };
+		06038BFE19B18D22006971E3 /* STObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STObject.h; sourceTree = "<group>"; };
+		06038BFF19B18D22006971E3 /* STObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STObject.m; sourceTree = "<group>"; };
+		0604498D1A1F0C9B00D0DAF9 /* STSOAPNetwork.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STSOAPNetwork.h; sourceTree = "<group>"; };
+		0604498E1A1F0C9B00D0DAF9 /* STSOAPNetwork.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STSOAPNetwork.m; sourceTree = "<group>"; };
+		0606EB70191B78B300FA9FB0 /* STCollectionViewFlowLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STCollectionViewFlowLayout.h; sourceTree = "<group>"; };
+		0606EB71191B78B300FA9FB0 /* STCollectionViewFlowLayout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STCollectionViewFlowLayout.m; sourceTree = "<group>"; };
+		0621C9FF1A03634400CB0715 /* UIAlertView+STBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIAlertView+STBlock.h"; sourceTree = "<group>"; };
+		0621CA001A03634400CB0715 /* UIAlertView+STBlock.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIAlertView+STBlock.m"; sourceTree = "<group>"; };
+		0621CA031A03635C00CB0715 /* STCategories.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STCategories.h; sourceTree = "<group>"; };
+		0623952719B6D3F500FFDD96 /* STPayManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPayManager.h; sourceTree = "<group>"; };
+		0623952819B6D3F500FFDD96 /* STPayManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPayManager.m; sourceTree = "<group>"; };
+		0623952B19B6D49B00FFDD96 /* STPayViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPayViewController.h; sourceTree = "<group>"; };
+		0623952C19B6D49B00FFDD96 /* STPayViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPayViewController.m; sourceTree = "<group>"; };
+		0626CD9B19A0FAFD00B84A8C /* fft.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fft.c; sourceTree = "<group>"; };
+		0626CD9C19A0FAFD00B84A8C /* fft.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fft.h; sourceTree = "<group>"; };
+		0626CD9D19A0FAFD00B84A8C /* STAudioCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STAudioCenter.h; sourceTree = "<group>"; };
+		0626CD9E19A0FAFD00B84A8C /* STAudioCenter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STAudioCenter.m; sourceTree = "<group>"; };
+		0626CD9F19A0FAFD00B84A8C /* STAudioPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STAudioPlayer.h; sourceTree = "<group>"; };
+		0626CDA019A0FAFD00B84A8C /* STAudioPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STAudioPlayer.m; sourceTree = "<group>"; };
+		0626CDA119A0FAFD00B84A8C /* STAudioRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STAudioRecorder.h; sourceTree = "<group>"; };
+		0626CDA219A0FAFD00B84A8C /* STAudioRecorder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STAudioRecorder.m; sourceTree = "<group>"; };
+		0626CDA319A0FAFD00B84A8C /* STWaveAnalysis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STWaveAnalysis.h; sourceTree = "<group>"; };
+		0626CDA419A0FAFD00B84A8C /* STWaveAnalysis.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STWaveAnalysis.m; sourceTree = "<group>"; };
+		0626CDB019A0FB9800B84A8C /* STHTTPNetwork.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STHTTPNetwork.h; sourceTree = "<group>"; };
+		0626CDB119A0FB9800B84A8C /* STHTTPNetwork.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STHTTPNetwork.m; sourceTree = "<group>"; };
+		0626CDB619A0FB9800B84A8C /* STReachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STReachability.h; sourceTree = "<group>"; };
+		0626CDB719A0FB9800B84A8C /* STReachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STReachability.m; sourceTree = "<group>"; };
+		0626CDC119A0FBD900B84A8C /* STImageCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STImageCache.h; sourceTree = "<group>"; };
+		0626CDC219A0FBD900B84A8C /* STImageCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STImageCache.m; sourceTree = "<group>"; };
+		0626CDC319A0FBD900B84A8C /* STImageLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STImageLoader.h; sourceTree = "<group>"; };
+		0626CDC419A0FBDA00B84A8C /* STImageLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STImageLoader.m; sourceTree = "<group>"; };
+		0626CDC519A0FBDA00B84A8C /* UIImageView+STImageLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImageView+STImageLoader.h"; sourceTree = "<group>"; };
+		0626CDC619A0FBDA00B84A8C /* UIImageView+STImageLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImageView+STImageLoader.m"; sourceTree = "<group>"; };
+		0626CDCE19A0FBFD00B84A8C /* STSideBarController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STSideBarController.h; sourceTree = "<group>"; };
+		0626CDCF19A0FBFD00B84A8C /* STSideBarController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STSideBarController.m; sourceTree = "<group>"; };
+		0628B960192235BD00E17578 /* STLocationManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STLocationManager.h; sourceTree = "<group>"; };
+		0628B961192235BD00E17578 /* STLocationManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STLocationManager.m; sourceTree = "<group>"; };
+		0628B98B19233DCD00E17578 /* STTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STTableViewController.h; sourceTree = "<group>"; };
+		0628B98C19233DCD00E17578 /* STTableViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STTableViewController.m; sourceTree = "<group>"; };
+		0628B98F192342A500E17578 /* STTableView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STTableView.h; sourceTree = "<group>"; };
+		0628B990192342A500E17578 /* STTableView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STTableView.m; sourceTree = "<group>"; };
+		062E9AB119CAEAE600ADB552 /* STRateControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STRateControl.h; sourceTree = "<group>"; };
+		062E9AB219CAEAE600ADB552 /* STRateControl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STRateControl.m; sourceTree = "<group>"; };
+		062E9AF319CC22A100ADB552 /* STAESCryptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STAESCryptor.h; sourceTree = "<group>"; };
+		062E9AF419CC22A100ADB552 /* STAESCryptor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STAESCryptor.m; sourceTree = "<group>"; };
+		062E9AF719CC292200ADB552 /* STRSACryptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STRSACryptor.h; sourceTree = "<group>"; };
+		062E9AF819CC292200ADB552 /* STRSACryptor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STRSACryptor.m; sourceTree = "<group>"; };
+		063DF320191CE2560009B947 /* STZipArchive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STZipArchive.h; sourceTree = "<group>"; };
+		063DF321191CE2560009B947 /* STZipArchive.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STZipArchive.m; sourceTree = "<group>"; };
+		065D78C11A820C420083D058 /* STHTTPOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = STHTTPOperation.h; sourceTree = "<group>"; };
+		065D78C21A820C420083D058 /* STHTTPOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = STHTTPOperation.m; sourceTree = "<group>"; };
+		065D78C31A820C420083D058 /* STHTTPRequest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = STHTTPRequest.h; sourceTree = "<group>"; };
+		065D78C41A820C420083D058 /* STHTTPRequest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = STHTTPRequest.m; sourceTree = "<group>"; };
+		065D78EE1A84C6410083D058 /* STHTTPConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STHTTPConfiguration.h; sourceTree = "<group>"; };
+		065D78EF1A84C6410083D058 /* STHTTPConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STHTTPConfiguration.m; sourceTree = "<group>"; };
+		066D46FE196583DC003FEF40 /* STIndicatorView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STIndicatorView.h; sourceTree = "<group>"; };
+		066D46FF196583DC003FEF40 /* STIndicatorView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STIndicatorView.m; sourceTree = "<group>"; };
+		0672CD5619D7F6850055189C /* STAlbumManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STAlbumManager.h; sourceTree = "<group>"; };
+		0672CD5719D7F6850055189C /* STAlbumManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STAlbumManager.m; sourceTree = "<group>"; };
+		0675CFE919AAF11300AD8B32 /* STImageCollectionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STImageCollectionView.h; sourceTree = "<group>"; };
+		0675CFEA19AAF11300AD8B32 /* STImageCollectionView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STImageCollectionView.m; sourceTree = "<group>"; };
+		0682B2E319F378EE001C175E /* STCryptorTestCase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STCryptorTestCase.m; sourceTree = "<group>"; };
+		0688662C19B8531100E2764F /* STSearchBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STSearchBar.h; sourceTree = "<group>"; };
+		0688662D19B8531100E2764F /* STSearchBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STSearchBar.m; sourceTree = "<group>"; };
+		0688663019B8543500E2764F /* STSearchDisplayController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STSearchDisplayController.h; sourceTree = "<group>"; };
+		0688663119B8543500E2764F /* STSearchDisplayController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STSearchDisplayController.m; sourceTree = "<group>"; };
+		069113B5191E81E300211D74 /* STScrollDirector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STScrollDirector.h; sourceTree = "<group>"; };
+		069113B6191E81E300211D74 /* STScrollDirector.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STScrollDirector.m; sourceTree = "<group>"; };
+		069BC15319F23070005906BF /* STNetworkConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STNetworkConfiguration.h; sourceTree = "<group>"; };
+		069BC15419F23070005906BF /* STNetworkConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STNetworkConfiguration.m; sourceTree = "<group>"; };
+		06A3073E19B3615B00B53144 /* STKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = STKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		06A3074719B3615B00B53144 /* STKitTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "STKitTests-Info.plist"; sourceTree = "<group>"; };
+		06A3074919B3615B00B53144 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		06A3074B19B3615B00B53144 /* STKitTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = STKitTests.m; sourceTree = "<group>"; };
+		06A3074D19B3615B00B53144 /* STKitTests-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "STKitTests-Prefix.pch"; sourceTree = "<group>"; };
+		06A3075319B3624E00B53144 /* STObjectTestCase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STObjectTestCase.m; sourceTree = "<group>"; };
+		06A3075519B36B0300B53144 /* STKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = STKit.framework; path = "../../../../Library/Developer/Xcode/DerivedData/STWorkspace-geijllfmuymgingxsjgqvtuhlffp/Build/Products/Release-iphoneos/STKit.framework"; sourceTree = "<group>"; };
+		06A37369192F8DC700DC7E56 /* STPopoverView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPopoverView.h; sourceTree = "<group>"; };
+		06A3736A192F8DC700DC7E56 /* STPopoverView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPopoverView.m; sourceTree = "<group>"; };
+		06A4A69919EF76710020CA40 /* STJavaScriptBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STJavaScriptBridge.h; sourceTree = "<group>"; };
+		06A4A69A19EF76710020CA40 /* STJavaScriptBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STJavaScriptBridge.m; sourceTree = "<group>"; };
+		06A6FEB719CEDD85005263D7 /* STImagePresent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STImagePresent.h; sourceTree = "<group>"; };
+		06A6FEB819CEDD85005263D7 /* STImagePresent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STImagePresent.m; sourceTree = "<group>"; };
+		06A758FF199C982D00AE98A2 /* STApplicationContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STApplicationContext.h; sourceTree = "<group>"; };
+		06A75900199C982D00AE98A2 /* STApplicationContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STApplicationContext.m; sourceTree = "<group>"; };
+		06C089C01A00F9120088C4C0 /* STSymmetricCryptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STSymmetricCryptor.h; sourceTree = "<group>"; };
+		06C089C11A00F9120088C4C0 /* STSymmetricCryptor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STSymmetricCryptor.m; sourceTree = "<group>"; };
+		06C565A81A6F511B00A4F8AF /* UIView+STConstraint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+STConstraint.h"; sourceTree = "<group>"; };
+		06C565A91A6F511B00A4F8AF /* UIView+STConstraint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+STConstraint.m"; sourceTree = "<group>"; };
+		06C6F9C51920A3B30028B2B3 /* STStringTokenizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STStringTokenizer.h; sourceTree = "<group>"; };
+		06C6F9C61920A3B30028B2B3 /* STStringTokenizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STStringTokenizer.m; sourceTree = "<group>"; };
+		06E6EAD51A6D60A800DC84A0 /* STTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STTableViewCell.h; sourceTree = "<group>"; };
+		06E6EAD61A6D60A800DC84A0 /* STTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STTableViewCell.m; sourceTree = "<group>"; };
+		06E9524419C93977001762A5 /* STRefreshControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STRefreshControl.h; sourceTree = "<group>"; };
+		06E9524519C93977001762A5 /* STRefreshControl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STRefreshControl.m; sourceTree = "<group>"; };
+		06E9524819C968DF001762A5 /* STPaginationControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPaginationControl.h; sourceTree = "<group>"; };
+		06E9524919C968DF001762A5 /* STPaginationControl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPaginationControl.m; sourceTree = "<group>"; };
+		06FE37B51A0DF998002CF174 /* STGIFGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STGIFGenerator.h; sourceTree = "<group>"; };
+		06FE37B61A0DF998002CF174 /* STGIFGenerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STGIFGenerator.m; sourceTree = "<group>"; };
+		06FE37C31A0E60BE002CF174 /* STImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STImage.h; sourceTree = "<group>"; };
+		06FE37C41A0E60BE002CF174 /* STImage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STImage.m; sourceTree = "<group>"; };
+		06FEC33219C9DE270093EC69 /* STControlDefines.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = STControlDefines.h; sourceTree = "<group>"; };
+		F61DD2A5186D31FD008D0268 /* STTheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STTheme.h; sourceTree = "<group>"; };
+		F61DD2A6186D31FD008D0268 /* STTheme.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STTheme.m; sourceTree = "<group>"; };
+		F61DD2A7186D31FD008D0268 /* STThemeManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STThemeManager.h; sourceTree = "<group>"; };
+		F61DD2A8186D31FD008D0268 /* STThemeManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STThemeManager.m; sourceTree = "<group>"; };
+		F61E22CE1857F3B00013A6D5 /* STNotificationWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STNotificationWindow.h; sourceTree = "<group>"; };
+		F61E22CF1857F3B00013A6D5 /* STNotificationWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STNotificationWindow.m; sourceTree = "<group>"; };
+		F620E559186A88B00024A854 /* STImageViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STImageViewController.h; sourceTree = "<group>"; };
+		F620E55A186A88B00024A854 /* STImageViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STImageViewController.m; sourceTree = "<group>"; };
+		F620E566186A9A2B0024A854 /* STImageScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STImageScrollView.h; sourceTree = "<group>"; };
+		F620E567186A9A2B0024A854 /* STImageScrollView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STImageScrollView.m; sourceTree = "<group>"; };
+		F625F9EC18462D52008EBA3F /* STLinkLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STLinkLabel.h; sourceTree = "<group>"; };
+		F625F9ED18462D52008EBA3F /* STLinkLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STLinkLabel.m; sourceTree = "<group>"; };
+		F62DEF7C187BEF4E00C7A1D8 /* STTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STTextView.h; sourceTree = "<group>"; };
+		F62DEF7D187BEF4E00C7A1D8 /* STTextView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STTextView.m; sourceTree = "<group>"; };
+		F635D82A187689DE00D2E939 /* STImagePickerController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STImagePickerController.h; sourceTree = "<group>"; };
+		F635D82B187689DE00D2E939 /* STImagePickerController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STImagePickerController.m; sourceTree = "<group>"; };
+		F655CABD18B3AA5F00237496 /* STNavigationBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STNavigationBar.h; sourceTree = "<group>"; };
+		F655CABE18B3AA5F00237496 /* STNavigationBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STNavigationBar.m; sourceTree = "<group>"; };
+		F65A3F1818ACCAF60084D96E /* STTabBarController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STTabBarController.h; sourceTree = "<group>"; };
+		F65A3F1918ACCAF60084D96E /* STTabBarController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STTabBarController.m; sourceTree = "<group>"; };
+		F65A3F2518ACCB520084D96E /* STNavigationController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STNavigationController.h; sourceTree = "<group>"; };
+		F65A3F2618ACCB520084D96E /* STNavigationController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STNavigationController.m; sourceTree = "<group>"; };
+		F65A3F2D18ACCD530084D96E /* STTabBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STTabBar.h; sourceTree = "<group>"; };
+		F65A3F2E18ACCD530084D96E /* STTabBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STTabBar.m; sourceTree = "<group>"; };
+		F65A3F3118ACD08A0084D96E /* STTabBarItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STTabBarItem.h; sourceTree = "<group>"; };
+		F65A3F3218ACD08A0084D96E /* STTabBarItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STTabBarItem.m; sourceTree = "<group>"; };
+		F65D3EBE1845E173007DF355 /* STKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = STKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F65D3EC31845E173007DF355 /* STKit-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "STKit-Info.plist"; sourceTree = "<group>"; };
+		F65D3EC71845E173007DF355 /* STKit-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "STKit-Prefix.pch"; sourceTree = "<group>"; };
+		F65D3ECC1845E2C3007DF355 /* Foundation+STKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Foundation+STKit.h"; sourceTree = "<group>"; };
+		F65D3ECD1845E2C3007DF355 /* Foundation+STKit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "Foundation+STKit.m"; sourceTree = "<group>"; };
+		F65D3ED41845E2C3007DF355 /* STCoreDataManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STCoreDataManager.h; sourceTree = "<group>"; };
+		F65D3ED51845E2C3007DF355 /* STCoreDataManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STCoreDataManager.m; sourceTree = "<group>"; };
+		F65D3EDA1845E2C3007DF355 /* STImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STImageView.h; sourceTree = "<group>"; };
+		F65D3EDB1845E2C3007DF355 /* STImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STImageView.m; sourceTree = "<group>"; };
+		F65D3EDE1845E2C3007DF355 /* STKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STKit.h; sourceTree = "<group>"; };
+		F65D3EDF1845E2C3007DF355 /* STLabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STLabel.h; sourceTree = "<group>"; };
+		F65D3EE01845E2C3007DF355 /* STLabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STLabel.m; sourceTree = "<group>"; };
+		F65D3EE51845E2C3007DF355 /* STRoundProgressView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STRoundProgressView.h; sourceTree = "<group>"; };
+		F65D3EE61845E2C3007DF355 /* STRoundProgressView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STRoundProgressView.m; sourceTree = "<group>"; };
+		F65D3EE91845E2C3007DF355 /* STViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STViewController.h; sourceTree = "<group>"; };
+		F65D3EEA1845E2C3007DF355 /* STViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STViewController.m; sourceTree = "<group>"; };
+		F65D3EEB1845E2C3007DF355 /* STWebViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STWebViewController.h; sourceTree = "<group>"; };
+		F65D3EEC1845E2C3007DF355 /* STWebViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STWebViewController.m; sourceTree = "<group>"; };
+		F65D3EEF1845E2C3007DF355 /* UIKit+STKit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIKit+STKit.h"; sourceTree = "<group>"; };
+		F65D3EF01845E2C3007DF355 /* UIKit+STKit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIKit+STKit.m"; sourceTree = "<group>"; };
+		F65D3F031845E41B007DF355 /* STDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STDefines.h; sourceTree = "<group>"; };
+		F66A09EB1854A5AC002D0597 /* STPersistence.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPersistence.h; sourceTree = "<group>"; };
+		F66A09EC1854A5AC002D0597 /* STPersistence.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPersistence.m; sourceTree = "<group>"; };
+		F69816301860518C004C5B64 /* STModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STModel.h; sourceTree = "<group>"; };
+		F69816311860518C004C5B64 /* STModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STModel.m; sourceTree = "<group>"; };
+		F6981634186051E1004C5B64 /* STModelViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STModelViewController.h; sourceTree = "<group>"; };
+		F6981635186051E1004C5B64 /* STModelViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STModelViewController.m; sourceTree = "<group>"; };
+		F6D65A5318E169E20026294F /* STButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STButton.h; sourceTree = "<group>"; };
+		F6D65A5418E169E20026294F /* STButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STButton.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		06A3073B19B3615B00B53144 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				06A3075619B36B0300B53144 /* STKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F65D3EBB1845E173007DF355 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0601648A1A03E63800B7B790 /* STPrivate */ = {
+			isa = PBXGroup;
+			children = (
+				0601648D1A03E63800B7B790 /* STResourceManager.h */,
+				0601648E1A03E63800B7B790 /* STResourceManager.m */,
+				0601648F1A03E63800B7B790 /* STVisualBlurView.h */,
+				060164901A03E63800B7B790 /* STVisualBlurView.m */,
+			);
+			path = STPrivate;
+			sourceTree = "<group>";
+		};
+		0621C9FE1A03634400CB0715 /* STCategories */ = {
+			isa = PBXGroup;
+			children = (
+				0621CA031A03635C00CB0715 /* STCategories.h */,
+				0621C9FF1A03634400CB0715 /* UIAlertView+STBlock.h */,
+				0621CA001A03634400CB0715 /* UIAlertView+STBlock.m */,
+			);
+			path = STCategories;
+			sourceTree = "<group>";
+		};
+		0626CD9A19A0FAFD00B84A8C /* STAudio */ = {
+			isa = PBXGroup;
+			children = (
+				0626CD9B19A0FAFD00B84A8C /* fft.c */,
+				0626CD9C19A0FAFD00B84A8C /* fft.h */,
+				0626CD9D19A0FAFD00B84A8C /* STAudioCenter.h */,
+				0626CD9E19A0FAFD00B84A8C /* STAudioCenter.m */,
+				0626CD9F19A0FAFD00B84A8C /* STAudioPlayer.h */,
+				0626CDA019A0FAFD00B84A8C /* STAudioPlayer.m */,
+				0626CDA119A0FAFD00B84A8C /* STAudioRecorder.h */,
+				0626CDA219A0FAFD00B84A8C /* STAudioRecorder.m */,
+				0626CDA319A0FAFD00B84A8C /* STWaveAnalysis.h */,
+				0626CDA419A0FAFD00B84A8C /* STWaveAnalysis.m */,
+			);
+			path = STAudio;
+			sourceTree = "<group>";
+		};
+		0626CDAF19A0FB9800B84A8C /* STNetwork */ = {
+			isa = PBXGroup;
+			children = (
+				065D78C31A820C420083D058 /* STHTTPRequest.h */,
+				065D78C41A820C420083D058 /* STHTTPRequest.m */,
+				0626CDB019A0FB9800B84A8C /* STHTTPNetwork.h */,
+				0626CDB119A0FB9800B84A8C /* STHTTPNetwork.m */,
+				065D78C11A820C420083D058 /* STHTTPOperation.h */,
+				065D78C21A820C420083D058 /* STHTTPOperation.m */,
+				065D78EE1A84C6410083D058 /* STHTTPConfiguration.h */,
+				065D78EF1A84C6410083D058 /* STHTTPConfiguration.m */,
+				069BC15319F23070005906BF /* STNetworkConfiguration.h */,
+				069BC15419F23070005906BF /* STNetworkConfiguration.m */,
+				0604498D1A1F0C9B00D0DAF9 /* STSOAPNetwork.h */,
+				0604498E1A1F0C9B00D0DAF9 /* STSOAPNetwork.m */,
+				0626CDB619A0FB9800B84A8C /* STReachability.h */,
+				0626CDB719A0FB9800B84A8C /* STReachability.m */,
+			);
+			path = STNetwork;
+			sourceTree = "<group>";
+		};
+		0626CDC019A0FBD900B84A8C /* STImage */ = {
+			isa = PBXGroup;
+			children = (
+				0626CDC119A0FBD900B84A8C /* STImageCache.h */,
+				0626CDC219A0FBD900B84A8C /* STImageCache.m */,
+				0626CDC319A0FBD900B84A8C /* STImageLoader.h */,
+				0626CDC419A0FBDA00B84A8C /* STImageLoader.m */,
+				0626CDC519A0FBDA00B84A8C /* UIImageView+STImageLoader.h */,
+				0626CDC619A0FBDA00B84A8C /* UIImageView+STImageLoader.m */,
+				0672CD5619D7F6850055189C /* STAlbumManager.h */,
+				0672CD5719D7F6850055189C /* STAlbumManager.m */,
+				06FE37C31A0E60BE002CF174 /* STImage.h */,
+				06FE37C41A0E60BE002CF174 /* STImage.m */,
+			);
+			path = STImage;
+			sourceTree = "<group>";
+		};
+		0626CDCD19A0FBFD00B84A8C /* STSideBar */ = {
+			isa = PBXGroup;
+			children = (
+				0626CDCE19A0FBFD00B84A8C /* STSideBarController.h */,
+				0626CDCF19A0FBFD00B84A8C /* STSideBarController.m */,
+			);
+			path = STSideBar;
+			sourceTree = "<group>";
+		};
+		062E9AF219CC227700ADB552 /* STSecurity */ = {
+			isa = PBXGroup;
+			children = (
+				062E9AF319CC22A100ADB552 /* STAESCryptor.h */,
+				062E9AF419CC22A100ADB552 /* STAESCryptor.m */,
+				062E9AF719CC292200ADB552 /* STRSACryptor.h */,
+				062E9AF819CC292200ADB552 /* STRSACryptor.m */,
+				06C089C01A00F9120088C4C0 /* STSymmetricCryptor.h */,
+				06C089C11A00F9120088C4C0 /* STSymmetricCryptor.m */,
+			);
+			path = STSecurity;
+			sourceTree = "<group>";
+		};
+		0688662B19B852FA00E2764F /* STSearch */ = {
+			isa = PBXGroup;
+			children = (
+				0688662C19B8531100E2764F /* STSearchBar.h */,
+				0688662D19B8531100E2764F /* STSearchBar.m */,
+				0688663019B8543500E2764F /* STSearchDisplayController.h */,
+				0688663119B8543500E2764F /* STSearchDisplayController.m */,
+			);
+			path = STSearch;
+			sourceTree = "<group>";
+		};
+		06A3074519B3615B00B53144 /* STKitTests */ = {
+			isa = PBXGroup;
+			children = (
+				06A3075519B36B0300B53144 /* STKit.framework */,
+				06A3074B19B3615B00B53144 /* STKitTests.m */,
+				0682B2E319F378EE001C175E /* STCryptorTestCase.m */,
+				06A3075319B3624E00B53144 /* STObjectTestCase.m */,
+				06A3074619B3615B00B53144 /* Supporting Files */,
+			);
+			path = STKitTests;
+			sourceTree = "<group>";
+		};
+		06A3074619B3615B00B53144 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				06A3074719B3615B00B53144 /* STKitTests-Info.plist */,
+				06A3074819B3615B00B53144 /* InfoPlist.strings */,
+				06A3074D19B3615B00B53144 /* STKitTests-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		06E9524319C93960001762A5 /* STControl */ = {
+			isa = PBXGroup;
+			children = (
+				06FEC33219C9DE270093EC69 /* STControlDefines.h */,
+				062E9AB119CAEAE600ADB552 /* STRateControl.h */,
+				062E9AB219CAEAE600ADB552 /* STRateControl.m */,
+				06E9524419C93977001762A5 /* STRefreshControl.h */,
+				06E9524519C93977001762A5 /* STRefreshControl.m */,
+				06E9524819C968DF001762A5 /* STPaginationControl.h */,
+				06E9524919C968DF001762A5 /* STPaginationControl.m */,
+			);
+			path = STControl;
+			sourceTree = "<group>";
+		};
+		F65A3F1718ACCADB0084D96E /* STTabBar */ = {
+			isa = PBXGroup;
+			children = (
+				F65A3F2D18ACCD530084D96E /* STTabBar.h */,
+				F65A3F2E18ACCD530084D96E /* STTabBar.m */,
+				F65A3F3118ACD08A0084D96E /* STTabBarItem.h */,
+				F65A3F3218ACD08A0084D96E /* STTabBarItem.m */,
+				F65A3F1818ACCAF60084D96E /* STTabBarController.h */,
+				F65A3F1918ACCAF60084D96E /* STTabBarController.m */,
+			);
+			path = STTabBar;
+			sourceTree = "<group>";
+		};
+		F65A3F2418ACCB520084D96E /* STNavigation */ = {
+			isa = PBXGroup;
+			children = (
+				F655CABD18B3AA5F00237496 /* STNavigationBar.h */,
+				F655CABE18B3AA5F00237496 /* STNavigationBar.m */,
+				F65A3F2518ACCB520084D96E /* STNavigationController.h */,
+				F65A3F2618ACCB520084D96E /* STNavigationController.m */,
+			);
+			path = STNavigation;
+			sourceTree = "<group>";
+		};
+		F65D3E881845E0C5007DF355 = {
+			isa = PBXGroup;
+			children = (
+				F65D3EC11845E173007DF355 /* STKit */,
+				06A3074519B3615B00B53144 /* STKitTests */,
+				F65D3E931845E0C5007DF355 /* Frameworks */,
+				F65D3E921845E0C5007DF355 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F65D3E921845E0C5007DF355 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F65D3EBE1845E173007DF355 /* STKit.framework */,
+				06A3073E19B3615B00B53144 /* STKitTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F65D3E931845E0C5007DF355 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F65D3EC11845E173007DF355 /* STKit */ = {
+			isa = PBXGroup;
+			children = (
+				F65D3ECB1845E2C3007DF355 /* Framework */,
+				F65D3EC21845E173007DF355 /* Supporting Files */,
+			);
+			path = STKit;
+			sourceTree = "<group>";
+		};
+		F65D3EC21845E173007DF355 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				F65D3EC31845E173007DF355 /* STKit-Info.plist */,
+				F65D3EC71845E173007DF355 /* STKit-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		F65D3ECB1845E2C3007DF355 /* Framework */ = {
+			isa = PBXGroup;
+			children = (
+				0601648A1A03E63800B7B790 /* STPrivate */,
+				0621C9FE1A03634400CB0715 /* STCategories */,
+				062E9AF219CC227700ADB552 /* STSecurity */,
+				06E9524319C93960001762A5 /* STControl */,
+				0688662B19B852FA00E2764F /* STSearch */,
+				0626CDAF19A0FB9800B84A8C /* STNetwork */,
+				0626CDC019A0FBD900B84A8C /* STImage */,
+				0626CD9A19A0FAFD00B84A8C /* STAudio */,
+				F65A3F1718ACCADB0084D96E /* STTabBar */,
+				0626CDCD19A0FBFD00B84A8C /* STSideBar */,
+				F65A3F2418ACCB520084D96E /* STNavigation */,
+				F65D3EDE1845E2C3007DF355 /* STKit.h */,
+				F65D3F031845E41B007DF355 /* STDefines.h */,
+				F61DD2A5186D31FD008D0268 /* STTheme.h */,
+				F61DD2A6186D31FD008D0268 /* STTheme.m */,
+				F61DD2A7186D31FD008D0268 /* STThemeManager.h */,
+				F61DD2A8186D31FD008D0268 /* STThemeManager.m */,
+				F65D3ECC1845E2C3007DF355 /* Foundation+STKit.h */,
+				F65D3ECD1845E2C3007DF355 /* Foundation+STKit.m */,
+				F66A09EB1854A5AC002D0597 /* STPersistence.h */,
+				F66A09EC1854A5AC002D0597 /* STPersistence.m */,
+				F65D3ED41845E2C3007DF355 /* STCoreDataManager.h */,
+				F65D3ED51845E2C3007DF355 /* STCoreDataManager.m */,
+				F65D3EEF1845E2C3007DF355 /* UIKit+STKit.h */,
+				F65D3EF01845E2C3007DF355 /* UIKit+STKit.m */,
+				06C565A81A6F511B00A4F8AF /* UIView+STConstraint.h */,
+				06C565A91A6F511B00A4F8AF /* UIView+STConstraint.m */,
+				06038BFE19B18D22006971E3 /* STObject.h */,
+				06038BFF19B18D22006971E3 /* STObject.m */,
+				F65D3EDF1845E2C3007DF355 /* STLabel.h */,
+				F65D3EE01845E2C3007DF355 /* STLabel.m */,
+				F6D65A5318E169E20026294F /* STButton.h */,
+				F6D65A5418E169E20026294F /* STButton.m */,
+				F625F9EC18462D52008EBA3F /* STLinkLabel.h */,
+				F625F9ED18462D52008EBA3F /* STLinkLabel.m */,
+				F62DEF7C187BEF4E00C7A1D8 /* STTextView.h */,
+				F62DEF7D187BEF4E00C7A1D8 /* STTextView.m */,
+				F65D3EDA1845E2C3007DF355 /* STImageView.h */,
+				F65D3EDB1845E2C3007DF355 /* STImageView.m */,
+				06A37369192F8DC700DC7E56 /* STPopoverView.h */,
+				06A3736A192F8DC700DC7E56 /* STPopoverView.m */,
+				066D46FE196583DC003FEF40 /* STIndicatorView.h */,
+				066D46FF196583DC003FEF40 /* STIndicatorView.m */,
+				F61E22CE1857F3B00013A6D5 /* STNotificationWindow.h */,
+				F61E22CF1857F3B00013A6D5 /* STNotificationWindow.m */,
+				F65D3EE51845E2C3007DF355 /* STRoundProgressView.h */,
+				F65D3EE61845E2C3007DF355 /* STRoundProgressView.m */,
+				06A6FEB719CEDD85005263D7 /* STImagePresent.h */,
+				06A6FEB819CEDD85005263D7 /* STImagePresent.m */,
+				F620E566186A9A2B0024A854 /* STImageScrollView.h */,
+				F620E567186A9A2B0024A854 /* STImageScrollView.m */,
+				0675CFE919AAF11300AD8B32 /* STImageCollectionView.h */,
+				0675CFEA19AAF11300AD8B32 /* STImageCollectionView.m */,
+				F65D3EE91845E2C3007DF355 /* STViewController.h */,
+				F65D3EEA1845E2C3007DF355 /* STViewController.m */,
+				F635D82A187689DE00D2E939 /* STImagePickerController.h */,
+				F635D82B187689DE00D2E939 /* STImagePickerController.m */,
+				F65D3EEB1845E2C3007DF355 /* STWebViewController.h */,
+				F65D3EEC1845E2C3007DF355 /* STWebViewController.m */,
+				F620E559186A88B00024A854 /* STImageViewController.h */,
+				F620E55A186A88B00024A854 /* STImageViewController.m */,
+				F69816301860518C004C5B64 /* STModel.h */,
+				F69816311860518C004C5B64 /* STModel.m */,
+				0628B98F192342A500E17578 /* STTableView.h */,
+				0628B990192342A500E17578 /* STTableView.m */,
+				0628B98B19233DCD00E17578 /* STTableViewController.h */,
+				0628B98C19233DCD00E17578 /* STTableViewController.m */,
+				F6981634186051E1004C5B64 /* STModelViewController.h */,
+				F6981635186051E1004C5B64 /* STModelViewController.m */,
+				0606EB70191B78B300FA9FB0 /* STCollectionViewFlowLayout.h */,
+				0606EB71191B78B300FA9FB0 /* STCollectionViewFlowLayout.m */,
+				063DF320191CE2560009B947 /* STZipArchive.h */,
+				063DF321191CE2560009B947 /* STZipArchive.m */,
+				069113B5191E81E300211D74 /* STScrollDirector.h */,
+				069113B6191E81E300211D74 /* STScrollDirector.m */,
+				06C6F9C51920A3B30028B2B3 /* STStringTokenizer.h */,
+				06C6F9C61920A3B30028B2B3 /* STStringTokenizer.m */,
+				0628B960192235BD00E17578 /* STLocationManager.h */,
+				0628B961192235BD00E17578 /* STLocationManager.m */,
+				06A758FF199C982D00AE98A2 /* STApplicationContext.h */,
+				06A75900199C982D00AE98A2 /* STApplicationContext.m */,
+				0623952719B6D3F500FFDD96 /* STPayManager.h */,
+				0623952819B6D3F500FFDD96 /* STPayManager.m */,
+				0623952B19B6D49B00FFDD96 /* STPayViewController.h */,
+				0623952C19B6D49B00FFDD96 /* STPayViewController.m */,
+				06A4A69919EF76710020CA40 /* STJavaScriptBridge.h */,
+				06A4A69A19EF76710020CA40 /* STJavaScriptBridge.m */,
+				06FE37B51A0DF998002CF174 /* STGIFGenerator.h */,
+				06FE37B61A0DF998002CF174 /* STGIFGenerator.m */,
+				06E6EAD51A6D60A800DC84A0 /* STTableViewCell.h */,
+				06E6EAD61A6D60A800DC84A0 /* STTableViewCell.m */,
+			);
+			path = Framework;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		F65D3F041845E6F9007DF355 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F65D3F051845E718007DF355 /* STKit.h in Headers */,
+				F65D3F061845E718007DF355 /* STDefines.h in Headers */,
+				F65D3F071845E718007DF355 /* Foundation+STKit.h in Headers */,
+				F65D3F0F1845E718007DF355 /* STCoreDataManager.h in Headers */,
+				F65D3F111845E718007DF355 /* UIKit+STKit.h in Headers */,
+				06C565AA1A6F511B00A4F8AF /* UIView+STConstraint.h in Headers */,
+				F65D3F131845E718007DF355 /* STLabel.h in Headers */,
+				F65D3F151845E718007DF355 /* STImageView.h in Headers */,
+				F65D3F191845E718007DF355 /* STRoundProgressView.h in Headers */,
+				F69816321860518C004C5B64 /* STModel.h in Headers */,
+				F61E22D01857F3B00013A6D5 /* STNotificationWindow.h in Headers */,
+				F6981636186051E1004C5B64 /* STModelViewController.h in Headers */,
+				F66A09ED1854A5AC002D0597 /* STPersistence.h in Headers */,
+				F625F9EE18462D52008EBA3F /* STLinkLabel.h in Headers */,
+				F65D3F251845E718007DF355 /* STViewController.h in Headers */,
+				F620E568186A9A2B0024A854 /* STImageScrollView.h in Headers */,
+				F61DD2AB186D31FD008D0268 /* STThemeManager.h in Headers */,
+				F635D82C187689DE00D2E939 /* STImagePickerController.h in Headers */,
+				F65A3F2F18ACCD530084D96E /* STTabBar.h in Headers */,
+				F65A3F3318ACD08A0084D96E /* STTabBarItem.h in Headers */,
+				F655CABF18B3AA5F00237496 /* STNavigationBar.h in Headers */,
+				F65A3F2B18ACCB520084D96E /* STNavigationController.h in Headers */,
+				F65A3F1A18ACCAF60084D96E /* STTabBarController.h in Headers */,
+				F61DD2A9186D31FD008D0268 /* STTheme.h in Headers */,
+				F620E55B186A88B00024A854 /* STImageViewController.h in Headers */,
+				069113B7191E81E300211D74 /* STScrollDirector.h in Headers */,
+				F6D65A5518E169E20026294F /* STButton.h in Headers */,
+				0606EB72191B78B300FA9FB0 /* STCollectionViewFlowLayout.h in Headers */,
+				066D4700196583DC003FEF40 /* STIndicatorView.h in Headers */,
+				0626CDCB19A0FBDA00B84A8C /* UIImageView+STImageLoader.h in Headers */,
+				0626CDA719A0FAFD00B84A8C /* STAudioCenter.h in Headers */,
+				0626CDB819A0FB9800B84A8C /* STHTTPNetwork.h in Headers */,
+				0626CDD019A0FBFD00B84A8C /* STSideBarController.h in Headers */,
+				0626CDA619A0FAFD00B84A8C /* fft.h in Headers */,
+				0626CDC719A0FBDA00B84A8C /* STImageCache.h in Headers */,
+				0626CDAD19A0FAFD00B84A8C /* STWaveAnalysis.h in Headers */,
+				06C089C21A00F9120088C4C0 /* STSymmetricCryptor.h in Headers */,
+				0626CDC919A0FBDA00B84A8C /* STImageLoader.h in Headers */,
+				0626CDAB19A0FAFD00B84A8C /* STAudioRecorder.h in Headers */,
+				0626CDBE19A0FB9800B84A8C /* STReachability.h in Headers */,
+				063DF322191CE2560009B947 /* STZipArchive.h in Headers */,
+				06C6F9C71920A3B30028B2B3 /* STStringTokenizer.h in Headers */,
+				0628B991192342A500E17578 /* STTableView.h in Headers */,
+				0628B962192235BD00E17578 /* STLocationManager.h in Headers */,
+				0628B98D19233DCD00E17578 /* STTableViewController.h in Headers */,
+				0675CFEB19AAF11300AD8B32 /* STImageCollectionView.h in Headers */,
+				0623952D19B6D49B00FFDD96 /* STPayViewController.h in Headers */,
+				0688663219B8543500E2764F /* STSearchDisplayController.h in Headers */,
+				0688662E19B8531100E2764F /* STSearchBar.h in Headers */,
+				0623952919B6D3F500FFDD96 /* STPayManager.h in Headers */,
+				06A3736B192F8DC700DC7E56 /* STPopoverView.h in Headers */,
+				06A75901199C982D00AE98A2 /* STApplicationContext.h in Headers */,
+				06E9524A19C968DF001762A5 /* STPaginationControl.h in Headers */,
+				06038C0019B18D22006971E3 /* STObject.h in Headers */,
+				06E9524619C93977001762A5 /* STRefreshControl.h in Headers */,
+				06FEC33319C9DE920093EC69 /* STControlDefines.h in Headers */,
+				062E9AF519CC22A100ADB552 /* STAESCryptor.h in Headers */,
+				F62DEF7E187BEF4E00C7A1D8 /* STTextView.h in Headers */,
+				062E9AF919CC292200ADB552 /* STRSACryptor.h in Headers */,
+				0672CD5819D7F6850055189C /* STAlbumManager.h in Headers */,
+				069BC15519F23070005906BF /* STNetworkConfiguration.h in Headers */,
+				0621CA011A03634400CB0715 /* UIAlertView+STBlock.h in Headers */,
+				0621CA041A03635C00CB0715 /* STCategories.h in Headers */,
+				060164931A03E63800B7B790 /* STResourceManager.h in Headers */,
+				06FE37B71A0DF998002CF174 /* STGIFGenerator.h in Headers */,
+				0604498F1A1F0C9B00D0DAF9 /* STSOAPNetwork.h in Headers */,
+				065D78E31A835D3E0083D058 /* STHTTPRequest.h in Headers */,
+				065D78EB1A84BCB50083D058 /* STHTTPOperation.h in Headers */,
+				06E6EAD71A6D60A800DC84A0 /* STTableViewCell.h in Headers */,
+				065D78F01A84C6410083D058 /* STHTTPConfiguration.h in Headers */,
+				06FE37C51A0E60BE002CF174 /* STImage.h in Headers */,
+				060164951A03E63800B7B790 /* STVisualBlurView.h in Headers */,
+				06A6FEB919CEDD85005263D7 /* STImagePresent.h in Headers */,
+				06A4A69B19EF76710020CA40 /* STJavaScriptBridge.h in Headers */,
+				062E9AB319CAEAE600ADB552 /* STRateControl.h in Headers */,
+				F65D3F291845E718007DF355 /* STWebViewController.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		06A3073D19B3615B00B53144 /* STKitTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 06A3075219B3615B00B53144 /* Build configuration list for PBXNativeTarget "STKitTests" */;
+			buildPhases = (
+				06A3073A19B3615B00B53144 /* Sources */,
+				06A3073B19B3615B00B53144 /* Frameworks */,
+				06A3073C19B3615B00B53144 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				06A3074F19B3615B00B53144 /* PBXTargetDependency */,
+			);
+			name = STKitTests;
+			productName = STKitTests;
+			productReference = 06A3073E19B3615B00B53144 /* STKitTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		F65D3EBD1845E173007DF355 /* STKit */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F65D3EC81845E173007DF355 /* Build configuration list for PBXNativeTarget "STKit" */;
+			buildPhases = (
+				F65D3EBA1845E173007DF355 /* Sources */,
+				F65D3EBB1845E173007DF355 /* Frameworks */,
+				F65D3EBC1845E173007DF355 /* Resources */,
+				F65D3F041845E6F9007DF355 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = STKit;
+			productName = STKit;
+			productReference = F65D3EBE1845E173007DF355 /* STKit.framework */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F65D3E891845E0C5007DF355 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0600;
+				ORGANIZATIONNAME = SunJiangting;
+				TargetAttributes = {
+					06A3073D19B3615B00B53144 = {
+						TestTargetID = F65D3EBD1845E173007DF355;
+					};
+					06A4D51919E83A69007D332D = {
+						CreatedOnToolsVersion = 6.0;
+					};
+				};
+			};
+			buildConfigurationList = F65D3E8C1845E0C5007DF355 /* Build configuration list for PBXProject "STKit" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = F65D3E881845E0C5007DF355;
+			productRefGroup = F65D3E921845E0C5007DF355 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F65D3EBD1845E173007DF355 /* STKit */,
+				06A3073D19B3615B00B53144 /* STKitTests */,
+				06A4D51919E83A69007D332D /* STKitPackage */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		06A3073C19B3615B00B53144 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				06A3074A19B3615B00B53144 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F65D3EBC1845E173007DF355 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		06A4D51F19E83A76007D332D /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\n# Sets the target folders and the final framework product.\nFMWK_NAME=${PROJECT_NAME}\n\nBUILD_ROOT=Build\nBUILD_DIR=Build\n\nxcodebuild -target ${FMWK_NAME} -configuration ${CONFIGURATION} -sdk iphoneos  BUILD_DIR=\"${BUILD_DIR}\" BUILD_ROOT=\"${BUILD_ROOT}\"\n\nxcodebuild -target ${FMWK_NAME} ONLY_ACTIVE_ARCH=NO  -configuration ${CONFIGURATION} -sdk iphonesimulator -arch i386 -arch x86_64 BUILD_DIR=\"${BUILD_DIR}\" BUILD_ROOT=\"${BUILD_ROOT}\" clean build\n\nPRODUCT_DIR=Product\n# Cleaning the oldest.\nif [ -d \"${PRODUCT_DIR}\" ]\nthen\nrm -rf \"${PRODUCT_DIR}\"\nfi\n\n# Creates and renews the final product folder.\nmkdir -p \"${PRODUCT_DIR}\"\ncp -R \"${BUILD_DIR}/${CONFIGURATION}-iphoneos/${FMWK_NAME}.framework\" \"${PRODUCT_DIR}/\"\n\nif [ -d \"${PRODUCT_DIR}/${FMWK_NAME}.framework/PrivateHeaders\" ]\nthen\nrm -rf \"${PRODUCT_DIR}/${FMWK_NAME}.framework/PrivateHeaders\"\nfi\n\nrm -rf \"${PRODUCT_DIR}/${FMWK_NAME}.framework/${FMWK_NAME}\"\n\nlipo -create \"${BUILD_DIR}/${CONFIGURATION}-iphoneos/${FMWK_NAME}.framework/${FMWK_NAME}\" \"${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/${FMWK_NAME}.framework/${FMWK_NAME}\" -output \"${PRODUCT_DIR}/${FMWK_NAME}.framework/${FMWK_NAME}\"\n\nrm -r \"${BUILD_ROOT}\"\n\nopen \"${PRODUCT_DIR}\"";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		06A3073A19B3615B00B53144 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				06A3074C19B3615B00B53144 /* STKitTests.m in Sources */,
+				06A3075419B3624E00B53144 /* STObjectTestCase.m in Sources */,
+				0682B2E419F378EE001C175E /* STCryptorTestCase.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F65D3EBA1845E173007DF355 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				065D78F11A84C6410083D058 /* STHTTPConfiguration.m in Sources */,
+				F65D3EFD1845E2C3007DF355 /* STRoundProgressView.m in Sources */,
+				0628B992192342A500E17578 /* STTableView.m in Sources */,
+				06E9524B19C968DF001762A5 /* STPaginationControl.m in Sources */,
+				F65D3F021845E2C3007DF355 /* UIKit+STKit.m in Sources */,
+				0626CDA819A0FAFD00B84A8C /* STAudioCenter.m in Sources */,
+				F6981637186051E1004C5B64 /* STModelViewController.m in Sources */,
+				066D4701196583DC003FEF40 /* STIndicatorView.m in Sources */,
+				F66A09EE1854A5AC002D0597 /* STPersistence.m in Sources */,
+				0626CDCC19A0FBDA00B84A8C /* UIImageView+STImageLoader.m in Sources */,
+				F620E55C186A88B00024A854 /* STImageViewController.m in Sources */,
+				06A6FEBA19CEDD85005263D7 /* STImagePresent.m in Sources */,
+				0628B963192235BD00E17578 /* STLocationManager.m in Sources */,
+				F635D82D187689DE00D2E939 /* STImagePickerController.m in Sources */,
+				06038C0119B18D22006971E3 /* STObject.m in Sources */,
+				060449901A1F0C9B00D0DAF9 /* STSOAPNetwork.m in Sources */,
+				F6D65A5618E169E20026294F /* STButton.m in Sources */,
+				F655CAC018B3AA5F00237496 /* STNavigationBar.m in Sources */,
+				063DF323191CE2560009B947 /* STZipArchive.m in Sources */,
+				F61DD2AA186D31FD008D0268 /* STTheme.m in Sources */,
+				06FE37C61A0E60BE002CF174 /* STImage.m in Sources */,
+				F65D3EF51845E2C3007DF355 /* STCoreDataManager.m in Sources */,
+				0626CDBF19A0FB9800B84A8C /* STReachability.m in Sources */,
+				0626CDA519A0FAFD00B84A8C /* fft.c in Sources */,
+				F65D3F001845E2C3007DF355 /* STWebViewController.m in Sources */,
+				F65A3F2C18ACCB520084D96E /* STNavigationController.m in Sources */,
+				0688663319B8543500E2764F /* STSearchDisplayController.m in Sources */,
+				069BC15619F23070005906BF /* STNetworkConfiguration.m in Sources */,
+				0626CDCA19A0FBDA00B84A8C /* STImageLoader.m in Sources */,
+				F65A3F3018ACCD530084D96E /* STTabBar.m in Sources */,
+				06A4A69C19EF76710020CA40 /* STJavaScriptBridge.m in Sources */,
+				0626CDC819A0FBDA00B84A8C /* STImageCache.m in Sources */,
+				F69816331860518C004C5B64 /* STModel.m in Sources */,
+				F65A3F1B18ACCAF60084D96E /* STTabBarController.m in Sources */,
+				062E9AFA19CC292200ADB552 /* STRSACryptor.m in Sources */,
+				062E9AB419CAEAE600ADB552 /* STRateControl.m in Sources */,
+				0623952A19B6D3F500FFDD96 /* STPayManager.m in Sources */,
+				06C089C31A00F9120088C4C0 /* STSymmetricCryptor.m in Sources */,
+				F65D3EF11845E2C3007DF355 /* Foundation+STKit.m in Sources */,
+				F620E569186A9A2B0024A854 /* STImageScrollView.m in Sources */,
+				F61DD2AC186D31FD008D0268 /* STThemeManager.m in Sources */,
+				F65D3EF81845E2C3007DF355 /* STImageView.m in Sources */,
+				0688662F19B8531100E2764F /* STSearchBar.m in Sources */,
+				06A75902199C982D00AE98A2 /* STApplicationContext.m in Sources */,
+				06E6EAD81A6D60A800DC84A0 /* STTableViewCell.m in Sources */,
+				0623952E19B6D49B00FFDD96 /* STPayViewController.m in Sources */,
+				060164941A03E63800B7B790 /* STResourceManager.m in Sources */,
+				0626CDAC19A0FAFD00B84A8C /* STAudioRecorder.m in Sources */,
+				0672CD5919D7F6850055189C /* STAlbumManager.m in Sources */,
+				0675CFEC19AAF11300AD8B32 /* STImageCollectionView.m in Sources */,
+				F62DEF7F187BEF4E00C7A1D8 /* STTextView.m in Sources */,
+				0621CA021A03634400CB0715 /* UIAlertView+STBlock.m in Sources */,
+				065D78E71A848C0C0083D058 /* STHTTPRequest.m in Sources */,
+				F61E22D11857F3B00013A6D5 /* STNotificationWindow.m in Sources */,
+				062E9AF619CC22A100ADB552 /* STAESCryptor.m in Sources */,
+				F65A3F3418ACD08A0084D96E /* STTabBarItem.m in Sources */,
+				06E9524719C93977001762A5 /* STRefreshControl.m in Sources */,
+				0626CDD119A0FBFD00B84A8C /* STSideBarController.m in Sources */,
+				06A3736C192F8DC700DC7E56 /* STPopoverView.m in Sources */,
+				060164961A03E63800B7B790 /* STVisualBlurView.m in Sources */,
+				065D78EA1A84BCB20083D058 /* STHTTPOperation.m in Sources */,
+				F625F9EF18462D52008EBA3F /* STLinkLabel.m in Sources */,
+				0626CDB919A0FB9800B84A8C /* STHTTPNetwork.m in Sources */,
+				F65D3EFA1845E2C3007DF355 /* STLabel.m in Sources */,
+				06C565AB1A6F511B00A4F8AF /* UIView+STConstraint.m in Sources */,
+				06C6F9C81920A3B30028B2B3 /* STStringTokenizer.m in Sources */,
+				F65D3EFF1845E2C3007DF355 /* STViewController.m in Sources */,
+				0626CDAE19A0FAFD00B84A8C /* STWaveAnalysis.m in Sources */,
+				0606EB73191B78B300FA9FB0 /* STCollectionViewFlowLayout.m in Sources */,
+				0628B98E19233DCD00E17578 /* STTableViewController.m in Sources */,
+				069113B8191E81E300211D74 /* STScrollDirector.m in Sources */,
+				06FE37B81A0DF998002CF174 /* STGIFGenerator.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		06A3074F19B3615B00B53144 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F65D3EBD1845E173007DF355 /* STKit */;
+			targetProxy = 06A3074E19B3615B00B53144 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		06A3074819B3615B00B53144 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				06A3074919B3615B00B53144 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		06A3075019B3615B00B53144 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(inherited)",
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/STWorkspace-geijllfmuymgingxsjgqvtuhlffp/Build/Products/Release-iphoneos",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "STKitTests/STKitTests-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				INFOPLIST_FILE = "STKitTests/STKitTests-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = xctest;
+			};
+			name = Debug;
+		};
+		06A3075119B3615B00B53144 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(inherited)",
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/STWorkspace-geijllfmuymgingxsjgqvtuhlffp/Build/Products/Release-iphoneos",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "STKitTests/STKitTests-Prefix.pch";
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				INFOPLIST_FILE = "STKitTests/STKitTests-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = xctest;
+			};
+			name = Release;
+		};
+		06A4D51A19E83A69007D332D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		06A4D51B19E83A69007D332D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		F65D3EB21845E0C5007DF355 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				VALID_ARCHS = "armv7 armv7s arm64";
+			};
+			name = Debug;
+		};
+		F65D3EB31845E0C5007DF355 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+				VALID_ARCHS = "armv7 armv7s arm64";
+			};
+			name = Release;
+		};
+		F65D3EC91845E173007DF355 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = NO;
+				DEFINES_MODULE = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "STKit/STKit-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"${SRCRoot}/",
+					"${SRCRoot}/STNetwork",
+					"${SRCRoot}/STImage",
+					"${SRCRoot}/STSearch",
+					"${SRCRoot}/STAudio",
+					"${SRCRoot}/STSideBar",
+					"${SRCRoot}/STControl",
+					"${SRCRoot}/STNavigation",
+					"${SRCRoot}/STTabBar",
+					"${SRCRoot}/STCategories",
+					"${SRCRoot}/STPrivate",
+				);
+				INFOPLIST_FILE = "STKit/STKit-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				MACH_O_TYPE = mh_object;
+				MACOSX_DEPLOYMENT_TARGET = "";
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				VALID_ARCHS = "armv7s armv7 arm64 i386 x86_64";
+				WRAPPER_EXTENSION = framework;
+			};
+			name = Debug;
+		};
+		F65D3ECA1845E173007DF355 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEFINES_MODULE = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "STKit/STKit-Prefix.pch";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"${SRCRoot}/",
+					"${SRCRoot}/STNetwork",
+					"${SRCRoot}/STImage",
+					"${SRCRoot}/STSearch",
+					"${SRCRoot}/STAudio",
+					"${SRCRoot}/STSideBar",
+					"${SRCRoot}/STControl",
+					"${SRCRoot}/STNavigation",
+					"${SRCRoot}/STTabBar",
+					"${SRCRoot}/STCategories",
+					"${SRCRoot}/STPrivate",
+				);
+				INFOPLIST_FILE = "STKit/STKit-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				LINK_WITH_STANDARD_LIBRARIES = NO;
+				MACH_O_TYPE = mh_object;
+				MACOSX_DEPLOYMENT_TARGET = "";
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				VALID_ARCHS = "armv7s armv7 arm64 i386 x86_64";
+				WRAPPER_EXTENSION = framework;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		06A3075219B3615B00B53144 /* Build configuration list for PBXNativeTarget "STKitTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				06A3075019B3615B00B53144 /* Debug */,
+				06A3075119B3615B00B53144 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		06A4D51C19E83A69007D332D /* Build configuration list for PBXAggregateTarget "STKitPackage" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				06A4D51A19E83A69007D332D /* Debug */,
+				06A4D51B19E83A69007D332D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F65D3E8C1845E0C5007DF355 /* Build configuration list for PBXProject "STKit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F65D3EB21845E0C5007DF355 /* Debug */,
+				F65D3EB31845E0C5007DF355 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F65D3EC81845E173007DF355 /* Build configuration list for PBXNativeTarget "STKit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F65D3EC91845E173007DF355 /* Debug */,
+				F65D3ECA1845E173007DF355 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F65D3E891845E0C5007DF355 /* Project object */;
+}
