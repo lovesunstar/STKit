@@ -118,6 +118,10 @@ CGSize const STAccessoryViewMinimumSize = {200, 100};
     _scrollView = scrollView;
 }
 
+@end
+
+@implementation STScrollDirector (STDefaultControl)
+
 - (NSString *)titleForState:(NSInteger)state {
     NSString *key = [NSString stringWithFormat:@"%ld", (long)state];
     return [self.titleDictionary valueForKey:key];

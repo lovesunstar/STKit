@@ -10,10 +10,9 @@
 #import "STTabBar.h"
 #import "STTabBarItem.h"
 #import "STNavigationController.h"
-
 #import <objc/runtime.h>
 
-@interface STTabBarController () <STTabBarDelegate, UIDynamicAnimatorDelegate> {
+@interface STTabBarController () <STTabBarDelegate> {
 }
 
 @property(nonatomic, strong) UIView *transitionView;

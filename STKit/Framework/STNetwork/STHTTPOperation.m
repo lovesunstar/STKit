@@ -51,6 +51,15 @@ static NSString *const STURLCacheResponseUserInfoTimeIntervalKey = @"STURLCacheR
 
 @end
 
+@interface STHTTPOperation (STNotify)
+
+- (void)_notifyWillStartWithOperation:(STHTTPOperation *)operation;
+- (void)_notifySendProgressWithOperation:(STHTTPOperation *)operation completionPercent:(CGFloat)percent;
+- (void)_notifyResponseWithOperation:(STHTTPOperation *)operation response:(NSHTTPURLResponse *)HTTPResponse;
+- (void)_notifyReceiveProgressWithOperation:(STHTTPOperation *)operation receivedData:(NSData *)receivedData completionPercent:(CGFloat)percent;
+- (void)_notifyFinishWithOperation:(STHTTPOperation *)operation responseData:(NSData *)responseData error:(NSError *)error;
+@end
+
 static inline BOOL _STHTTPOperationCouldChangeToState(STHTTPOperation *operation, _STHTTPOperationState state);
 
 @implementation STHTTPOperation
@@ -223,20 +232,8 @@ static NSThread *_standardNetworkThread;
     self.HTTPResponseData = [NSMutableData data];
     _cachedResponseData = nil;
     _HTTPStatusCode = HTTPResponse.statusCode;
-    if ([_networkDelegate respondsToSelector:@selector(HTTPOperation:didReceiveResponse:)]) {
-        [_networkDelegate HTTPOperation:self didReceiveResponse:HTTPResponse];
-    } else {
-        if (self.responseHandler) {
-            self.responseHandler(self, response);
-        }
-    }
-    if ([_networkDelegate respondsToSelector:@selector(HTTPOperation:didReceiveData:completionPercent:)]) {
-        [_networkDelegate HTTPOperation:self didReceiveData:self.responseData completionPercent:0];
-    } else {
-        if (self.progressHandler) {
-            self.progressHandler(self, self.responseData, 0);
-        }
-    }
+    [self _notifyResponseWithOperation:self response:HTTPResponse];
+    [self _notifyReceiveProgressWithOperation:self receivedData:self.responseData completionPercent:0];
 }
 
 /// 数据传输过程中，每次收到数据就会调用此方法
@@ -256,15 +253,7 @@ static NSThread *_standardNetworkThread;
         long long receiveDataLength = self.HTTPResponseData.length;
         double progress = ((double)(receiveDataLength + startPosition) / (double)expectedContentLength);
         NSData *responseData = self.responseData;
-        if ([_networkDelegate respondsToSelector:@selector(HTTPOperation:didReceiveData:completionPercent:)]) {
-            [_networkDelegate HTTPOperation:self didReceiveData:responseData completionPercent:progress];
-        } else {
-            if (self.progressHandler) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    self.progressHandler(self, responseData, progress);
-                });
-            }
-        }
+        [self _notifyReceiveProgressWithOperation:self receivedData:responseData completionPercent:progress];
     }
 }
 
@@ -278,15 +267,7 @@ static NSThread *_standardNetworkThread;
 totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
     if (totalBytesExpectedToWrite > 0) {
         CGFloat percent = ((double)totalBytesWritten / (double)totalBytesExpectedToWrite);
-        if ([_networkDelegate respondsToSelector:@selector(HTTPOperation:didSendRequestWithCompletionPercent:)]) {
-            [_networkDelegate HTTPOperation:self didSendRequestWithCompletionPercent:percent];
-        } else {
-            if (self.requestProgressHandler) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    self.requestProgressHandler(self, percent);
-                });
-            }
-        }
+        [self _notifySendProgressWithOperation:self completionPercent:percent];
     }
 }
 
@@ -321,13 +302,7 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
     }
     if (HTTPStatusCode >= 200 && HTTPStatusCode < 300) {
         /// 成功
-        if ([_networkDelegate respondsToSelector:@selector(HTTPOperation:didFinishWithData:error:)]) {
-            [_networkDelegate HTTPOperation:self didFinishWithData:self.responseData error:nil];
-        } else {
-            if (self.finishedHandler) {
-                self.finishedHandler(self, self.responseData, nil);
-            }
-        }
+        [self _notifyFinishWithOperation:self responseData:self.responseData error:nil];
     } else if (HTTPStatusCode >= 300 && HTTPStatusCode < 400) {
      
         if (HTTPStatusCode == 301) {
@@ -343,13 +318,7 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
             userInfo = @{STHTTPNetworkErrorDescriptionUserInfoKey:description};
         }
         NSError *error = [NSError errorWithDomain:STHTTPNetworkErrorDomain code:HTTPStatusCode userInfo:userInfo];
-        if ([_networkDelegate respondsToSelector:@selector(HTTPOperation:didFinishWithData:error:)]) {
-            [_networkDelegate HTTPOperation:self didFinishWithData:nil error:error];
-        } else {
-            if (self.finishedHandler) {
-                self.finishedHandler(self, nil, error);
-            }
-        }
+        [self _notifyFinishWithOperation:self responseData:nil error:error];
     } else if (HTTPStatusCode >= 400 && HTTPStatusCode < 500) {
         /// 服务端错误
         NSString *description = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
@@ -358,15 +327,7 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
             userInfo = @{STHTTPNetworkErrorDescriptionUserInfoKey:description};
         }
         NSError *error = [NSError errorWithDomain:STHTTPNetworkErrorDomain code:HTTPStatusCode userInfo:userInfo];
-        if ([_networkDelegate respondsToSelector:@selector(HTTPOperation:didFinishWithData:error:)]) {
-            [_networkDelegate HTTPOperation:self didFinishWithData:nil error:error];
-        } else {
-            if (self.finishedHandler) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    self.finishedHandler(self, nil, error);
-                });
-            }
-        }
+        [self _notifyFinishWithOperation:self responseData:nil error:error];
     } else if (HTTPStatusCode >= 500) {
         NSString *description = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
         NSDictionary *userInfo = nil;
@@ -374,30 +335,14 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
             userInfo = @{STHTTPNetworkErrorDescriptionUserInfoKey:description};
         }
         NSError *error = [NSError errorWithDomain:STHTTPNetworkErrorDomain code:HTTPStatusCode userInfo:userInfo];
-        if ([_networkDelegate respondsToSelector:@selector(HTTPOperation:didFinishWithData:error:)]) {
-            [_networkDelegate HTTPOperation:self didFinishWithData:nil error:error];
-        } else {
-            if (self.finishedHandler) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    self.finishedHandler(self, nil, error);
-                });
-            }
-        }
+        [self _notifyFinishWithOperation:self responseData:nil error:error];
     }
     self.operationState = STHTTPOperationStateFinished;
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
     /// 请求失败
-    if ([_networkDelegate respondsToSelector:@selector(HTTPOperation:didFinishWithData:error:)]) {
-        [_networkDelegate HTTPOperation:self didFinishWithData:nil error:error];
-    } else {
-        if (self.finishedHandler) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                self.finishedHandler(self, nil, error);
-            });
-        }
-    }
+    [self _notifyFinishWithOperation:self responseData:nil error:error];
     self.operationState = STHTTPOperationStateFinished;
 }
 
@@ -495,13 +440,7 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
                 [self.request prepareToRequest];
                 [self _preprocessRequest:(NSMutableURLRequest *)_originalURLRequest withHTTPConfiguration:configuration completionHandler:^(NSHTTPURLResponse *response, NSData *data, NSError *error, BOOL shouldContinue) {
                     if (shouldContinue) {
-                        if ([_networkDelegate respondsToSelector:@selector(HTTPOperationWillStart:)]) {
-                            [_networkDelegate HTTPOperationWillStart:self];
-                        } else {
-                            if (self.willStartHandler) {
-                                self.willStartHandler(self);
-                            }
-                        }
+                        [self _notifyWillStartWithOperation:self];
                         NSURLConnection *URLConnection = [[NSURLConnection alloc] initWithRequest:_originalURLRequest delegate:self startImmediately:NO];
                         [URLConnection scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
                         [URLConnection start];
@@ -693,6 +632,71 @@ static NSInteger _autoIncrementIdentifier = 100000;
     @synchronized(self) {
         _autoIncrementIdentifier++;
         return _autoIncrementIdentifier;
+    }
+}
+
+@end
+
+@implementation STHTTPOperation (STNotify)
+
+
+- (void)_notifySendProgressWithOperation:(STHTTPOperation *)operation completionPercent:(CGFloat)percent {
+    if ([_networkDelegate respondsToSelector:@selector(HTTPOperation:didSendRequestWithCompletionPercent:)]) {
+        [_networkDelegate HTTPOperation:self didSendRequestWithCompletionPercent:percent];
+    } else {
+        if (self.requestProgressHandler) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.requestProgressHandler(self, percent);
+            });
+        }
+    }
+}
+
+- (void)_notifyReceiveProgressWithOperation:(STHTTPOperation *)operation receivedData:(NSData *)receivedData completionPercent:(CGFloat)percent {
+    if ([_networkDelegate respondsToSelector:@selector(HTTPOperation:didReceiveData:completionPercent:)]) {
+        [_networkDelegate HTTPOperation:self didReceiveData:receivedData completionPercent:percent];
+    } else {
+        if (self.progressHandler) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.progressHandler(self, receivedData, percent);
+            });
+        }
+    }
+}
+
+- (void)_notifyFinishWithOperation:(STHTTPOperation *)operation responseData:(NSData *)responseData error:(NSError *)error {
+    if ([_networkDelegate respondsToSelector:@selector(HTTPOperation:didFinishWithData:error:)]) {
+        [_networkDelegate HTTPOperation:self didFinishWithData:self.responseData error:error];
+    } else {
+        if (self.finishedHandler) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.finishedHandler(self, self.responseData, nil);
+            });
+        }
+    }
+}
+
+- (void)_notifyWillStartWithOperation:(STHTTPOperation *)operation {
+    if ([_networkDelegate respondsToSelector:@selector(HTTPOperationWillStart:)]) {
+        [_networkDelegate HTTPOperationWillStart:self];
+    } else {
+        if (self.willStartHandler) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.willStartHandler(self);
+            });
+        }
+    }
+}
+
+- (void)_notifyResponseWithOperation:(STHTTPOperation *)operation response:(NSHTTPURLResponse *)HTTPResponse {
+    if ([_networkDelegate respondsToSelector:@selector(HTTPOperation:didReceiveResponse:)]) {
+        [_networkDelegate HTTPOperation:self didReceiveResponse:HTTPResponse];
+    } else {
+        if (self.responseHandler) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.responseHandler(self, HTTPResponse);
+            });
+        }
     }
 }
 

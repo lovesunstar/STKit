@@ -11,7 +11,6 @@
 #import "Foundation+STKit.h"
 #import "UIKit+STKit.h"
 #import "STResourceManager.h"
-#import <WebKit/WebKit.h>
 
 @interface STWebViewToolbar : UIView
 
@@ -75,7 +74,7 @@
 
 @end
 
-@interface STWebViewController () <UIWebViewDelegate, WKUIDelegate>
+@interface STWebViewController () <UIWebViewDelegate>
 
 @property(nonatomic, strong) UIWebView *webView;
 

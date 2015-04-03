@@ -18,6 +18,7 @@
 @property(nonatomic, assign) STRefreshControlState refreshControlState;
 
 @property(nonatomic, weak) UIScrollView *scrollView;
+@property(nonatomic, strong) NSDate     *startLoadingDate;
 
 @end
 
@@ -43,8 +44,13 @@
 }
 
 - (void)endRefreshing {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self _changedRefreshControlToState:STRefreshControlStateNormal animated:YES];
+    NSTimeInterval duration = self.minimumLoadingDuration;
+    if (self.startLoadingDate) {
+        duration = [[NSDate date] timeIntervalSinceDate:self.startLoadingDate];
+    }
+    CGFloat delay = MAX(0, self.minimumLoadingDuration - duration);
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+       [self _changedRefreshControlToState:STRefreshControlStateNormal animated:YES];
     });
 }
 
@@ -55,8 +61,7 @@
     
 }
 
-- (void)_changedRefreshControlToState:(STRefreshControlState)refreshControlState
-                             animated:(BOOL)animated {
+- (void)_changedRefreshControlToState:(STRefreshControlState)refreshControlState animated:(BOOL)animated {
     if (_refreshControlState != STRefreshControlStateLoading) {
         /// 如果不是刷新状态，则一定读取到正确的contentInset
         self.contentInsetTop = self.scrollView.contentInset.top;
@@ -81,6 +86,7 @@
     void (^completion)(BOOL) = ^(BOOL finished) {
         if (refreshControlState == STRefreshControlStateLoading) {
             [self sendActionsForControlEvents:UIControlEventValueChanged];
+            self.startLoadingDate = [NSDate date];
         }
         [self refreshControlDidChangedToState:refreshControlState];
     };

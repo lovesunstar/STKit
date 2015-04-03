@@ -373,7 +373,7 @@ static NSURLCache *_HTTPCache;
             break;
         }
         default: {
-            NSError *error = [NSError errorWithDomain:STHTTPNetworkDomain code:1001 userInfo:@{ @"info" : @"Unsupported dataType." }];
+            NSError *error = [NSError errorWithDomain:STHTTPNetworkDomain code:STHTTPNetworkErrorCodeUnsupportedResponseDataType userInfo:@{ @"info" : @"Unsupported response dataType." }];
             if (handler) {
                 handler(data, error);
             }

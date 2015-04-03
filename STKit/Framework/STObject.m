@@ -12,8 +12,6 @@
 #import "Foundation+STKit.h"
 #import <objc/runtime.h>
 
-
-
 @interface _STPropertyAttribute : NSObject
 
 
@@ -67,6 +65,9 @@ typedef NS_OPTIONS(NSUInteger, STPropertyPolicy){
             if (attribute_t.name[0] == 'V') {
                 self.variable = [NSString stringWithUTF8String:attribute_t.value];
             }
+        }
+        if (property_attribute_t) {
+            free(property_attribute_t);
         }
         if (!(self.policy & STPropertyPolicyNonatomic)) {
             self.policy |= STPropertyPolicyAtomic;

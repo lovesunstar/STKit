@@ -31,6 +31,8 @@
 		060449901A1F0C9B00D0DAF9 /* STSOAPNetwork.m in Sources */ = {isa = PBXBuildFile; fileRef = 0604498E1A1F0C9B00D0DAF9 /* STSOAPNetwork.m */; };
 		0606EB72191B78B300FA9FB0 /* STCollectionViewFlowLayout.h in Headers */ = {isa = PBXBuildFile; fileRef = 0606EB70191B78B300FA9FB0 /* STCollectionViewFlowLayout.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0606EB73191B78B300FA9FB0 /* STCollectionViewFlowLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 0606EB71191B78B300FA9FB0 /* STCollectionViewFlowLayout.m */; };
+		061658BB1AC432C6004EB9AD /* NSData+STGZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 061658B91AC432C6004EB9AD /* NSData+STGZip.h */; };
+		061658BC1AC432C6004EB9AD /* NSData+STGZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 061658BA1AC432C6004EB9AD /* NSData+STGZip.m */; };
 		0621CA011A03634400CB0715 /* UIAlertView+STBlock.h in Headers */ = {isa = PBXBuildFile; fileRef = 0621C9FF1A03634400CB0715 /* UIAlertView+STBlock.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0621CA021A03634400CB0715 /* UIAlertView+STBlock.m in Sources */ = {isa = PBXBuildFile; fileRef = 0621CA001A03634400CB0715 /* UIAlertView+STBlock.m */; };
 		0621CA041A03635C00CB0715 /* STCategories.h in Headers */ = {isa = PBXBuildFile; fileRef = 0621CA031A03635C00CB0715 /* STCategories.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -197,6 +199,8 @@
 		0604498E1A1F0C9B00D0DAF9 /* STSOAPNetwork.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STSOAPNetwork.m; sourceTree = "<group>"; };
 		0606EB70191B78B300FA9FB0 /* STCollectionViewFlowLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STCollectionViewFlowLayout.h; sourceTree = "<group>"; };
 		0606EB71191B78B300FA9FB0 /* STCollectionViewFlowLayout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STCollectionViewFlowLayout.m; sourceTree = "<group>"; };
+		061658B91AC432C6004EB9AD /* NSData+STGZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData+STGZip.h"; sourceTree = "<group>"; };
+		061658BA1AC432C6004EB9AD /* NSData+STGZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData+STGZip.m"; sourceTree = "<group>"; };
 		0621C9FF1A03634400CB0715 /* UIAlertView+STBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIAlertView+STBlock.h"; sourceTree = "<group>"; };
 		0621CA001A03634400CB0715 /* UIAlertView+STBlock.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIAlertView+STBlock.m"; sourceTree = "<group>"; };
 		0621CA031A03635C00CB0715 /* STCategories.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STCategories.h; sourceTree = "<group>"; };
@@ -424,6 +428,8 @@
 				0604498E1A1F0C9B00D0DAF9 /* STSOAPNetwork.m */,
 				0626CDB619A0FB9800B84A8C /* STReachability.h */,
 				0626CDB719A0FB9800B84A8C /* STReachability.m */,
+				061658B91AC432C6004EB9AD /* NSData+STGZip.h */,
+				061658BA1AC432C6004EB9AD /* NSData+STGZip.m */,
 			);
 			path = STNetwork;
 			sourceTree = "<group>";
@@ -731,6 +737,7 @@
 				06C6F9C71920A3B30028B2B3 /* STStringTokenizer.h in Headers */,
 				0628B991192342A500E17578 /* STTableView.h in Headers */,
 				0628B962192235BD00E17578 /* STLocationManager.h in Headers */,
+				061658BB1AC432C6004EB9AD /* NSData+STGZip.h in Headers */,
 				0628B98D19233DCD00E17578 /* STTableViewController.h in Headers */,
 				0675CFEB19AAF11300AD8B32 /* STImageCollectionView.h in Headers */,
 				0623952D19B6D49B00FFDD96 /* STPayViewController.h in Headers */,
@@ -946,6 +953,7 @@
 				F61E22D11857F3B00013A6D5 /* STNotificationWindow.m in Sources */,
 				062E9AF619CC22A100ADB552 /* STAESCryptor.m in Sources */,
 				F65A3F3418ACD08A0084D96E /* STTabBarItem.m in Sources */,
+				061658BC1AC432C6004EB9AD /* NSData+STGZip.m in Sources */,
 				06E9524719C93977001762A5 /* STRefreshControl.m in Sources */,
 				0626CDD119A0FBFD00B84A8C /* STSideBarController.m in Sources */,
 				06A3736C192F8DC700DC7E56 /* STPopoverView.m in Sources */,

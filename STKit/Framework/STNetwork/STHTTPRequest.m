@@ -7,9 +7,9 @@
 //
 
 #import "STHTTPRequest.h"
-#import <zlib.h>
 #import "Foundation+STKit.h"
 #import <UIKit/UIKit.h>
+#import "NSData+STGZip.h"
 
 @implementation STMultipartItem
 
@@ -34,13 +34,10 @@
 }
 
 @property (nonatomic, strong)NSMutableDictionary    *parameters;
++ (BOOL)supportGZipCompress;
 @end
 
 @implementation STHTTPRequest
-
-- (NSString *)description {
-    return _URLString;
-}
 
 - (instancetype)init {
     return [self initWithURLString:nil HTTPMethod:nil parameters:nil];
@@ -83,7 +80,8 @@
 
 - (void)prepareToRequest {
     STHTTPConfiguration *configuration = self.HTTPConfiguration?:[STHTTPConfiguration defaultConfiguration];
-    BOOL compressedRequest = !!(configuration.compressionOptions & STCompressionOptionsRequestAllowed);
+    BOOL supportZipCompress = [[self class] supportGZipCompress];
+    BOOL compressedRequest = !!(configuration.compressionOptions & STCompressionOptionsRequestAllowed) && supportZipCompress;
     if (compressedRequest) {
         [_mutableURLRequest setValue:@"gzip" forHTTPHeaderField:@"Content-Encoding"];
     }
@@ -190,7 +188,19 @@
             [_mutableURLRequest setValue:[NSString stringWithFormat:@"application/x-www-form-urlencoded; charset=%@;", charset]
                           forHTTPHeaderField:@"Content-Type"];
         }
-        NSData *body = compressed ? ([postData st_compressDataUsingGZip]?: postData) : postData;
+        NSData *body = postData;
+        if (compressed) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+            SEL selector = NSSelectorFromString(@"st_compressDataUsingGZip");
+            if ([postData respondsToSelector:selector]) {
+                body = [postData performSelector:selector];
+            }
+            if (!body) {
+                body = postData;
+            }
+#pragma clang diagnostic pop
+        }
         if (body.length > 0) {
             [_mutableURLRequest setValue:[NSString stringWithFormat:@"%ld", (long)body.length] forHTTPHeaderField:@"Content-Length"];
         }
@@ -221,6 +231,22 @@
     return ![key isEqualToString:@"_mutableURLRequest"] && [super automaticallyNotifiesObserversForKey:key];
 }
 
+
++ (BOOL)supportGZipCompress {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+    SEL selector = NSSelectorFromString(@"st_compressDataUsingGZip");
+    return [NSData instancesRespondToSelector:selector];
+#pragma clang diagnostic pop
+}
+
+- (NSString *)description {
+    NSMutableString *description = [NSMutableString stringWithCapacity:20];
+    [description appendString:_mutableURLRequest.HTTPMethod];
+    [description appendString:@":"];
+    [description appendString:_URLString];
+    return [description copy];
+}
 @end
 
 
@@ -342,66 +368,16 @@
 
 @end
 
-@implementation NSData (STGZip)
-static const NSUInteger STGZipChunkSize = 16384;
-- (NSData *)st_compressDataUsingGZip {
-    if (self.length == 0) {
-        return nil;
-    }
-    z_stream stream;
-    stream.zalloc = Z_NULL;
-    stream.zfree = Z_NULL;
-    stream.opaque = Z_NULL;
-    stream.avail_in = (uint)[self length];
-    stream.next_in = (Bytef *)[self bytes];
-    stream.total_out = 0;
-    stream.avail_out = 0;
-    
-    int compression = Z_DEFAULT_COMPRESSION;
-    if (deflateInit2(&stream, compression, Z_DEFLATED, 31, 8, Z_DEFAULT_STRATEGY) == Z_OK) {
-        NSMutableData *data = [NSMutableData dataWithLength:STGZipChunkSize];
-        while (stream.avail_out == 0) {
-            if (stream.total_out >= data.length) {
-                data.length += STGZipChunkSize;
-            }
-            stream.next_out = (uint8_t *)[data mutableBytes] + stream.total_out;
-            stream.avail_out = (uInt)([data length] - stream.total_out);
-            deflate(&stream, Z_FINISH);
-        }
-        deflateEnd(&stream);
-        data.length = stream.total_out;
-        return data;
-    }
-    return nil;
-}
 
-+ (NSData *)st_dataWithZipCompressedData:(NSData *)data {
-    z_stream stream;
-    stream.zalloc = Z_NULL;
-    stream.zfree = Z_NULL;
-    stream.avail_in = (uint)data.length;
-    stream.next_in = (Bytef *)data.bytes;
-    stream.total_out = 0;
-    stream.avail_out = 0;
-    NSMutableData *resultData = [NSMutableData dataWithLength:(NSUInteger)(data.length * 1.5)];
-    if (inflateInit2(&stream, 47) == Z_OK) {
-        int status = Z_OK;
-        while (status == Z_OK) {
-            if (stream.total_out >= resultData.length) {
-                resultData.length += data.length / 2;
-            }
-            stream.next_out = (uint8_t *)resultData.mutableBytes + stream.total_out;
-            stream.avail_out = (uInt)(resultData.length - stream.total_out);
-            status = inflate (&stream, Z_SYNC_FLUSH);
-        }
-        if (inflateEnd(&stream) == Z_OK) {
-            if (status == Z_STREAM_END) {
-                resultData.length = stream.total_out;
-                return resultData;
-            }
-        }
+@implementation NSString (STURLParameters)
+
+- (NSString *)stringByAppendingURLParameters:(NSDictionary *)parameters {
+    NSString *result = [parameters st_compontentsJoinedByConnector:@"=" separator:@"&"];
+    if (result.length == 0) {
+        return self;
     }
-    return nil;
+    NSString *connector = ([self contains:@"?"])? @"&" : @"?";
+    return [self stringByAppendingFormat:@"%@%@", connector, result];
 }
 
 @end
