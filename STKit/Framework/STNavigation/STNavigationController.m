@@ -225,7 +225,14 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
     // Do any additional setup after loading the view.
     self.view.backgroundColor = [UIColor whiteColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-
+    CGRect frame = CGRectZero;
+    if (STGetSystemVersion() >= 7) {
+        frame = [UIScreen mainScreen].bounds;
+    } else {
+        frame.size = [UIScreen mainScreen].applicationFrame.size;
+    }
+    self.view.frame = frame;
+    
     self.transitionView = [[UIView alloc] initWithFrame:self.view.bounds];
     self.transitionView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.transitionView.backgroundColor = [UIColor clearColor];
@@ -1294,7 +1301,7 @@ static NSString *const STScrollViewContentInsetBottom = @"STScrollViewContentIns
             height = 44;
         }
     } else {
-        height = (STGetSystemVersion() > 7) ? 64 : 44;
+        height = (STGetSystemVersion() >= 7) ? 64 : 44;
     }
     rect.size.height = height - (height * self.navigationBarHidden);
     return rect;
@@ -1303,7 +1310,7 @@ static NSString *const STScrollViewContentInsetBottom = @"STScrollViewContentIns
 - (CGRect)navigationViewFrameForController:(UIViewController *)viewController {
     CGRect rect = CGRectZero;
     rect.size.width = CGRectGetWidth(self.view.frame);
-    CGFloat height = (STGetSystemVersion() > 7) ? 64 : 44;
+    CGFloat height = (STGetSystemVersion() >= 7) ? 64 : 44;
     rect.size.height = height - (height * self.navigationBarHidden);
     return rect;
 }
@@ -1314,7 +1321,7 @@ static NSString *const STScrollViewContentInsetBottom = @"STScrollViewContentIns
 
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
-    if (STGetSystemVersion() > 7) {
+    if (STGetSystemVersion() >= 7) {
         CGRect frame = self.view.frame;
         frame.origin.y = 0;
         self.view.frame = frame;

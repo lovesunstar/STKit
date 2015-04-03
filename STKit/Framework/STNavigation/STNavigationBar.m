@@ -54,6 +54,9 @@
         [self addSubview:self.transitionView];
 
         self.contentView = [[UIView alloc] initWithFrame:self.transitionView.bounds];
+        if (STGetSystemVersion() < 7) {
+            self.contentView.backgroundColor = [UIColor whiteColor];
+        }
         [self.transitionView addSubview:self.contentView];
 
         self.titleLabel = [[UILabel alloc] initWithFrame:CGRectZero];

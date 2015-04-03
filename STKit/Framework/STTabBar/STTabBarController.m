@@ -315,6 +315,9 @@
 - (STTabBar *)tabBar {
     if (!_tabBar) {
         CGSize screenSize = [UIScreen mainScreen].applicationFrame.size;
+        if (STGetSystemVersion() >= 7) {
+            screenSize = [UIScreen mainScreen].bounds.size;
+        }
         _tabBar = [[STTabBar alloc] initWithFrame:CGRectMake(0, screenSize.height - self.tabBarHeight, screenSize.width, self.tabBarHeight)];
         _tabBar.delegate = self;
         [_tabBar setValue:@(self.actualTabBarHeight) forVar:@"_actualHeight"];
