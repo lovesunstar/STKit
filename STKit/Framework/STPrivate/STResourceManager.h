@@ -48,3 +48,4 @@ extern NSString *const STImageResourcePayPlatformWXID;
 
 extern NSString *const STImageResourcePlaceholderID;
 extern NSString *const STImageResourceSaveToAlbumID;
+extern NSString *const STImageResourceNavigationBarID;

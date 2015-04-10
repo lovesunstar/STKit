@@ -36,7 +36,7 @@
 - (void)fetchMessagesWithWebView:(UIWebView *)webview {
     NSString *queueString = [webview stringByEvaluatingJavaScriptFromString:@"STBridge.fetchQueue()"];
     NSArray *messages = [queueString JSONValue];
-    for (NSDictionary *message in messages) {
+    for (__unused NSDictionary *message in messages) {
         STLog(@"%@", message);
     }
 }

@@ -53,6 +53,13 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    CGRect frame = CGRectZero;
+    if (STGetSystemVersion() >= 7) {
+        frame = [UIScreen mainScreen].bounds;
+    } else {
+        frame.size = [UIScreen mainScreen].applicationFrame.size;
+    }
+    self.view.frame = frame;
     self.view.backgroundColor = [UIColor colorWithRGB:0xFFFFFF];
     if (self.customNavigationController.viewControllers.count > 1) {
         self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonCustomItem:STBarButtonCustomItemBack

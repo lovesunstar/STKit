@@ -906,7 +906,6 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
     
     void (^animationCompletion)(BOOL) = ^(BOOL finished) {
         self.animating = NO;
-
         STNavigationControllerTransitionContext *transitionContext = [[STNavigationControllerTransitionContext alloc] init];
         transitionContext->_st_fromViewController = fromViewController;
         transitionContext->_st_toViewController = toViewController;
@@ -1228,11 +1227,6 @@ static NSString *const STScrollViewContentInsetBottom = @"STScrollViewContentIns
         [self.rootViewController didMoveToParentViewController:self];
     }
     [self.view bringSubviewToFront:self.navigationBar];
-
-    if ([self.rootViewController.customNavigationController.navigationBar respondsToSelector:@selector(barTintColor)]) {
-        [self.navigationBar performSelector:@selector(setBarTintColor:)
-                                 withObject:self.rootViewController.customNavigationController.navigationBar.barTintColor];
-    }
     self.navigationBar.barTintColor = self.rootViewController.customNavigationController.navigationBar.barTintColor;
 
     [self updateNavigationViewIfNeeded];
@@ -1286,6 +1280,7 @@ static NSString *const STScrollViewContentInsetBottom = @"STScrollViewContentIns
     }
     self.navigationBar.rightBarView = navigationItem.rightBarButtonItem.customView;
     self.navigationBar.titleTextAttributes = navigationController.navigationBar.titleTextAttributes;
+    self.navigationBar.backgroundImage = navigationController.navigationBar.backgroundImage;
 }
 
 - (void)backRootViewControllerAnimated:(id)sender {

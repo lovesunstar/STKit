@@ -26,6 +26,7 @@ typedef NS_OPTIONS(NSUInteger, STPropertyPolicy){
 
 @property(nonatomic, strong) NSString  *type;
 @property(nonatomic, strong) NSString  *variable;
+@property(nonatomic, copy)   NSString  *name;
 @property(nonatomic) BOOL   readonly;
 @property(nonatomic) STPropertyPolicy policy;
 
@@ -66,6 +67,7 @@ typedef NS_OPTIONS(NSUInteger, STPropertyPolicy){
                 self.variable = [NSString stringWithUTF8String:attribute_t.value];
             }
         }
+        _name = [[NSString stringWithUTF8String:property_getName(property)] copy];
         if (property_attribute_t) {
             free(property_attribute_t);
         }
@@ -77,6 +79,27 @@ typedef NS_OPTIONS(NSUInteger, STPropertyPolicy){
         }
     }
     return self;
+}
+
+- (NSString *)description {
+    NSMutableString *description = [@"@property(" mutableCopy];
+    if (self.policy & STPropertyPolicyNonatomic) {
+        [description appendString:@"nonatomic"];
+    } else {
+        [description appendString:@"atomic"];
+    }
+    if (self.policy & STPropertyPolicyRetain) {
+        [description appendString:@", strong"];
+    } else if (self.policy & STPropertyPolicyCopy) {
+        [description appendString:@", copy"];
+    } else {
+        [description appendString:@", assign"];
+    }
+    if (self.readonly) {
+        [description appendString:@", readonly"];
+    }
+    [description appendFormat:@") %@ *%@;", self.type, self.name];
+    return [description copy];
 }
 
 @end
@@ -97,25 +120,7 @@ ST_EXTERN void STObjectSetValueForKey(id object, id value, NSString *key) {
 
 
 void STPrintPropertyAttribute(_STPropertyAttribute *attribute) {
-    printf("@property(");
-    if (attribute.policy & STPropertyPolicyNonatomic) {
-        printf("nonatomic");
-    } else {
-        printf("atomic");
-    }
-    if (attribute.policy & STPropertyPolicyRetain) {
-        printf(", strong");
-    } else if (attribute.policy & STPropertyPolicyCopy) {
-        printf(", copy");
-    } else {
-        printf(", assign");
-    }
-    if (attribute.readonly) {
-        printf(", readonly");
-    }
-    printf(")");
-    printf(" %s", attribute.type.UTF8String);
-    printf(" %s; \n", attribute.variable.UTF8String);
+    NSLog(@"%@", attribute);
 };
 #if DEBUG
 #define STCanPrint 0

@@ -109,6 +109,7 @@
         UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
         flowLayout.minimumInteritemSpacing = 0;
         flowLayout.minimumLineSpacing = 0;
+        flowLayout.itemSize = CGSizeZero;
         flowLayout.headerReferenceSize = CGSizeZero;
         flowLayout.footerReferenceSize = CGSizeZero;
         flowLayout.sectionInset = UIEdgeInsetsZero;
@@ -133,7 +134,8 @@
         collectionView.willReloadData = ^{ index = weakSelf.currentImageIndex; };
         collectionView.didReloadData = ^{ weakSelf.currentImageIndex = index; };
 
-        self.saveButton = [UIButton buttonWithType:UIButtonTypeSystem];
+        UIButtonType buttonType = STGetSystemVersion() >= 7 ? UIButtonTypeSystem : UIButtonTypeCustom;
+        self.saveButton = [UIButton buttonWithType:buttonType];
         [self.saveButton setImage:[STResourceManager imageWithResourceID:STImageResourceSaveToAlbumID] forState:UIControlStateNormal];
         [self.saveButton addTarget:self action:@selector(saveToAlbumActionFired:) forControlEvents:UIControlEventTouchUpInside];
         [self addSubview:self.saveButton];

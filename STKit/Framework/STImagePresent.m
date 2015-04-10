@@ -25,7 +25,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.frame = [UIScreen mainScreen].bounds;
-    self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.backgroundView = [[UIView alloc] initWithFrame:self.view.bounds];
     self.backgroundView.backgroundColor = [UIColor blackColor];
     self.backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -35,6 +34,11 @@
     self.collectionView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.collectionView.backgroundColor = [UIColor clearColor];
     [self.view addSubview:self.collectionView];
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    self.view.frame = [UIScreen mainScreen].bounds;
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
@@ -72,7 +76,6 @@
         _STImagePresentViewController *viewController = [[_STImagePresentViewController alloc] initWithNibName:nil bundle:nil];
         self.rootViewController = viewController;
         viewController.view.frame = self.bounds;
-        viewController.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         self.viewController = viewController;
     }
     return self;
@@ -82,6 +85,7 @@
     UIWindow *keyWindow = [UIApplication sharedApplication].keyWindow;
     [super makeKeyAndVisible];
     [keyWindow makeKeyWindow];
+    self.rootViewController.view.frame = self.bounds;
 }
 
 @end

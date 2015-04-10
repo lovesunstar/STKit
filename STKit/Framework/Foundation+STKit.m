@@ -58,6 +58,41 @@ BOOL STClassRespondsToSelector(Class class, SEL aSelector) {
     return (method != nil);
 }
 
+
+void STPrintClassMethods(Class cls) {
+    if (!cls) {
+        return;
+    }
+    unsigned int count = 0;
+    Method *methods = class_copyMethodList(cls, &count);
+    for (int i = 0; i < count; i ++) {
+        struct objc_method_description *description = method_getDescription(methods[i]);
+        NSLog(@"%@", NSStringFromSelector(description->name));
+    }
+}
+extern void _STClassGetAllProperities(Class class, NSMutableSet *mutableSet);
+extern void STPrintClassProperities(Class cls) {
+    NSMutableSet *set = [NSMutableSet setWithCapacity:5];
+    _STClassGetAllProperities(cls, set);
+    NSLog(@"%@", set);
+}
+
+void _STClassGetAllProperities(Class class, NSMutableSet *mutableSet) {
+    if (!class) {
+        return;
+    }
+    unsigned int propertyCount = 0;
+    objc_property_t *properties = class_copyPropertyList(class, &propertyCount);
+    for (unsigned int i = 0; i < propertyCount; ++i) {
+        objc_property_t property = properties[i];
+        const char *name = property_getName(property);
+        [mutableSet addObject:[NSString stringWithUTF8String:name]];
+    }
+    free(properties);
+    _STClassGetAllProperities(class_getSuperclass(class), mutableSet);
+}
+
+
 inline NSString *STLibiaryDirectory() {
     NSArray *cachePaths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
     NSString *cachePath = cachePaths[0];

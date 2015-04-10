@@ -9,6 +9,7 @@
 #import "STNavigationBar.h"
 #import "UIKit+STKit.h"
 #import "STVisualBlurView.h"
+#import "STResourceManager.h"
 
 @interface STNavigationBar ()
 @property(nonatomic, strong) UILabel *titleLabel;
@@ -35,8 +36,8 @@
         self.backgroundImageView = [[UIImageView alloc] initWithFrame:self.bounds];
         self.backgroundImageView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         self.backgroundImageView.contentMode = UIViewContentModeScaleAspectFill;
+        self.backgroundImageView.clipsToBounds = YES;
         [self addSubview:self.backgroundImageView];
-        self.backgroundImageView.hidden = YES;
         
         if (!self.backgroundView) {
             self.backgroundView = self.backgroundImageView;
@@ -54,9 +55,6 @@
         [self addSubview:self.transitionView];
 
         self.contentView = [[UIView alloc] initWithFrame:self.transitionView.bounds];
-        if (STGetSystemVersion() < 7) {
-            self.contentView.backgroundColor = [UIColor whiteColor];
-        }
         [self.transitionView addSubview:self.contentView];
 
         self.titleLabel = [[UILabel alloc] initWithFrame:CGRectZero];
@@ -66,11 +64,15 @@
         self.titleLabel.font = [UIFont boldSystemFontOfSize:19.];
         self.titleLabel.backgroundColor = [UIColor clearColor];
         self.titleView = self.titleLabel;
-
+        
+        self.separatorView = [[UIView alloc] init];
+        [self addSubview:self.separatorView];
+        
         if (STGetSystemVersion() >= 7) {
-            self.separatorView = [[UIView alloc] init];
             self.separatorView.backgroundColor = [UIColor colorWithRGB:0x999999];
-            [self addSubview:self.separatorView];
+        } else {
+            self.separatorView.backgroundColor = [UIColor colorWithRGB:0xcccccc];
+            self.backgroundImage = [STResourceManager imageWithResourceID:STImageResourceNavigationBarID];
         }
     }
     return self;
@@ -78,13 +80,10 @@
 
 - (void)setBackgroundImage:(UIImage *)backgroundImage {
     self.backgroundImageView.image = backgroundImage;
-    if (backgroundImage) {
-        self.backgroundImageView.hidden = NO;
-        self.backgroundView.hidden = YES;
-    } else {
-        self.backgroundImageView.hidden = YES;
-        self.backgroundView.hidden = NO;
-    }
+}
+
+- (UIImage *)backgroundImage {
+    return self.backgroundImageView.image;
 }
 
 - (void)setTitle:(NSString *)title {
@@ -180,6 +179,9 @@
 }
 
 - (void)setBarTintColor:(UIColor *)barTintColor {
+    if (self.backgroundView == self.backgroundImageView && self.backgroundImageView.image) {
+        return;
+    }
     if ([self.backgroundView respondsToSelector:@selector(setTintColor:)]) {
         [self.backgroundView performSelector:@selector(setTintColor:) withObject:barTintColor];
     } else {
