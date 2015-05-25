@@ -28,11 +28,11 @@
 @end
 
 @interface STHTTPRequest () {
- @private
+@private
     NSString    *_URLString;
+    NSString    *_HTTPMethod;
     NSMutableURLRequest *_mutableURLRequest;
 }
-
 @property (nonatomic, strong)NSMutableDictionary    *parameters;
 + (BOOL)supportGZipCompress;
 @end
@@ -49,8 +49,11 @@
         self.parameters = [NSMutableDictionary dictionaryWithDictionary:parameters];
         _URLString = [URLString copy];
         NSURL *URL = [NSURL URLWithString:URLString];
+        _HTTPMethod = [HTTPMethod copy];
         _mutableURLRequest = [[NSMutableURLRequest alloc] initWithURL:URL];
-        _mutableURLRequest.HTTPMethod = HTTPMethod;
+        if (HTTPMethod) {
+            _mutableURLRequest.HTTPMethod = HTTPMethod;
+        }
         [_mutableURLRequest setValue:@"text/html,text/json,text/xml,application/xhtml+xml,application/xml,application/json,*/*;" forHTTPHeaderField:@"Accept"];
         
         NSString *name = [[[NSBundle mainBundle] infoDictionary] objectForKey:(__bridge NSString *)kCFBundleNameKey];
@@ -68,8 +71,9 @@
 }
 
 - (void)setHTTPConfiguration:(STHTTPConfiguration *)HTTPConfiguration {
-    if (!_mutableURLRequest.HTTPMethod) {
+    if (!_mutableURLRequest.HTTPMethod || !_HTTPMethod) {
         _mutableURLRequest.HTTPMethod = HTTPConfiguration.HTTPMethod;
+        _HTTPMethod = HTTPConfiguration.HTTPMethod;
     }
     if (_mutableURLRequest.timeoutInterval == 0) {
         _mutableURLRequest.timeoutInterval = HTTPConfiguration.timeoutInterval;
@@ -137,8 +141,11 @@
         }];
         __block NSInteger simpleFieldsCount = 0;
         [unwrapParameters enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-            if (![obj isKindOfClass:[STMultipartItem class]]) {
-                simpleFieldsCount++;
+            if ([obj isKindOfClass:[NSDictionary class]]) {
+                id value = [[obj allObjects] firstObject];
+                if (![value isKindOfClass:[STMultipartItem class]]) {
+                    simpleFieldsCount++;
+                }
             }
         }];
         NSMutableData *postData = [NSMutableData data];
@@ -172,7 +179,7 @@
             NSString *charset =
             (__bridge NSString *)CFStringConvertEncodingToIANACharSetName(CFStringConvertNSStringEncodingToEncoding(NSUTF8StringEncoding));
             [_mutableURLRequest setValue:[NSString stringWithFormat:@"multipart/form-data; charset=%@; boundary=%@", charset, kBoundary]
-                          forHTTPHeaderField:@"Content-Type"];
+                      forHTTPHeaderField:@"Content-Type"];
         } else if (enctype == STHTTPRequestFormEnctypeTextPlain) {
             NSString *parameterString =
             [[unwrapParameters st_componentsJoinedUsingSeparator:@"\r\n"] stringByReplacingOccurrencesOfString:@" " withString:@"+"];
@@ -186,7 +193,7 @@
             NSString *charset =
             (__bridge NSString *)CFStringConvertEncodingToIANACharSetName(CFStringConvertNSStringEncodingToEncoding(NSUTF8StringEncoding));
             [_mutableURLRequest setValue:[NSString stringWithFormat:@"application/x-www-form-urlencoded; charset=%@;", charset]
-                          forHTTPHeaderField:@"Content-Type"];
+                      forHTTPHeaderField:@"Content-Type"];
         }
         NSData *body = postData;
         if (compressed) {
