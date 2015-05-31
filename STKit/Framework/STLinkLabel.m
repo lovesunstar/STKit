@@ -32,6 +32,7 @@ ST_INLINE CGRect STRunGetRect(CTLineRef line, CTRunRef run, CGPoint lineOrigin) 
 @property(nonatomic, assign) NSRange nativeRange;
 
 @property(nonatomic, strong) UIColor *linkColor;
+@property(nonatomic, strong) UIColor *backgroundColor;
 @property(nonatomic, strong) UIColor *highlightLinkColor;
 @property(nonatomic, strong) UIColor *highlightBackgroundColor;
 @end
@@ -84,7 +85,7 @@ ST_INLINE CGRect STRunGetRect(CTLineRef line, CTRunRef run, CGPoint lineOrigin) 
 
         _linkColor = [UIColor blueColor];
         _highlightedLinkColor = [UIColor redColor];
-        _linkBackgroundColor = [UIColor grayColor];
+        _highlightedLinkBackgroundColor = [UIColor grayColor];
         _verticalTouchAreaFactor = 1.0;
 
         self.autoHyperlink = YES;
@@ -94,6 +95,10 @@ ST_INLINE CGRect STRunGetRect(CTLineRef line, CTRunRef run, CGPoint lineOrigin) 
         __weak STLinkLabel *weakSelf = self;
         self.hitTestBlock = ^(CGPoint point, UIEvent *event, BOOL *returnSuper) {
             if (weakSelf.userInteractionEnabled) {
+                *returnSuper = YES;
+                return (UIView *)nil;
+            }
+            if (weakSelf.hidden || weakSelf.alpha < 0.01) {
                 *returnSuper = YES;
                 return (UIView *)nil;
             }
@@ -149,6 +154,11 @@ ST_INLINE CGRect STRunGetRect(CTLineRef line, CTRunRef run, CGPoint lineOrigin) 
                                               if (colorString.length > 0) {
                                                   colorString = [colorString stringByReplacingOccurrencesOfString:@"#" withString:@"0x"];
                                                   linkObject.linkColor = [UIColor colorWithHexString:colorString];
+                                              }
+                                              NSString *backgroundColorString = [attrs valueForKey:@"backgroundColor"];
+                                              if (backgroundColorString.length > 0) {
+                                                  backgroundColorString = [backgroundColorString stringByReplacingOccurrencesOfString:@"#" withString:@"0x"];
+                                                  linkObject.backgroundColor = [UIColor colorWithHexString:backgroundColorString];
                                               }
                                               NSString *highlightedColor = [attrs valueForKey:@"highlightedColor"];
                                               if (highlightedColor.length > 0) {
@@ -259,17 +269,23 @@ ST_INLINE CGRect STRunGetRect(CTLineRef line, CTRunRef run, CGPoint lineOrigin) 
     CFRange fitRange;
     _suggestionSize = CTFramesetterSuggestFrameSizeWithConstraints(framesetter, CFRangeMake(0, 0), NULL, self.frame.size, &fitRange);
     _completelyDisplay = (fitRange.location == 0) && (fitRange.length == attributedString.length);
-
-    UIColor *backgroundColor = self.selectedLinkObject.highlightBackgroundColor?:self.linkBackgroundColor;
-    if (self.selectedLinkObject && backgroundColor) {
-        [self highlightLinkObject:self.selectedLinkObject inContext:context path:path.CGPath];
+    for (STLinkObject *linkObject in self.linkObjects) {
+        NSRange linkRange = linkObject.range;
+        if (linkRange.location == NSNotFound || linkRange.length == 0) {
+            continue;
+        }
+        [self drawBackgroundColor:linkObject.backgroundColor?:self.linkBackgroundColor withLinkObject:linkObject inContext:context path:path.CGPath];
+    }
+    UIColor *backgroundColor = self.selectedLinkObject.highlightBackgroundColor?:self.highlightedLinkBackgroundColor;
+    if (self.selectedLinkObject) {
+        [self drawBackgroundColor:backgroundColor withLinkObject:self.selectedLinkObject inContext:context path:path.CGPath];
     }
     CTFrameDraw(_frame, context);
     CFRelease(framesetter);
 }
 
-- (void)highlightLinkObject:(STLinkObject *)linkObject inContext:(CGContextRef)context path:(CGPathRef)path {
-    if (!linkObject) {
+- (void)drawBackgroundColor:(UIColor *)backgroundColor withLinkObject:(STLinkObject *)linkObject inContext:(CGContextRef)context path:(CGPathRef)path {
+    if (!linkObject || !backgroundColor) {
         return;
     }
     /// 计算出里面的最大高度，作为渲染高亮的高度
@@ -291,7 +307,7 @@ ST_INLINE CGRect STRunGetRect(CTLineRef line, CTRunRef run, CGPoint lineOrigin) 
                 [rectArrays replaceObjectAtIndex:rectArrays.count - 1 withObject:NSStringFromCGRect(previousRect)];
             } else {
                 CGRect effectRect = CGRectMake(999999999.0f, 999999999.0f, 0, 0);
-                effectRect.origin.y = MIN(effectRect.origin.y, rect.origin.y);
+                effectRect.origin.y = MIN(effectRect.origin.y - 1, rect.origin.y - 1);
                 effectRect.origin.x = MIN(effectRect.origin.x, rect.origin.x);
                 effectRect.size.width = CGRectGetMaxX(rect) - CGRectGetMinX(effectRect);
                 [rectArrays addObject:NSStringFromCGRect(effectRect)];
@@ -300,7 +316,6 @@ ST_INLINE CGRect STRunGetRect(CTLineRef line, CTRunRef run, CGPoint lineOrigin) 
             height = MAX(runRect.size.height, height);
         }
     }];
-    UIColor *backgroundColor = self.selectedLinkObject.highlightBackgroundColor?:self.linkBackgroundColor;
     [rectArrays enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         CGRect rect = CGRectFromString(obj);
         rect.size.height = height;

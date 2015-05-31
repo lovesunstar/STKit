@@ -10,6 +10,7 @@
 #import <CoreText/CoreText.h>
 #import <UIKit/UIKit.h>
 #import <objc/runtime.h>
+#import <objc/message.h>
 #import <CommonCrypto/CommonDigest.h>
 
 ST_EXTERN BOOL STClassIsKindOfClass(Class _class, Class parentClass) {
@@ -454,6 +455,19 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return [[NSString alloc] initWithData:self encoding:NSUTF8StringEncoding];
 }
 
+- (NSString *)md5String {
+    unsigned char result[16];
+    if (self.length == 0) {
+        return nil;
+    }
+    CC_MD5(self.bytes, (CC_LONG)self.length, result);
+    NSMutableString *output = [NSMutableString stringWithCapacity:CC_MD5_DIGEST_LENGTH * 2];
+    for (int i = 0; i < CC_MD5_DIGEST_LENGTH; i++) {
+        [output appendFormat:@"%02x", result[i]];
+    }
+    return [output copy];
+}
+
 @end
 
 @implementation NSString (STPagination)
@@ -777,18 +791,11 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
 
 @implementation NSArray (STSecure)
 
-+ (void)load {
-    Class inmutableClass = NSClassFromString(@"__NSArrayI") ? NSClassFromString(@"__NSArrayI") : [[NSArray array] class];
-
-    method_exchangeImplementations(class_getInstanceMethod(inmutableClass, @selector(objectAtIndex:)),
-                                   class_getInstanceMethod(inmutableClass, @selector(secureObjectAtIndex:)));
-}
-
-- (id)secureObjectAtIndex:(NSUInteger)index {
+- (id)st_objectAtIndex:(NSUInteger)index {
     if (index >= self.count) {
         return nil;
     }
-    return [self secureObjectAtIndex:index];
+    return [self objectAtIndex:index];
 }
 
 @end
@@ -884,6 +891,25 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return [mutableString copy];
 }
 
++ (instancetype)dictionaryWithURLQuery:(NSString *)URLQuery {
+    NSMutableDictionary *result = [NSMutableDictionary dictionaryWithCapacity:2];
+    NSArray *patterns = [URLQuery componentsSeparatedByString:@"&"];
+    [patterns enumerateObjectsUsingBlock:^(NSString *pattern, NSUInteger idx, BOOL *stop) {
+        NSArray *parts = [pattern componentsSeparatedByString:@"="];
+        if (parts.count == 2) {
+            NSString *key = parts[0];
+            NSString *value = parts[1];
+            if ([value contains:@"%"]) {
+                value = [value st_stringByURLDecoded];
+            }
+            [result setValue:value forKey:key];
+        }
+    }];
+    if ([self isSubclassOfClass:[NSMutableDictionary class]] || STClassIsKindOfClass(self, NSMutableDictionary.class)) {
+        return result;
+    }
+    return [result copy];
+}
 @end
 
 @implementation NSString (STNetwork)
@@ -907,5 +933,5 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
 @end
 
 NSString *STKitGetVersion(void) {
-    return @"1.1";
+    return @"2.0";
 }

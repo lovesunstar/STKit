@@ -10,21 +10,44 @@
 #import <QuartzCore/QuartzCore.h>
 #import <Accelerate/Accelerate.h>
 #import <ImageIO/ImageIO.h>
-#import "STResourceManager.h"
-#import "STApplicationContext.h"
 #import <objc/runtime.h>
-#import "STNavigationController.h"
 
-CGFloat STOnePixel() { return 1.0 / [UIScreen mainScreen].scale; }
+CGFloat STOnePixel() {
+    return 1.0 / [UIScreen mainScreen].scale;
+}
 
-extern CGFloat STGetScreenWidth() { return CGRectGetWidth([UIScreen mainScreen].bounds); }
-extern CGFloat STGetScreenHeight() { return CGRectGetHeight([UIScreen mainScreen].bounds); }
+CGFloat STGetScreenWidth() {
+    return CGRectGetWidth([UIScreen mainScreen].bounds);
+}
 
-CGFloat STGetSystemVersion() { return [UIDevice currentDevice].systemVersion.floatValue; }
-NSString *STGetSystemVersionString() { return [UIDevice currentDevice].systemVersion; }
+CGFloat STGetScreenHeight() {
+    return CGRectGetHeight([UIScreen mainScreen].bounds);
+}
+
+CGFloat STGetSystemVersion() {
+    return [UIDevice currentDevice].systemVersion.floatValue;
+}
+
+NSString *STGetSystemVersionString() {
+    return [UIDevice currentDevice].systemVersion;
+}
 
 CGPoint STConvertPointBetweenSize(CGPoint point, CGSize fromSize, CGSize toSize) {
+    if (fromSize.width * fromSize.height == 0) {
+        return CGPointZero;
+    }
     return CGPointMake((point.x * toSize.width) / fromSize.width, (point.y * toSize.height) / fromSize.height);
+}
+
+CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize toSize) {
+    if (fromSize.width * fromSize.height == 0) {
+        return CGRectZero;
+    }
+    CGRect targetRect;
+    targetRect.origin = STConvertPointBetweenSize(frame.origin, fromSize, toSize);
+    targetRect.size.width = CGRectGetWidth(frame) * toSize.width / fromSize.width;
+    targetRect.size.height = CGRectGetHeight(frame) * toSize.height / fromSize.height;
+    return targetRect;
 }
 
 
@@ -41,7 +64,47 @@ CGPoint STConvertPointBetweenSize(CGPoint point, CGSize fromSize, CGSize toSize)
 }
 
 + (UIColor *)colorWithHexString:(NSString *)hexString {
-    return [self colorWithHexString:hexString alpha:1.0];
+    if (![hexString isKindOfClass:[NSString class]] || hexString.length == 0) {
+        return nil;
+    }
+    if ([hexString hasPrefix:@"0x"]) {
+        hexString = [hexString substringFromIndex:2];
+    }
+    if ([hexString hasPrefix:@"#"]) {
+        hexString = [hexString substringFromIndex:1];
+    }
+    static NSPredicate *_predicate;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        _predicate = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", @"^(([0-9a-fA-F]{3})|([0-9a-fA-F]{6,8}))$"];
+    });
+    if (![_predicate evaluateWithObject:hexString]) {
+        return nil;
+    }
+    if (hexString.length == 3) {
+        // 处理F12 为 FF1122
+        NSString *index0 = [hexString substringWithRange:NSMakeRange(0, 1)];
+        NSString *index1 = [hexString substringWithRange:NSMakeRange(1, 1)];
+        NSString *index2 = [hexString substringWithRange:NSMakeRange(2, 1)];
+        hexString = [NSString stringWithFormat:@"%@%@%@%@%@%@", index0, index0, index1, index1, index2, index2];
+    }
+    unsigned int alpha = 0xFF;
+    NSString *rgbString = [hexString substringToIndex:6];
+    NSString *alphaString = [hexString substringFromIndex:6];
+    // 存在Alpha
+    if (alphaString.length > 0) {
+        NSScanner *scanner = [NSScanner scannerWithString:alphaString];
+        if (![scanner scanHexInt:&alpha]) {
+            alpha = 0xFF;
+        }
+    }
+    
+    unsigned int rgb = 0;
+    NSScanner *scanner = [NSScanner scannerWithString:rgbString];
+    if (![scanner scanHexInt:&rgb]) {
+        return nil;
+    }
+    return [self colorWithRGB:rgb alpha:alpha / 255.0];
 }
 
 + (UIColor *)colorWithHexString:(NSString *)hexString alpha:(CGFloat)alpha {
@@ -224,36 +287,6 @@ CGPoint STConvertPointBetweenSize(CGPoint point, CGSize fromSize, CGSize toSize)
 }
 
 /**
- * @abstract 递归查找view的nextResponder，直到找到类型为class的Responder
- *
- * @param class  nextResponder 的 class
- * @return       第一个满足类型为class的UIResponder
- */
-- (UIResponder *)nextResponderWithClass:(Class) class {
-    UIResponder *nextResponder = self;
-    while (nextResponder) {
-        nextResponder = nextResponder.nextResponder;
-        if ([nextResponder isKindOfClass:class]) {
-            return nextResponder;
-        }
-    }
-    return nil;
-}
-
-- (UIResponder *)findFirstResponder {
-    if (self.isFirstResponder) {
-        return self;
-    }
-    for (UIView *subView in self.subviews) {
-        id responder = [subView findFirstResponder];
-        if (responder) {
-            return responder;
-        }
-    }
-    return nil;
-}
-
-/**
  * @abstract view的parentview中，是否包含某一类的view
  *
  * @param viewClass  superview 的 class
@@ -318,10 +351,11 @@ CGPoint STConvertPointBetweenSize(CGPoint point, CGSize fromSize, CGSize toSize)
  * @param target 接受手势通知的对象
  * @param action 回调方法
  */
-- (void)addTouchTarget : (id)target action : (SEL)action {
+- (void)addTouchTarget:(id)target action:(SEL)action {
     UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:target action:action];
     [self addGestureRecognizer:tapGestureRecognizer];
 }
+
 - (void)removeTouchTarget:(id)target action:(SEL)action {
     for (UIGestureRecognizer *gestureRecognizer in self.gestureRecognizers) {
         if ([gestureRecognizer isKindOfClass:[UITapGestureRecognizer class]]) {
@@ -408,6 +442,87 @@ CGPoint STConvertPointBetweenSize(CGPoint point, CGSize fromSize, CGSize toSize)
 
 - (CGPoint)anchorPoint {
     return self.layer.anchorPoint;
+}
+
+@end
+
+@implementation UIScrollView (STKit)
+
+- (void)setContentOffsetX:(CGFloat)contentOffsetX {
+    CGPoint contentOffset = self.contentOffset;
+    contentOffset.x = contentOffsetX;
+    self.contentOffset = contentOffset;
+}
+
+- (CGFloat)contentOffsetX {
+    return self.contentOffset.x;
+}
+
+- (void)setContentOffsetY:(CGFloat)contentOffsetY {
+    CGPoint contentOffset = self.contentOffset;
+    contentOffset.y = contentOffsetY;
+    self.contentOffset = contentOffset;
+}
+
+- (CGFloat)contentOffsetY {
+    return self.contentOffset.y;
+}
+
+- (void)setContentWidth:(CGFloat)contentWidth {
+    CGSize contentSize = self.contentSize;
+    contentSize.width = contentWidth;
+    self.contentSize = contentSize;
+}
+
+- (CGFloat)contentWidth {
+    return self.contentSize.width;
+}
+
+- (void)setContentHeight:(CGFloat)contentHeight {
+    CGSize contentSize = self.contentSize;
+    contentSize.height = contentHeight;
+    self.contentSize = contentSize;
+}
+
+- (CGFloat)contentHeight {
+    return self.contentSize.height;
+}
+
+@end
+
+@implementation UIResponder (STResponder)
+
+
+/**
+ * @abstract 递归查找view的nextResponder，直到找到类型为class的Responder
+ *
+ * @param class  nextResponder 的 class
+ * @return       第一个满足类型为class的UIResponder
+ */
+- (UIResponder *)nextResponderWithClass:(Class) class {
+    UIResponder *nextResponder = self;
+    while (nextResponder) {
+        nextResponder = nextResponder.nextResponder;
+        if ([nextResponder isKindOfClass:class]) {
+            return nextResponder;
+        }
+    }
+    return nil;
+}
+
+- (UIResponder *)findFirstResponder {
+    if (self.isFirstResponder) {
+        return self;
+    }
+    if ([self isKindOfClass:[UIView class]]) {
+        for (UIView *subView in ((UIView *)self).subviews) {
+            id responder = [subView findFirstResponder];
+            if (responder) {
+                return responder;
+            }
+        }
+    }
+    return nil;
 }
 
 @end
@@ -549,7 +664,7 @@ const static NSString *STTextContainerMenuEnabled = @"STTextContainerMenuEnabled
 - (UIImage *)snapshotImage {
     CGContextRef context = UIGraphicsGetCurrentContext();
     UIGraphicsPushContext(context);
-    UIGraphicsBeginImageContextWithOptions(self.bounds.size, self.opaque, [UIScreen mainScreen].scale);
+    UIGraphicsBeginImageContextWithOptions(self.bounds.size, NO, [UIScreen mainScreen].scale);
     [self.layer renderInContext:UIGraphicsGetCurrentContext()];
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
@@ -635,7 +750,7 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
 @implementation UITableView (STReloadData)
 
 + (void)load {
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(reloadData)), class_getInstanceMethod(self, @selector(st_ReloadData)));
+    method_exchangeImplementations(class_getInstanceMethod(self, @selector(reloadData)), class_getInstanceMethod(self, @selector(st_reloadData)));
 }
 
 - (void)setWillReloadData:(STInvokeHandler)willReloadData {
@@ -654,11 +769,11 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
     return objc_getAssociatedObject(self, STTableViewDidReloadInvokeBlockKey);
 }
 
-- (void)st_ReloadData {
+- (void)st_reloadData {
     if (self.willReloadData) {
         self.willReloadData();
     }
-    [self st_ReloadData];
+    [self st_reloadData];
     if (self.didReloadData) {
         self.didReloadData();
     }
@@ -689,36 +804,10 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
 
 @end
 
-@interface UINavigationController (STTest)
-
-@end
-
-@implementation UINavigationController (STTest)
-
-+ (void)load {
-    
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(popViewControllerAnimated:)), class_getInstanceMethod(self, @selector(st_popViewControllerAnimated:)));
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(popToViewController:animated:)), class_getInstanceMethod(self, @selector(st_popToViewController:animated:)));
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(popToRootViewControllerAnimated:)), class_getInstanceMethod(self, @selector(st_popToRootViewControllerAnimated:)));
-}
-
-- (UIViewController *)st_popViewControllerAnimated:(BOOL)animated {
-    return [self st_popViewControllerAnimated:animated];
-}
-// Returns the popped controller.
-- (NSArray *)st_popToViewController:(UIViewController *)viewController animated:(BOOL)animated {
-    return [self st_popToViewController:viewController animated:animated];
-}// Pops view controllers until the one specified is on top. Returns the popped controllers.
-- (NSArray *)st_popToRootViewControllerAnimated:(BOOL)animated {
-    return [self st_popToRootViewControllerAnimated:animated];
-}
-
-@end
-
 @implementation UIImage (STSubimage)
 
 - (UIImage *)subimageInRect:(CGRect)rect {
-    CGFloat scale = [UIScreen mainScreen].scale;
+    CGFloat scale = MAX(self.scale, 1);
     rect = CGRectMake(rect.origin.x * scale, rect.origin.y * scale, rect.size.width * scale, rect.size.height * scale);
     CGImageRef subimageRef = CGImageCreateWithImageInRect(self.CGImage, rect);
     CGRect smallBounds = CGRectMake(0, 0, CGImageGetWidth(subimageRef), CGImageGetHeight(subimageRef));
@@ -750,6 +839,10 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
 
 // imageSize {100,100} size{200, 50} widthRate = 0.5, heightRate = 2
 // imageSize {100,100} size{200, 100} widthRate = 0.5 heightRate = 1
+- (UIImage *)imageConstrainedToSize:(CGSize)size {
+    return [self imageConstrainedToSize:size contentMode:UIViewContentModeScaleAspectFit];
+}
+
 - (UIImage *)imageConstrainedToSize:(CGSize)size contentMode:(UIViewContentMode)contentMode {
     CGImageRef imageRef = self.CGImage;
     if (!imageRef || (size.width == 0 && size.height == 0)) {
@@ -820,7 +913,8 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
         default:
             break;
     }
-    UIGraphicsBeginImageContextWithOptions(newSize, YES, [UIScreen mainScreen].scale);
+    CGFloat scale = MAX(self.scale, 1);
+    UIGraphicsBeginImageContextWithOptions(newSize, YES, scale);
     CGContextRef context = UIGraphicsGetCurrentContext();
     if (orient == UIImageOrientationRight || orient == UIImageOrientationLeft) {
         CGContextScaleCTM(context, -1, 1);
@@ -1247,55 +1341,29 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
 
 @end
 
-@implementation UIBarButtonItem (STKit)
 
-+ (instancetype)backBarButtonItemWithTarget:(id)target action:(SEL)action {
-    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
-    button.frame = CGRectMake(0, 0, 70, 44);
-    button.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
-    [button setImage:[STResourceManager imageWithResourceID:STImageResourceNavigationItemBackID] forState:UIControlStateNormal];
-    button.imageEdgeInsets = UIEdgeInsetsMake(10, 10, 10, 24);
-    button.titleEdgeInsets = UIEdgeInsetsMake(0, 7, 0, 0);
-    [button setTitle:@"返回" forState:UIControlStateNormal];
-    button.titleLabel.textColor = [UIColor colorWithRGB:0xFF7300];
-    button.titleLabel.highlightedTextColor = [UIColor colorWithRGB:0xFFFFFF alpha:0.5];
-    if ([button respondsToSelector:@selector(setTitleColor:forState:)]) {
-        [button setTitleColor:[UIColor colorWithRGB:0xFF7300] forState:UIControlStateNormal];
-        [button setTitleColor:[UIColor colorWithRGB:0x0 alpha:0.5] forState:UIControlStateHighlighted];
-    }
-    button.titleLabel.textAlignment = NSTextAlignmentLeft;
-    [button addTarget:target action:action forControlEvents:UIControlEventTouchUpInside];
-    return [[UIBarButtonItem alloc] initWithCustomView:button];
+@interface UINavigationController (STTest)
+
+@end
+
+@implementation UINavigationController (STTest)
+
++ (void)load {
+    
+    method_exchangeImplementations(class_getInstanceMethod(self, @selector(popViewControllerAnimated:)), class_getInstanceMethod(self, @selector(st_popViewControllerAnimated:)));
+    method_exchangeImplementations(class_getInstanceMethod(self, @selector(popToViewController:animated:)), class_getInstanceMethod(self, @selector(st_popToViewController:animated:)));
+    method_exchangeImplementations(class_getInstanceMethod(self, @selector(popToRootViewControllerAnimated:)), class_getInstanceMethod(self, @selector(st_popToRootViewControllerAnimated:)));
 }
 
-- (instancetype)initWithBarButtonCustomItem:(STBarButtonCustomItem)customItem target:(id)target action:(SEL)action {
-    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
-    button.frame = CGRectMake(0, 0, 70, 44);
-    button.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
-    [button setImage:[STResourceManager imageWithResourceID:STImageResourceNavigationItemBackID] forState:UIControlStateNormal];
-    button.imageEdgeInsets = UIEdgeInsetsMake(10, 10, 10, 24);
-    button.titleEdgeInsets = UIEdgeInsetsMake(0, 7, 0, 0);
-    [button setTitle:@"返回" forState:UIControlStateNormal];
-    button.titleLabel.textColor = [UIColor colorWithRGB:0xFF7300];
-    button.titleLabel.highlightedTextColor = [UIColor colorWithRGB:0xFFFFFF alpha:0.5];
-    if ([button respondsToSelector:@selector(setTitleColor:forState:)]) {
-        [button setTitleColor:[UIColor colorWithRGB:0xFF7300] forState:UIControlStateNormal];
-        [button setTitleColor:[UIColor colorWithRGB:0x0 alpha:0.5] forState:UIControlStateHighlighted];
-    }
-    button.titleLabel.textAlignment = NSTextAlignmentLeft;
-    [button addTarget:target action:action forControlEvents:UIControlEventTouchUpInside];
-    return [self initWithCustomView:button];
+- (UIViewController *)st_popViewControllerAnimated:(BOOL)animated {
+    return [self st_popViewControllerAnimated:animated];
 }
-
-- (instancetype)initWithTitle:(NSString *)title target:(id)target action:(SEL)action {
-    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
-    button.frame = CGRectMake(0, 0, 60, 44);
-    [button setTitle:title forState:UIControlStateNormal];
-    [button setTitleColor:[UIColor colorWithRGB:0xFF7300] forState:UIControlStateNormal];
-    [button setTitleColor:[UIColor colorWithRGB:0x0 alpha:0.5] forState:UIControlStateHighlighted];
-    [button setTitleColor:[UIColor darkGrayColor] forState:UIControlStateDisabled];
-    [button addTarget:target action:action forControlEvents:UIControlEventTouchUpInside];
-    return [self initWithCustomView:button];
+// Returns the popped controller.
+- (NSArray *)st_popToViewController:(UIViewController *)viewController animated:(BOOL)animated {
+    return [self st_popToViewController:viewController animated:animated];
+}// Pops view controllers until the one specified is on top. Returns the popped controllers.
+- (NSArray *)st_popToRootViewControllerAnimated:(BOOL)animated {
+    return [self st_popToRootViewControllerAnimated:animated];
 }
 
 @end

@@ -108,7 +108,6 @@
 }
 
 - (void)modelWillStartLoadData:(STModel *)model {
-
     self.tableFooterView = self.tableView.tableFooterView;
 }
 

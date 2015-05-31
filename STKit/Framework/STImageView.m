@@ -26,7 +26,7 @@
 /// 是否正在播放GIF
 @property (nonatomic, assign, getter=isPlaying) BOOL  playing;
 @property (nonatomic, assign) BOOL  automaticallyPlay;
-@property (nonatomic, strong) void (^completionHandler)(BOOL finished);
+@property (nonatomic, strong) void (^completionHandler)(STImageView *imageView, BOOL finished);
 @property (nonatomic, assign) NSInteger     currentPlayIndex;
 
 @end
@@ -199,14 +199,14 @@
         if (self.currentPlayIndex != 0) {
             // 如果没有到第0桢，就说明现在被暂停了
             if (self.completionHandler) {
-                self.completionHandler(NO);
+                self.completionHandler(self, NO);
             }
         }
     } else {
         [self.displayTimer invalidate];
         self.displayTimer = nil;
         if (self.completionHandler) {
-            self.completionHandler(!causedByUser);
+            self.completionHandler(self, !causedByUser);
         }
     }
     self.playing = NO;

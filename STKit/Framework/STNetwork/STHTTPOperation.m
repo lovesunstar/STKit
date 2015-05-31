@@ -85,7 +85,7 @@ static NSThread *_standardNetworkThread;
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"STOperation:%@", self.request];
+    return [NSString stringWithFormat:@"STOperation:%@ %@",self.request.URLRequest.HTTPMethod, self.request.URLRequest.URL.absoluteString];
 }
 
 - (instancetype)initWithHTTPRequest:(STHTTPRequest *)request {
@@ -496,7 +496,7 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
         if (!cachedResponse) {
             error = [NSError errorWithDomain:STHTTPNetworkErrorDomain code:STHTTPNetworkErrorCodeCantLoadCache userInfo:@{STHTTPNetworkErrorDescriptionUserInfoKey:@"DnotLoad with no cache"}];
         }
-        varCompletionHandler(HTTPResponse, cachedResponse.data, error, YES);
+        varCompletionHandler(HTTPResponse, cachedResponse.data, error, NO);
         return;
     }
     /// 按照HTTP标准协议来处理
@@ -504,7 +504,7 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
     if (expiredDate && [[NSDate date] compare:expiredDate] != NSOrderedDescending) {
         // 没有超过maxAge
         varShouldContinue = NO;
-        varCompletionHandler(HTTPResponse, cachedResponse.data, nil, YES);
+        varCompletionHandler(HTTPResponse, cachedResponse.data, nil, NO);
     } else {
         varShouldContinue = YES;
         NSDictionary *modifyHeaders = [self _requestHeadersFromCachedResponse:cachedResponse];
@@ -704,11 +704,11 @@ static NSInteger _autoIncrementIdentifier = 100000;
 
 @implementation STHTTPOperation (STHTTPRequest)
 
-+ (instancetype) operationWithURLString:(NSString *)URLString parameters:(NSDictionary *)parameters {
-    return [self operationWithURLString:URLString HTTPMethod:@"GET" parameters:parameters];
++ (instancetype)operationWithURLString:(NSString *)URLString parameters:(NSDictionary *)parameters {
+    return [self operationWithURLString:URLString HTTPMethod:nil parameters:parameters];
 }
 
-+ (instancetype) operationWithURLString:(NSString *)URLString HTTPMethod:(NSString *)method parameters:(NSDictionary *)parameters {
++ (instancetype)operationWithURLString:(NSString *)URLString HTTPMethod:(NSString *)method parameters:(NSDictionary *)parameters {
     STHTTPRequest *HTTPRequest = [[STHTTPRequest alloc] initWithURLString:URLString HTTPMethod:method parameters:parameters];
     return [[self alloc] initWithHTTPRequest:HTTPRequest];
 }

@@ -172,9 +172,7 @@
 - (void)setCurrentImageIndex:(NSUInteger)currentImageIndex {
     if (currentImageIndex < self.images.count) {
         _currentImageIndex = currentImageIndex;
-        [self.collectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:currentImageIndex inSection:0]
-                                    atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally
-                                            animated:NO];
+        [self.collectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:currentImageIndex inSection:0] atScrollPosition:UICollectionViewScrollPositionCenteredHorizontally animated:NO];
     }
 }
 
@@ -231,7 +229,6 @@
         } else {
             [collectionViewCell.imageView setImageURL:imageItem.imageURLString animated:YES];
         }
-        [collectionViewCell.imageView zoomToFit];
     }
     if (STGetSystemVersion() < 8) {
         /// 高于iOS8版本会自己调用

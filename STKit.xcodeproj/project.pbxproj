@@ -113,6 +113,8 @@
 		06C565AB1A6F511B00A4F8AF /* UIView+STConstraint.m in Sources */ = {isa = PBXBuildFile; fileRef = 06C565A91A6F511B00A4F8AF /* UIView+STConstraint.m */; };
 		06C6F9C71920A3B30028B2B3 /* STStringTokenizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 06C6F9C51920A3B30028B2B3 /* STStringTokenizer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		06C6F9C81920A3B30028B2B3 /* STStringTokenizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 06C6F9C61920A3B30028B2B3 /* STStringTokenizer.m */; };
+		06C92DAB1AE50B0900C192B6 /* STURLCache.h in Headers */ = {isa = PBXBuildFile; fileRef = 06C92DA91AE50B0900C192B6 /* STURLCache.h */; };
+		06C92DAC1AE50B0900C192B6 /* STURLCache.m in Sources */ = {isa = PBXBuildFile; fileRef = 06C92DAA1AE50B0900C192B6 /* STURLCache.m */; };
 		06E6EAD71A6D60A800DC84A0 /* STTableViewCell.h in Headers */ = {isa = PBXBuildFile; fileRef = 06E6EAD51A6D60A800DC84A0 /* STTableViewCell.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		06E6EAD81A6D60A800DC84A0 /* STTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 06E6EAD61A6D60A800DC84A0 /* STTableViewCell.m */; };
 		06E9524619C93977001762A5 /* STRefreshControl.h in Headers */ = {isa = PBXBuildFile; fileRef = 06E9524419C93977001762A5 /* STRefreshControl.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -286,6 +288,8 @@
 		06C565A91A6F511B00A4F8AF /* UIView+STConstraint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+STConstraint.m"; sourceTree = "<group>"; };
 		06C6F9C51920A3B30028B2B3 /* STStringTokenizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STStringTokenizer.h; sourceTree = "<group>"; };
 		06C6F9C61920A3B30028B2B3 /* STStringTokenizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STStringTokenizer.m; sourceTree = "<group>"; };
+		06C92DA91AE50B0900C192B6 /* STURLCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STURLCache.h; sourceTree = "<group>"; };
+		06C92DAA1AE50B0900C192B6 /* STURLCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STURLCache.m; sourceTree = "<group>"; };
 		06E6EAD51A6D60A800DC84A0 /* STTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STTableViewCell.h; sourceTree = "<group>"; };
 		06E6EAD61A6D60A800DC84A0 /* STTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STTableViewCell.m; sourceTree = "<group>"; };
 		06E9524419C93977001762A5 /* STRefreshControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STRefreshControl.h; sourceTree = "<group>"; };
@@ -430,6 +434,8 @@
 				0626CDB719A0FB9800B84A8C /* STReachability.m */,
 				061658B91AC432C6004EB9AD /* NSData+STGZip.h */,
 				061658BA1AC432C6004EB9AD /* NSData+STGZip.m */,
+				06C92DA91AE50B0900C192B6 /* STURLCache.h */,
+				06C92DAA1AE50B0900C192B6 /* STURLCache.m */,
 			);
 			path = STNetwork;
 			sourceTree = "<group>";
@@ -751,6 +757,7 @@
 				06E9524619C93977001762A5 /* STRefreshControl.h in Headers */,
 				06FEC33319C9DE920093EC69 /* STControlDefines.h in Headers */,
 				062E9AF519CC22A100ADB552 /* STAESCryptor.h in Headers */,
+				06C92DAB1AE50B0900C192B6 /* STURLCache.h in Headers */,
 				F62DEF7E187BEF4E00C7A1D8 /* STTextView.h in Headers */,
 				062E9AF919CC292200ADB552 /* STRSACryptor.h in Headers */,
 				0672CD5819D7F6850055189C /* STAlbumManager.h in Headers */,
@@ -936,6 +943,7 @@
 				0623952A19B6D3F500FFDD96 /* STPayManager.m in Sources */,
 				06C089C31A00F9120088C4C0 /* STSymmetricCryptor.m in Sources */,
 				F65D3EF11845E2C3007DF355 /* Foundation+STKit.m in Sources */,
+				06C92DAC1AE50B0900C192B6 /* STURLCache.m in Sources */,
 				F620E569186A9A2B0024A854 /* STImageScrollView.m in Sources */,
 				F61DD2AC186D31FD008D0268 /* STThemeManager.m in Sources */,
 				F65D3EF81845E2C3007DF355 /* STImageView.m in Sources */,

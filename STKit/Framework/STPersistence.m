@@ -59,6 +59,7 @@ NSString *STPersistTemporyDirectory() {
 @interface STPersistence ()
 
 @property(nonatomic, copy) NSString *cacheDirectory;
+@property(nonatomic, strong) NSFileManager  *fileManager;
 
 @end
 
@@ -108,6 +109,7 @@ NSString *STPersistTemporyDirectory() {
         if (!self.cacheDirectory) {
             self = nil;
         }
+        self.fileManager = [[NSFileManager alloc] init];
     }
     return self;
 }
@@ -301,6 +303,34 @@ static NSMutableDictionary *_persistences;
 
 + (instancetype)tempoaryPersistenceWithSubpath:(NSString *)subpath {
     return [[self alloc] initWithDirectory:STPersistenceDirectoryTemporary subpath:subpath];
+}
+
+@end
+
+@implementation STPersistence (STPersistenceClean)
+
+- (void)removeAllCachedValues {
+    NSString *directory = self.cacheDirectory;
+    NSDirectoryEnumerator *enumerator = [self.fileManager enumeratorAtPath:directory];
+    // 先清空子目录，最后删除文件夹
+    for (NSString *itemPath in enumerator) {
+        BOOL isDirectory = NO;
+        @autoreleasepool {
+            NSString *path = [directory stringByAppendingPathComponent:itemPath];
+            if ([self.fileManager fileExistsAtPath:path isDirectory:&isDirectory]) {
+                if (!isDirectory) {
+                    [self.fileManager removeItemAtPath:path error:nil];
+                }
+            }
+        }
+    }
+    NSArray *directories = [self.fileManager contentsOfDirectoryAtPath:directory error:nil];
+    for (NSString *subname in directories) {
+        @autoreleasepool {
+            NSString *subpath = [directory stringByAppendingPathComponent:subname];
+            [self.fileManager removeItemAtPath:subpath error:nil];
+        }
+    }
 }
 
 @end

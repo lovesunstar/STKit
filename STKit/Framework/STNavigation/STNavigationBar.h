@@ -24,3 +24,19 @@
 
 @property(nonatomic, copy) NSDictionary       *titleTextAttributes;
 @end
+
+typedef enum STBarButtonCustomItem {
+    STBarButtonCustomItemBack,
+    STBarButtonCustomItemDismiss,
+    STBarButtonCustomItemMore,
+} STBarButtonCustomItem;
+@interface UIBarButtonItem (STKit)
+
++ (instancetype)backBarButtonItemWithTarget:(id)target action:(SEL)action;
+- (instancetype)initWithBarButtonCustomItem:(STBarButtonCustomItem)customItem target:(id)target action:(SEL)action;
+
+- (instancetype)initWithTitle:(NSString *)title target:(id)target action:(SEL)action;
+
+- (instancetype)initWithTitle:(NSString *)title tintColor:(UIColor *)tintColor target:(id)target action:(SEL)action;
+@end
+

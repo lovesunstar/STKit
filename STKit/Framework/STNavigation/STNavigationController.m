@@ -321,6 +321,7 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
     void (^completion)(BOOL) = ^(BOOL finished) {
         [toWrapperViewController didMoveToParentViewController:self];
         [fromWrapperViewController.view removeFromSuperview];
+        self.visibleWrapperViewController = toWrapperViewController;
     };
     if (self.customTabBarController) {
         [self _layoutTabBarFromViewController:fromWrapperViewController toViewController:toWrapperViewController];
@@ -923,7 +924,6 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
         if (completion) {
             completion(finished);
         }
-        self.visibleWrapperViewController = toWrapperViewController;
         if (self.operationQueue.count > 0) {
             NSBlockOperation *operation = [self.operationQueue objectAtIndex:0];
             [self.operationQueue removeObjectAtIndex:0];

@@ -32,11 +32,12 @@
 
 @end
 
-const NSInteger _STAssetViewControllerPageSize = 100;
+const NSInteger _STAssetViewControllerPageSize = 100000000;
 @interface _STAssetViewController : STViewController <UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout> {
   @private
     NSInteger _page;
 }
+@property(nonatomic, strong) UIButton    *backBarButton;
 @property(nonatomic, weak) id<_STImagePickerControllerDelegate> pickerDelegate;
 /// 最多能选取多少张图片
 @property(nonatomic, assign) NSInteger maximumNumberOfSelection;
@@ -46,7 +47,7 @@ const NSInteger _STAssetViewControllerPageSize = 100;
 /// 数据源，需要显示的Asset集合
 @property(nonatomic, strong) NSMutableArray *dataSource;
 /// 即将获取下一页，子类需重写， range会在 0, dataSource.count 之间
-- (void)fetchAssetWithRange:(NSRange)range;
+- (void)fetchAssetWithRange:(NSRange)range options:(NSEnumerationOptions)options;
 /// 共有多少Asset
 - (NSInteger)numberOfAssets;
 - (void)updatePhotoCellPhotoCell:(_STAssetCollectionCell *)photoCell asset:(NSObject *)asset;
@@ -98,9 +99,11 @@ const NSInteger _STAssetViewControllerPageSize = 100;
 #pragma mark - STPhotoGroupViewController
 @interface _STPhotoGroupViewController : UITableViewController
 
+@property(nonatomic, strong) UIButton    *backBarButton;
+
 @property(nonatomic, strong) ALAssetsLibrary *assetsLibiary;
 @property(nonatomic, assign) BOOL allowsMultipleSelection;
-
+@property(nonatomic) BOOL wantsEnterFirstAlbumWhenLoaded;
 @property(nonatomic, strong) NSArray *dataSource;
 @property(nonatomic, weak) id<_STImagePickerControllerDelegate> pickerDelegate;
 
@@ -125,15 +128,19 @@ const NSInteger _STAssetViewControllerPageSize = 100;
 
 @implementation STImagePickerController
 
-- (instancetype)initWithRootViewController:(UIViewController *)rootViewController {
-    self = [super initWithRootViewController:rootViewController];
+- (instancetype)init {
+    _STPhotoGroupViewController *photoGroupViewController = [[_STPhotoGroupViewController alloc] initWithStyle:UITableViewStylePlain];
+    self = [super initWithRootViewController:photoGroupViewController];
     if (self) {
-        self.photoGroupViewController = [[_STPhotoGroupViewController alloc] initWithStyle:UITableViewStylePlain];
+        self.photoGroupViewController = photoGroupViewController;
         self.photoGroupViewController.pickerDelegate = self;
         self.maximumNumberOfSelection = 20;
-        self.viewControllers = @[ self.photoGroupViewController ];
     }
     return self;
+}
+
+- (instancetype)initWithRootViewController:(UIViewController *)rootViewController {
+    return [self init];
 }
 
 - (void)setMaximumNumberOfSelection:(NSInteger)maximumNumberOfSelection {
@@ -141,8 +148,14 @@ const NSInteger _STAssetViewControllerPageSize = 100;
     _maximumNumberOfSelection = maximumNumberOfSelection;
 }
 
+- (void)setWantsEnterFirstAlbumWhenLoaded:(BOOL)wantsEnterFirstAlbumWhenLoaded {
+    self.photoGroupViewController.wantsEnterFirstAlbumWhenLoaded = wantsEnterFirstAlbumWhenLoaded;
+    _wantsEnterFirstAlbumWhenLoaded = wantsEnterFirstAlbumWhenLoaded;
+}
+
 - (void)viewDidLoad {
     self.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName : [UIColor blackColor]};
+    self.photoGroupViewController.backBarButton = self.backBarButton;
     [super viewDidLoad];
 }
 
@@ -184,10 +197,23 @@ const NSInteger _STAssetViewControllerPageSize = 100;
     }
 }
 
+- (void)setBackBarButton:(UIButton *)backBarButton {
+    _backBarButton = backBarButton;
+    self.photoGroupViewController.backBarButton = backBarButton;
+}
+
++ (UIImage *)imageWithIdentifier:(NSString *)identifier {
+    NSString *filePath = [STTemporaryDirectory() stringByAppendingPathComponent:identifier];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:filePath isDirectory:NULL]) {
+        return [UIImage imageWithContentsOfFile:filePath];
+    }
+    return nil;
+}
 @end
 
-NSString *const STImagePickerControllerOriginalImagePath = @"STImagePickerControllerOriginalImagePath"; // an path of image in temp
-NSString *const STImagePickerControllerThumbImage = @"STImagePickerControllerThumbImage";
+NSString *const STImagePickerControllerImageIdentifierKey = @"STImagePickerControllerImageIdentifierKey"; // an path of image in temp
+NSString *const STImagePickerControllerThumbImageKey = @"STImagePickerControllerThumbImageKey";
+NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerImageSizeKey";
 
 #pragma mark AssetCell
 
@@ -317,7 +343,8 @@ NSString *const STImagePickerControllerThumbImage = @"STImagePickerControllerThu
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.navigationItem.title = @"照片";
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"取消" target:self action:@selector(dismissActionFired:)];
+    UIColor *tintColor = self.customNavigationController.navigationBar.titleTextAttributes[NSForegroundColorAttributeName];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"取消" tintColor:tintColor target:self action:@selector(dismissActionFired:)];
 
     [self.tableView registerClass:[_STGroupAssetCell class] forCellReuseIdentifier:@"GroupAssetIdentifier"];
     [self.tableView registerClass:[_STPhotoAssetCell class] forCellReuseIdentifier:@"PhotoAssetIdentifier"];
@@ -367,25 +394,32 @@ NSString *const STImagePickerControllerThumbImage = @"STImagePickerControllerThu
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [self _selectRowAtIndexPath:indexPath animated:YES];
+    [self.tableView deselectRowAtIndexPath:indexPath animated:YES];
+}
+
+- (void)_selectRowAtIndexPath:(NSIndexPath *)indexPath animated:(BOOL)animated {
     _STAssetViewController *assetViewController;
     if (self.fetchResult && indexPath.section == 0) {
         _STPhotoAssetViewController *viewController = [[_STPhotoAssetViewController alloc] initWithFetchResult:(PHFetchResult *)self.fetchResult];
         assetViewController = viewController;
     } else {
-        ALAssetsGroup *assetsGroup = [self.dataSource objectAtIndex:indexPath.row];
-        _STGroupAssetViewController *viewController = [[_STGroupAssetViewController alloc] initWithAssetsGroup:assetsGroup];
-        assetViewController = viewController;
+        ALAssetsGroup *assetsGroup = [self.dataSource st_objectAtIndex:indexPath.row];
+        if (assetsGroup) {
+            assetViewController = [[_STGroupAssetViewController alloc] initWithAssetsGroup:assetsGroup];
+        }
     }
-
+    
     assetViewController.pickerDelegate = self.pickerDelegate;
     assetViewController.maximumNumberOfSelection = self.maximumNumberOfSelection;
-    [self.customNavigationController pushViewController:assetViewController animated:YES];
-    [self.tableView deselectRowAtIndexPath:indexPath animated:YES];
+    assetViewController.backBarButton = self.backBarButton;
+    if (assetViewController) {
+        [self.customNavigationController pushViewController:assetViewController animated:animated];
+    }
 }
 
 #pragma mark - Private Method
 - (void)reloadDataSource {
-
     NSMutableArray *dataSource = (NSMutableArray *)self.dataSource;
     [dataSource removeAllObjects];
     self.fetchResult = nil;
@@ -396,6 +430,9 @@ NSString *const STImagePickerControllerThumbImage = @"STImagePickerControllerThu
                 [dataSource addObject:group];
             }
         } else {
+            [dataSource sortUsingComparator:^NSComparisonResult(ALAssetsGroup *obj1, ALAssetsGroup * obj2) {
+                return obj1.numberOfAssets < obj2.numberOfAssets;
+            }];
             if (NSClassFromString(@"PHFetchResult")) {
                 PHFetchOptions *fetchOptions = [[PHFetchOptions alloc] init];
                 PHFetchResult *fetchResult = [PHAsset fetchAssetsWithMediaType:PHAssetMediaTypeImage options:fetchOptions];
@@ -405,7 +442,11 @@ NSString *const STImagePickerControllerThumbImage = @"STImagePickerControllerThu
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.tableView reloadData];
-                self.tableView.backgroundView = (dataSource.count > 0 || self.fetchResult) ? nil : self.albumEmptyView;
+                BOOL empty = (dataSource.count > 0 || self.fetchResult);
+                self.tableView.backgroundView = empty ? nil : self.albumEmptyView;
+                if (self.wantsEnterFirstAlbumWhenLoaded) {
+                    [self _selectRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0] animated:NO];
+                }
             });
         }
     };
@@ -413,7 +454,8 @@ NSString *const STImagePickerControllerThumbImage = @"STImagePickerControllerThu
         [self.tableView reloadData];
         self.tableView.backgroundView = self.permissionDeniedView;
     };
-    [self.assetsLibiary enumerateGroupsWithTypes:ALAssetsGroupAll usingBlock:assetsEnumerationBlock failureBlock:assetsFailureBlock];
+    ALAssetsGroupType supportedType = ALAssetsGroupAll;
+    [self.assetsLibiary enumerateGroupsWithTypes:supportedType usingBlock:assetsEnumerationBlock failureBlock:assetsFailureBlock];
 }
 
 - (void)dismissActionFired:(id)sender {
@@ -644,7 +686,14 @@ NSString *const STImagePickerControllerThumbImage = @"STImagePickerControllerThu
 - (void)viewDidLoad {
     [super viewDidLoad];
     [self loadNextPage];
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"完成" target:self action:@selector(finishActionFired:)];
+    if (self.backBarButton) {
+        [self.backBarButton removeTarget:nil action:NULL forControlEvents:UIControlEventAllEvents];
+        [self.backBarButton addTarget:self action:@selector(backViewControllerActionFired:) forControlEvents:UIControlEventTouchUpInside];
+        self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.backBarButton];
+    }
+    UIColor *tintColor = self.customNavigationController.navigationBar.titleTextAttributes[NSForegroundColorAttributeName];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"完成" tintColor:tintColor target:self action:@selector(finishActionFired:)];
+    
     self.navigationItem.rightBarButtonItem.enabled = NO;
     UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
     NSInteger count = CGRectGetWidth(self.view.frame) / 78;
@@ -666,31 +715,29 @@ NSString *const STImagePickerControllerThumbImage = @"STImagePickerControllerThu
     self.collectionView.backgroundColor = [UIColor whiteColor];
     self.collectionView.allowsMultipleSelection = YES;
     [self.collectionView registerClass:[_STAssetCollectionCell class] forCellWithReuseIdentifier:@"Identifier"];
+    self.collectionView.alwaysBounceHorizontal = NO;
+    self.collectionView.alwaysBounceVertical = YES;
     [self.view addSubview:self.collectionView];
 
     UIEdgeInsets edgeInsets = self.collectionView.contentInset;
     edgeInsets.top += 5;
+    edgeInsets.bottom += 5;
     self.collectionView.contentInset = edgeInsets;
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (![self hasNextPage]) {
+            NSIndexPath *indexPath = [NSIndexPath indexPathForItem:[self.collectionView numberOfItemsInSection:0] - 1 inSection:0];
+            [self.collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:UICollectionViewScrollPositionBottom animated:NO];
+        }
+    });
 }
 
-- (void)edgeInsetsToFit {
-    UIEdgeInsets edgeInsets = self.collectionView.contentInset;
-    CGSize contentSize = self.collectionView.contentSize;
-    CGSize size = self.collectionView.bounds.size;
-    CGFloat heightOffset = (contentSize.height + edgeInsets.top) - size.height;
-    if (heightOffset < 0) {
-        edgeInsets.bottom = size.height - (contentSize.height + edgeInsets.top) + 1;
-        self.collectionView.contentInset = edgeInsets;
-    } else {
-        edgeInsets.bottom = 9;
-        self.collectionView.contentInset = edgeInsets;
-    }
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
 }
 
-- (void)viewDidLayoutSubviews {
-    [super viewDidLayoutSubviews];
-    _STAssetViewController *weakSelf = self;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.01 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ [weakSelf edgeInsetsToFit]; });
+- (void)backViewControllerActionFired:(id)sender {
+    [self.customNavigationController popViewControllerAnimated:YES];
 }
 
 #pragma mark - UICollectionViewDataSource
@@ -807,13 +854,18 @@ NSString *const STImagePickerControllerThumbImage = @"STImagePickerControllerThu
 }
 
 - (void)finishActionFired:(id)sender {
-    NSArray *selectedItem = self.selectedAssets;
-    if (selectedItem.count == 0) {
+    NSArray *selectedItems = self.selectedAssets;
+    if (selectedItems.count == 0) {
         return;
     }
     [STIndicatorView showInView:self.customNavigationController.view animated:NO];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        NSArray *imageArray = [self compressedImageWithAssets:selectedItem];
+        NSArray *sortedSelectedItems = [selectedItems sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+            NSInteger index0 = [self.dataSource indexOfObject:obj1];
+            NSInteger index1 = [self.dataSource indexOfObject:obj2];
+            return index0 > index1;
+        }];
+        NSArray *imageArray = [self compressedImageWithAssets:sortedSelectedItems];
         dispatch_async(dispatch_get_main_queue(), ^{
             [STIndicatorView hideInView:self.customNavigationController.view animated:YES];
             if ([self.pickerDelegate respondsToSelector:@selector(assetViewController:didFinishWithPhotoArray:)]) {
@@ -831,11 +883,11 @@ NSString *const STImagePickerControllerThumbImage = @"STImagePickerControllerThu
         if (start + _STAssetViewControllerPageSize > [self numberOfAssets]) {
             range.length = [self numberOfAssets] - start;
         }
-        [self fetchAssetWithRange:range];
+        [self fetchAssetWithRange:range options:0];
     }
 }
 
-- (void)fetchAssetWithRange:(NSRange)range {
+- (void)fetchAssetWithRange:(NSRange)range options:(NSEnumerationOptions)options {
 }
 
 - (BOOL)hasNextPage {
@@ -848,6 +900,26 @@ NSString *const STImagePickerControllerThumbImage = @"STImagePickerControllerThu
 
 - (NSArray *)compressedImageWithAssets:(NSArray *)assets {
     return nil;
+}
+
+- (NSData *)compressedDataWithOriginalImage:(UIImage *)image {
+    STImagePickerController *pickerController = (STImagePickerController *)self.customNavigationController;
+    NSObject<STImageProcessDelegate> *processDelegate = [pickerController isKindOfClass:[STImagePickerController class]] ? pickerController.processDelegate : nil;
+    if ([processDelegate respondsToSelector:@selector(compressedOriginalImage:)]) {
+        return [processDelegate compressedOriginalImage:image];
+    }
+    return UIImageJPEGRepresentation(image, 1.0);
+}
+
+- (void)saveImageData:(NSData *)imageData withIdentifier:(NSString *)identifier {
+    STImagePickerController *pickerController = (STImagePickerController *)self.customNavigationController;
+    NSObject<STImageProcessDelegate> *processDelegate = [pickerController isKindOfClass:[STImagePickerController class]] ? pickerController.processDelegate : nil;
+    if ([processDelegate respondsToSelector:@selector(saveImageData:withIdentifier:)]) {
+        [processDelegate saveImageData:imageData withIdentifier:identifier];
+    } else {
+        NSString *filePath = [STTemporaryDirectory() stringByAppendingPathComponent:identifier];
+        [imageData writeToFile:filePath atomically:YES];
+    }
 }
 
 @end
@@ -878,10 +950,10 @@ NSString *const STImagePickerControllerThumbImage = @"STImagePickerControllerThu
     return [self.assetsGroup numberOfAssets];
 }
 
-- (void)fetchAssetWithRange:(NSRange)range {
+- (void)fetchAssetWithRange:(NSRange)range options:(NSEnumerationOptions)options {
     NSIndexSet *indexSet = [[NSIndexSet alloc] initWithIndexesInRange:range];
     [self.assetsGroup enumerateAssetsAtIndexes:indexSet
-                                       options:0
+                                       options:options
                                     usingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
                                         if (result) {
                                             [self.dataSource addObject:result];
@@ -892,19 +964,24 @@ NSString *const STImagePickerControllerThumbImage = @"STImagePickerControllerThu
 - (NSArray *)compressedImageWithAssets:(NSArray *)assets {
     NSMutableArray *imageArray = [NSMutableArray arrayWithCapacity:assets.count];
     NSTimeInterval timeInterval = [[NSDate date] timeIntervalSince1970];
-    NSString *tempPrefix = [NSString stringWithFormat:@"%@/%lf", STTemporaryDirectory(), timeInterval];
-    __block NSInteger startIndex = 0;
     [assets enumerateObjectsUsingBlock:^(ALAsset *asset, NSUInteger idx, BOOL *stop) {
         NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:2];
-        UIImage *originalImage = [UIImage imageWithCGImage:[asset defaultRepresentation].fullScreenImage];
-        NSData *data = UIImageJPEGRepresentation(originalImage, 0.9);
-        NSString *filePath = [NSString stringWithFormat:@"%@_%ld.jpg", tempPrefix, (long)startIndex];
-        [data writeToFile:filePath atomically:YES];
+        ALAssetRepresentation *representation = [asset defaultRepresentation];
+        UIImage *originalImage = [UIImage imageWithCGImage:representation.fullScreenImage];
+        if (!originalImage) {
+            originalImage = [UIImage imageWithCGImage:representation.fullResolutionImage scale:representation.scale orientation:(UIImageOrientation)representation.orientation];
+            if (!originalImage) {
+                originalImage = [UIImage imageWithCGImage:asset.aspectRatioThumbnail];
+            }
+        }
+        NSData *data = [self compressedDataWithOriginalImage:originalImage];
+        NSString *identifier = [NSString stringWithFormat:@"STImagePicker-%lld%ld.jpg", @(timeInterval * 1000).longLongValue, (long)idx];
+        [self saveImageData:data withIdentifier:identifier];
         UIImage *image = [UIImage imageWithCGImage:[asset thumbnail]];
-        [dict setValue:image forKey:STImagePickerControllerThumbImage];
-        [dict setValue:filePath forKey:STImagePickerControllerOriginalImagePath];
+        [dict setValue:image forKey:STImagePickerControllerThumbImageKey];
+        [dict setValue:identifier forKey:STImagePickerControllerImageIdentifierKey];
+        dict[STImagePickerControllerImageSizeKey] = NSStringFromCGSize(originalImage.size);
         [imageArray addObject:dict];
-        startIndex++;
     }];
     return imageArray;
 }
@@ -950,10 +1027,10 @@ NSString *const STImagePickerControllerThumbImage = @"STImagePickerControllerThu
     return [self.fetchResult countOfAssetsWithMediaType:PHAssetMediaTypeImage];
 }
 
-- (void)fetchAssetWithRange:(NSRange)range {
+- (void)fetchAssetWithRange:(NSRange)range options:(NSEnumerationOptions)options {
     NSIndexSet *indexSet = [[NSIndexSet alloc] initWithIndexesInRange:range];
     [self.fetchResult enumerateObjectsAtIndexes:indexSet
-                                        options:0
+                                        options:options
                                      usingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
                                          if (obj) {
                                              [self.dataSource addObject:obj];
@@ -964,10 +1041,6 @@ NSString *const STImagePickerControllerThumbImage = @"STImagePickerControllerThu
 - (NSArray *)compressedImageWithAssets:(NSArray *)assets {
     NSMutableArray *imageArray = [NSMutableArray arrayWithCapacity:assets.count];
     NSTimeInterval timeInterval = [[NSDate date] timeIntervalSince1970];
-
-    NSString *tempPrefix = [NSString stringWithFormat:@"%@/%lf", STTemporaryDirectory(), timeInterval];
-    __block NSInteger startIndex = 0;
-
     PHImageRequestOptions *requestOptions = [[PHImageRequestOptions alloc] init];
     requestOptions.synchronous = YES;
     [assets enumerateObjectsUsingBlock:^(PHAsset *asset, NSUInteger idx, BOOL *stop) {
@@ -979,21 +1052,24 @@ NSString *const STImagePickerControllerThumbImage = @"STImagePickerControllerThu
                          contentMode:PHImageContentModeAspectFill
                              options:requestOptions
                        resultHandler:^(UIImage *result, NSDictionary *info) {
-                           [dict setValue:result forKey:STImagePickerControllerThumbImage];
+                           [dict setValue:result forKey:STImagePickerControllerThumbImageKey];
                        }];
             [[PHImageManager defaultManager]
                 requestImageDataForAsset:asset
                                  options:requestOptions
                            resultHandler:^(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info) {
-                               NSString *filePath = [NSString stringWithFormat:@"%@_%ld.jpg", tempPrefix, (long)startIndex];
-                               [imageData writeToFile:filePath atomically:YES];
-                               [dict setValue:filePath forKey:STImagePickerControllerOriginalImagePath];
+                               UIImage *originalImage = [UIImage imageWithData:imageData];
+//                               originalImage = [UIImage imageWithCGImage:originalImage.CGImage scale:originalImage.scale orientation:orientation];
+                               
+                               NSData *data = [self compressedDataWithOriginalImage:originalImage];
+                               NSString *identifier = [NSString stringWithFormat:@"STImagePicker-%lld%ld.jpg", @(timeInterval * 1000).longLongValue, (long)idx];
+                               [self saveImageData:data withIdentifier:identifier];
+                               dict[STImagePickerControllerImageSizeKey] = NSStringFromCGSize(originalImage.size);
+                               [dict setValue:identifier forKey:STImagePickerControllerImageIdentifierKey];
                            }];
             [imageArray addObject:dict];
-            startIndex++;
         }
     }];
-
     return imageArray;
 }
 

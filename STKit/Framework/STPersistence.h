@@ -50,3 +50,9 @@ extern NSString *STPersistTemporyDirectory();
 + (instancetype)tempoaryPersistenceWithSubpath:(NSString *)subpath;
 
 @end
+
+@interface STPersistence (STPersistenceClean)
+
+- (void)removeAllCachedValues;
+
+@end

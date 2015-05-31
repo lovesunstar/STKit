@@ -88,6 +88,15 @@
 
 @end
 
+@interface NSArray (STNetwork)
+
+- (NSString *)st_componentsJoinedUsingURLEncode;
+
+- (NSString *)st_componentsJoinedUsingSeparator:(NSString *)separator;
+
+@end
+
+
 @interface NSString (STURLParameters)
 
 - (NSString *)stringByAppendingURLParameters:(NSDictionary *)parameters;

@@ -206,3 +206,46 @@
     _titleTextAttributes = titleTextAttributes;
 }
 @end
+
+
+@implementation UIBarButtonItem (STKit)
+
++ (instancetype)backBarButtonItemWithTarget:(id)target action:(SEL)action {
+    return [[self alloc] initWithBarButtonCustomItem:STBarButtonCustomItemBack target:target action:action];
+}
+
+- (instancetype)initWithBarButtonCustomItem:(STBarButtonCustomItem)customItem target:(id)target action:(SEL)action {
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    button.frame = CGRectMake(0, 0, 70, 44);
+    button.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
+    [button setImage:[STResourceManager imageWithResourceID:STImageResourceNavigationItemBackID] forState:UIControlStateNormal];
+    button.imageEdgeInsets = UIEdgeInsetsMake(10, 10, 10, 24);
+    button.titleEdgeInsets = UIEdgeInsetsMake(0, 7, 0, 0);
+    [button setTitle:@"返回" forState:UIControlStateNormal];
+    [button setTitleColor:[UIColor colorWithRGB:0xFF7300] forState:UIControlStateNormal];
+    [button setTitleColor:[UIColor colorWithRGB:0x883D00] forState:UIControlStateHighlighted];
+    button.titleLabel.textAlignment = NSTextAlignmentLeft;
+    [button addTarget:target action:action forControlEvents:UIControlEventTouchUpInside];
+    return [self initWithCustomView:button];
+}
+
+- (instancetype)initWithTitle:(NSString *)title target:(id)target action:(SEL)action {
+    return [self initWithTitle:title tintColor:[UIColor colorWithRGB:0xFF7300] target:target action:action];
+}
+
+- (instancetype)initWithTitle:(NSString *)title tintColor:(UIColor *)tintColor target:(id)target action:(SEL)action {
+    if (!tintColor) {
+        tintColor = [UIColor blackColor];
+    }
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    button.frame = CGRectMake(0, 0, 60, 44);
+    [button setTitle:title forState:UIControlStateNormal];
+    button.titleLabel.font=  [UIFont systemFontOfSize:16.];
+    [button setTitleColor:tintColor forState:UIControlStateNormal];
+    [button setTitleColor:[tintColor colorWithAlphaComponent:0.7] forState:UIControlStateHighlighted];
+    [button setTitleColor:[tintColor colorWithAlphaComponent:0.4] forState:UIControlStateDisabled];
+    [button addTarget:target action:action forControlEvents:UIControlEventTouchUpInside];
+    return [self initWithCustomView:button];
+}
+
+@end

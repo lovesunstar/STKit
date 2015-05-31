@@ -150,6 +150,7 @@
         _displayDuration = 5.0;
         _notificationViewArray = [NSMutableArray arrayWithCapacity:5];
         _belowWindow = [UIApplication sharedApplication].keyWindow;
+        self.windowLevel = _belowWindow.windowLevel;
         [self makeKeyAndVisible];
     }
     return self;

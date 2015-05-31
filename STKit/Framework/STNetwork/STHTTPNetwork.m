@@ -7,8 +7,8 @@
 //
 
 #import "STHTTPNetwork.h"
-
 #import "STHTTPOperation.h"
+#import "STURLCache.h"
 
 typedef void (^STXMLReaderHandler)(NSXMLParser *XMLparser, id object, NSError *error);
 
@@ -191,7 +191,7 @@ static NSURLCache *_HTTPCache;
 + (NSURLCache *)defaultHTTPCache {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        _HTTPCache = [[NSURLCache alloc] initWithMemoryCapacity:4*1024*1024 diskCapacity:50*1024*1024 diskPath:@"STHTTPCache"];
+        _HTTPCache = [[STURLCache alloc] initWithMemoryCapacity:4*1024*1024 diskCapacity:50*1024*1024 diskPath:@"STHTTPCache"];
     });
     return _HTTPCache;
 }

@@ -119,7 +119,7 @@ static STImagePresent *_imagePresent;
 + (void)presentImageItem:(STImageItem *)imageItem imageView:(UIImageView *)imageView animated:(BOOL)animated {
     [_previousImagePresent dismissAnimated:NO];
     [STImagePresent standardImagePresent]->_presentedImageView = imageView;
-    [STImagePresent standardImagePresent].images = @[ imageItem ];
+    [STImagePresent standardImagePresent].images = @[imageItem];
     [[STImagePresent standardImagePresent] presentImageAtIndex:0 animated:YES];
 }
 
@@ -170,7 +170,6 @@ static STImagePresent *_previousImagePresent;
     frame.size.width -= window.viewController.collectionView.horizontalSpacing;
     STImageScrollView *imageScrollView = [[STImageScrollView alloc] initWithFrame:frame];
     [window.viewController.collectionView setValue:imageScrollView forKey:@"_defaultImageScrollView"];
-    [window makeKeyAndVisible];
 
     UIImageView *imageView = _presentedImageView;
     if ([self.delegate respondsToSelector:@selector(imagePresent:imageViewForImageAtIndex:)]) {
@@ -181,6 +180,7 @@ static STImagePresent *_previousImagePresent;
     } else {
         [self _fadeInAnimated:YES];
     }
+    [window makeKeyAndVisible];
 }
 
 - (void)dismissAnimated:(BOOL)animated {
@@ -216,7 +216,9 @@ static STImagePresent *_previousImagePresent;
         if (image) {
             __weak STImagePresent *weakSelf = self;
             STImageWriteToPhotosAlbum(image, @"STKitDemo",
-                                      ^(UIImage *image, NSError *error) { [weakSelf _image:image didFinishSavingWithError:error contextInfo:NULL]; });
+                                      ^(UIImage *image, NSError *error) {
+                                          [weakSelf _image:image didFinishSavingWithError:error contextInfo:NULL];
+                                      });
         }
     }
 }
@@ -245,12 +247,8 @@ static STImagePresent *_previousImagePresent;
     presentingImageView.image = imageView.image;
     window.viewController.backgroundView.alpha = 0.1;
     presentingImageView.alpha = 0.1;
-
+    STImageItem *item = window.viewController.collectionView.images[self.presentedIndex];
     void (^animations)(void) = ^{
-        imageView.window.transform = CGAffineTransformMakeScale(0.95, 0.95);
-        presentingImageView.alpha = 1.0;
-        window.viewController.backgroundView.alpha = 1.0;
-        STImageItem *item = window.viewController.collectionView.images[self.presentedIndex];
         if (item.imageURLString) {
             [imageScrollView setImageURL:item.imageURLString animated:NO];
         } else {
@@ -258,6 +256,10 @@ static STImagePresent *_previousImagePresent;
                 [imageScrollView setImage:item.image animated:NO];
             }
         }
+        
+        imageView.window.transform = CGAffineTransformMakeScale(0.95, 0.95);
+        presentingImageView.alpha = 1.0;
+        window.viewController.backgroundView.alpha = 1.0;
         [imageScrollView zoomToFit];
     };
     void (^completion)(BOOL) = ^(BOOL finished) {
@@ -269,6 +271,7 @@ static STImagePresent *_previousImagePresent;
     if (animated) {
         [UIView animateWithDuration:0.25 animations:animations completion:completion];
     } else {
+        animations();
         completion(YES);
     }
 }

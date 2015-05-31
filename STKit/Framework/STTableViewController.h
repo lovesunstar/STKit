@@ -22,7 +22,7 @@
 - (void)refreshData;
 - (void)refreshDataUsingRefreshControl;
 
-//// 当数据加载完成之后，会调用此方法，子类徐重写，刷新列表等
+//// 当数据加载完成之后，会调用此方法，子类需重写，刷新列表等
 - (void)reloadData;
 
 /// 当出现异常失败时，是否列表可以滚动

@@ -434,9 +434,13 @@
     STVisualBlurView *blurView = [[STVisualBlurView alloc] initWithBlurEffectStyle:blurEffectStyle];
     blurView.frame = self.bounds;
     blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    [self.backgroundView addSubview:blurView];
-    _blurEffectStyle = blurEffectStyle;
-    [self displayBlurImage];
+    if (blurView) {
+        [self.backgroundView addSubview:blurView];
+        _blurEffectStyle = blurEffectStyle;
+        [self displayBlurImage];
+    } else {
+        self.backgroundView.backgroundColor = [UIColor colorWithWhite:0.11 alpha:0.73];
+    }
 }
 
 - (void)setCornerRadius:(CGFloat)cornerRadius {
