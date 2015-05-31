@@ -18,15 +18,6 @@
 }
 @end
 
-
-@interface NSArray (STNetwork)
-
-- (NSString *)st_componentsJoinedUsingURLEncode;
-
-- (NSString *)st_componentsJoinedUsingSeparator:(NSString *)separator;
-
-@end
-
 @interface STHTTPRequest () {
 @private
     NSString    *_URLString;
