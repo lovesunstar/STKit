@@ -135,6 +135,7 @@ const NSInteger _STAssetViewControllerPageSize = 100000000;
         self.photoGroupViewController = photoGroupViewController;
         self.photoGroupViewController.pickerDelegate = self;
         self.maximumNumberOfSelection = 20;
+        self.maximumInteractivePopEdgeDistance = 13;
     }
     return self;
 }
@@ -146,6 +147,11 @@ const NSInteger _STAssetViewControllerPageSize = 100000000;
 - (void)setMaximumNumberOfSelection:(NSInteger)maximumNumberOfSelection {
     self.photoGroupViewController.maximumNumberOfSelection = maximumNumberOfSelection;
     _maximumNumberOfSelection = maximumNumberOfSelection;
+}
+
+- (void)setMaximumInteractivePopEdgeDistance:(CGFloat)maximumInteractivePopEdgeDistance {
+    self.photoGroupViewController.maximumInteractivePopEdgeDistance = maximumInteractivePopEdgeDistance;
+    _maximumInteractivePopEdgeDistance = maximumInteractivePopEdgeDistance;
 }
 
 - (void)setWantsEnterFirstAlbumWhenLoaded:(BOOL)wantsEnterFirstAlbumWhenLoaded {
@@ -411,6 +417,7 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
     }
     
     assetViewController.pickerDelegate = self.pickerDelegate;
+    assetViewController.maximumInteractivePopEdgeDistance = self.maximumInteractivePopEdgeDistance;
     assetViewController.maximumNumberOfSelection = self.maximumNumberOfSelection;
     assetViewController.backBarButton = self.backBarButton;
     if (assetViewController) {
@@ -1059,8 +1066,6 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
                                  options:requestOptions
                            resultHandler:^(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info) {
                                UIImage *originalImage = [UIImage imageWithData:imageData];
-//                               originalImage = [UIImage imageWithCGImage:originalImage.CGImage scale:originalImage.scale orientation:orientation];
-                               
                                NSData *data = [self compressedDataWithOriginalImage:originalImage];
                                NSString *identifier = [NSString stringWithFormat:@"STImagePicker-%lld%ld.jpg", @(timeInterval * 1000).longLongValue, (long)idx];
                                [self saveImageData:data withIdentifier:identifier];

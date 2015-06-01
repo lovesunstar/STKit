@@ -43,6 +43,8 @@
 @property(nonatomic) BOOL wantsEnterFirstAlbumWhenLoaded;
 @property(nonatomic) NSInteger maximumNumberOfSelection; // default 20
 
+@property(nonatomic) CGFloat maximumInteractivePopEdgeDistance; // default 13
+
 @property(nonatomic, strong) UIButton    *backBarButton;
 
 @property(nonatomic, strong) id userInfo;

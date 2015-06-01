@@ -16,6 +16,63 @@
 - (BOOL)isEqualToItem:(STMultipartItem *)item {
     return NO;
 }
+
+- (NSData *)HTTPBodyDataWithBoundary:(NSString *)boundary fieldName:(NSString *)fieldName {
+    NSData *data = self.data?:[NSData dataWithContentsOfFile:self.path];
+    NSString *name =  self.name ?: @((long long)[[NSDate date] timeIntervalSince1970]).stringValue;
+    if (!fieldName || !boundary||  ![data isKindOfClass:[NSData class]] || data.length == 0) {
+        return nil;
+    }
+    NSMutableData *HTTPBody = [NSMutableData dataWithCapacity:300];
+    NSString *body =
+    [NSString stringWithFormat:@"--%@\r\nContent-Disposition: form-data; name=\"%@\"; filename=\"%@\"\r\nContent-Type: "
+     @"application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\n",
+     boundary, fieldName, name];
+    [HTTPBody appendData:[body dataUsingEncoding:NSUTF8StringEncoding]];
+    [HTTPBody appendData:data];
+    [HTTPBody appendData:[@"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+    return HTTPBody;
+}
+@end
+
+@interface STHTTPBodyItem : NSObject
+
+@property(nonatomic, copy) NSString *fieldName;
+@property(nonatomic, strong) id     fieldValue;
+
+@end
+
+@implementation STHTTPBodyItem
+
+- (instancetype)initWithFieldName:(NSString *)fieldName value:(id)value {
+    self = [super init];
+    if (self) {
+        self.fieldName = fieldName;
+        self.fieldValue = value;
+    }
+    return self;
+}
+
+- (NSData *)HTTPBodyDataWithBoundary:(NSString *)boundary {
+    if ([self.fieldValue isKindOfClass:[STMultipartItem class]]) {
+        return [(STMultipartItem *)self.fieldValue HTTPBodyDataWithBoundary:boundary fieldName:self.fieldName];
+    }
+    NSMutableData *HTTPBody = [NSMutableData dataWithCapacity:100];
+    NSString *body =
+    [NSString stringWithFormat:@"--%@\r\nContent-Disposition: form-data; name=\"%@\"\r\n\r\n%@", boundary, self.fieldName, self.fieldValue];
+    [HTTPBody appendData:[body dataUsingEncoding:NSUTF8StringEncoding]];
+    [HTTPBody appendData:[@"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+    return HTTPBody;
+}
+
+@end
+
+@interface NSArray (STNetwork)
+
+- (NSString *)st_componentsJoinedUsingURLEncode;
+
+- (NSString *)st_componentsJoinedUsingSeparator:(NSString *)separator;
+
 @end
 
 @interface STHTTPRequest () {
@@ -125,45 +182,34 @@
         NSMutableArray *unwrapParameters = [NSMutableArray arrayWithCapacity:self.parameters.count];
         [self.parameters enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
             if ([obj isKindOfClass:[NSArray class]]) {
-                [obj enumerateObjectsUsingBlock:^(id elements, NSUInteger idx, BOOL *stop) { [unwrapParameters addObject:@{key : elements}]; }];
+                [obj enumerateObjectsUsingBlock:^(id element, NSUInteger idx, BOOL *stop) {
+                    STHTTPBodyItem *item = [[STHTTPBodyItem alloc] initWithFieldName:key value:element];
+                    [unwrapParameters addObject:item];
+                }];
             } else {
-                [unwrapParameters addObject:@{key : obj}];
+                STHTTPBodyItem *item = [[STHTTPBodyItem alloc] initWithFieldName:key value:obj];
+                [unwrapParameters addObject:item];
             }
         }];
-        __block NSInteger simpleFieldsCount = 0;
-        [unwrapParameters enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-            if ([obj isKindOfClass:[NSDictionary class]]) {
-                id value = [[obj allObjects] firstObject];
-                if (![value isKindOfClass:[STMultipartItem class]]) {
-                    simpleFieldsCount++;
-                }
+        __block BOOL containsMutilpartItem = NO;
+        [unwrapParameters enumerateObjectsUsingBlock:^(STHTTPBodyItem *obj, NSUInteger idx, BOOL *stop) {
+            if ([obj isKindOfClass:[STHTTPBodyItem class]] && [obj.fieldValue isKindOfClass:[STMultipartItem class]]) {
+                containsMutilpartItem = YES;
+                *stop = YES;
             }
         }];
         NSMutableData *postData = [NSMutableData data];
         STHTTPRequestFormEnctype enctype = configuration.enctype;
-        if (simpleFieldsCount < unwrapParameters.count || enctype == STHTTPRequestFormEnctypeMultipartData) {
-            [unwrapParameters enumerateObjectsUsingBlock:^(NSDictionary *parameter, NSUInteger idx, BOOL *stop) {
-                NSString *key = [parameter.allKeys firstObject];
-                id obj = [parameter valueForKey:key];
-                if ([obj isKindOfClass:[STMultipartItem class]]) {
-                    STMultipartItem *multipartItem = (STMultipartItem *)obj;
-                    if (multipartItem.name && (multipartItem.path || multipartItem.data)) {
-                        NSData *data = multipartItem.data?:[NSData dataWithContentsOfFile:multipartItem.path];
-                        if (data.length > 0) {
-                            NSString *body =
-                            [NSString stringWithFormat:@"--%@\r\nContent-Disposition: form-data; name=\"%@\"; filename=\"%@\"\r\nContent-Type: "
-                             @"application/octet-stream\r\nContent-Transfer-Encoding: binary\r\n\r\n",
-                             kBoundary, key, multipartItem.name];
-                            [postData appendData:[body dataUsingEncoding:NSUTF8StringEncoding]];
-                            [postData appendData:data];
-                            [postData appendData:[@"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
-                        }
+        if (containsMutilpartItem) {
+            enctype = STHTTPRequestFormEnctypeMultipartData;
+        }
+        if (enctype == STHTTPRequestFormEnctypeMultipartData) {
+            [unwrapParameters enumerateObjectsUsingBlock:^(STHTTPBodyItem *parameter, NSUInteger idx, BOOL *stop) {
+                if ([parameter isKindOfClass:[STHTTPBodyItem class]]) {
+                    NSData *data = [parameter HTTPBodyDataWithBoundary:kBoundary];
+                    if (data.length > 0) {
+                        [postData appendData:data];
                     }
-                } else {
-                    NSString *body =
-                    [NSString stringWithFormat:@"--%@\r\nContent-Disposition: form-data; name=\"%@\"\r\n\r\n%@", kBoundary, key, obj];
-                    [postData appendData:[body dataUsingEncoding:NSUTF8StringEncoding]];
-                    [postData appendData:[@"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
                 }
             }];
             [postData appendData:[[NSString stringWithFormat:@"--%@--\r\n", kBoundary] dataUsingEncoding:NSUTF8StringEncoding]];
@@ -333,9 +379,9 @@
 
 - (NSString *)st_componentsJoinedUsingURLEncode {
     NSMutableString *mutableString = [NSMutableString string];
-    [self enumerateObjectsUsingBlock:^(NSDictionary *parameter, NSUInteger idx, BOOL *stop) {
-        NSString *key = [parameter.allKeys firstObject];
-        NSString *value = [parameter valueForKey:key];
+    [self enumerateObjectsUsingBlock:^(STHTTPBodyItem *parameter, NSUInteger idx, BOOL *stop) {
+        NSString *key = parameter.fieldName;
+        NSString *value = parameter.fieldValue;
         if ([value isKindOfClass:[NSString class]]) {
             [mutableString appendFormat:@"%@=%@&", [key st_stringByURLEncoded], [value st_stringByURLEncoded]];
         } else {
@@ -353,9 +399,9 @@
         separator = @"&";
     }
     NSMutableString *mutableString = [NSMutableString string];
-    [self enumerateObjectsUsingBlock:^(NSDictionary *parameter, NSUInteger idx, BOOL *stop) {
-        NSString *key = [parameter.allKeys firstObject];
-        NSString *value = [parameter valueForKey:key];
+    [self enumerateObjectsUsingBlock:^(STHTTPBodyItem *parameter, NSUInteger idx, BOOL *stop) {
+        NSString *key = parameter.fieldName;
+        NSString *value = parameter.fieldValue;
         [mutableString appendFormat:@"%@=%@%@", key, value, separator];
     }];
     if (mutableString.length > 0) {
