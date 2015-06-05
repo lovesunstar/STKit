@@ -168,9 +168,13 @@
         }
     }
     sideItemWidth = MIN(sideItemWidth, 60);
-
+    CGFloat titleWidth = self.titleView.width;
+    if (titleWidth == 0 || titleWidth > CGRectGetWidth(self.bounds) - 2 * sideItemWidth) {
+        titleWidth = CGRectGetWidth(self.bounds) - 2 * sideItemWidth;
+    }
+    CGFloat titleLeft = (CGRectGetWidth(self.bounds) - titleWidth) / 2;
     self.leftBarView.frame = CGRectMake(0, 0, sideItemWidth, CGRectGetHeight(self.leftBarView.frame));
-    self.titleView.frame = CGRectMake(sideItemWidth, 0, CGRectGetWidth(self.bounds) - 2 * sideItemWidth, CGRectGetHeight(self.titleView.frame));
+    self.titleView.frame = CGRectMake(titleLeft, 0, titleWidth, CGRectGetHeight(self.titleView.frame));
     self.rightBarView.frame = CGRectMake(CGRectGetWidth(self.bounds) - sideItemWidth, 0, sideItemWidth, CGRectGetHeight(self.rightBarView.frame));
 
     [self fitLocationWithView:self.leftBarView];
@@ -240,7 +244,7 @@
     UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
     button.frame = CGRectMake(0, 0, 60, 44);
     [button setTitle:title forState:UIControlStateNormal];
-    button.titleLabel.font=  [UIFont systemFontOfSize:16.];
+    button.titleLabel.font=  [UIFont systemFontOfSize:16.f];
     [button setTitleColor:tintColor forState:UIControlStateNormal];
     [button setTitleColor:[tintColor colorWithAlphaComponent:0.7] forState:UIControlStateHighlighted];
     [button setTitleColor:[tintColor colorWithAlphaComponent:0.4] forState:UIControlStateDisabled];

@@ -217,6 +217,20 @@ typedef void(^STTimerFiredHandler) (NSTimer * timer, BOOL *invalidate);
 
 @end
 
+@interface NSDictionary (STSecure)
+
+- (NSInteger)st_integerValueForKey:(NSString *)key;
+- (long long)st_longLongValueForKey:(NSString *)key;
+- (int)st_intValueForKey:(NSString *)key;
+- (double)st_doubleValueForKey:(NSString *)key;
+- (BOOL)st_boolValueForKey:(NSString *)key;
+
+- (NSArray *)st_arrayValueForKey:(NSString *)key;
+- (NSDictionary *)st_dictionaryValueForKey:(NSString *)key;
+- (NSString *)st_stringValueForKey:(NSString *)key;
+
+@end
+
 @interface NSArray (STClass)
 
 - (BOOL)containsClass:(Class) class;

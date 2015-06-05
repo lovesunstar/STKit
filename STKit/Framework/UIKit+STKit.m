@@ -24,6 +24,15 @@ CGFloat STGetScreenHeight() {
     return CGRectGetHeight([UIScreen mainScreen].bounds);
 }
 
+
+CGAffineTransform STTransformMakeRotation(CGPoint center, CGPoint anchorPoint, CGFloat angle) {
+    CGFloat x = anchorPoint.x - center.x;
+    CGFloat y = anchorPoint.y - center.y;
+    CGAffineTransform  transform = CGAffineTransformMakeTranslation(x, y);
+    transform = CGAffineTransformRotate(transform, angle);
+    return CGAffineTransformTranslate(transform, -x, -y);
+}
+
 CGFloat STGetSystemVersion() {
     return [UIDevice currentDevice].systemVersion.floatValue;
 }
@@ -806,16 +815,35 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
 
 @implementation UIImage (STSubimage)
 
+- (UIImage *)imageRotatedByRadians:(CGFloat)radians {
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.size.width, self.size.height)];
+    CGAffineTransform transform = CGAffineTransformMakeRotation(radians);
+    view.transform = transform;
+    CGSize rotatedSize = view.size;
+    UIGraphicsBeginImageContextWithOptions(rotatedSize, NO, self.scale);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    CGContextTranslateCTM(context, rotatedSize.width/2, rotatedSize.height/2);
+    CGContextRotateCTM(context, radians);
+    CGContextScaleCTM(context, 1.0, -1.0);
+    CGContextDrawImage(context, CGRectMake(-self.size.width / 2, -self.size.height / 2, self.size.width, self.size.height), self.CGImage);
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
+}
+
+- (UIImage *)imageRotatedByDegrees:(CGFloat)degrees {
+    return [self imageRotatedByRadians:STDegreeToRadian(degrees)];
+}
+
 - (UIImage *)subimageInRect:(CGRect)rect {
     CGFloat scale = MAX(self.scale, 1);
     rect = CGRectMake(rect.origin.x * scale, rect.origin.y * scale, rect.size.width * scale, rect.size.height * scale);
     CGImageRef subimageRef = CGImageCreateWithImageInRect(self.CGImage, rect);
     CGRect smallBounds = CGRectMake(0, 0, CGImageGetWidth(subimageRef), CGImageGetHeight(subimageRef));
-
     UIGraphicsBeginImageContext(smallBounds.size);
     CGContextRef context = UIGraphicsGetCurrentContext();
     CGContextDrawImage(context, smallBounds, subimageRef);
-    UIImage *smallImage = [UIImage imageWithCGImage:subimageRef];
+    UIImage *smallImage = [UIImage imageWithCGImage:subimageRef scale:self.scale orientation:self.imageOrientation];
     UIGraphicsEndImageContext();
     CGImageRelease(subimageRef);
     return smallImage;
@@ -828,7 +856,7 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
 
     CGSize imageSize = CGSizeMake(self.size.width, self.size.height);
 
-    UIGraphicsBeginImageContextWithOptions(imageSize, YES, [UIScreen mainScreen].scale);
+    UIGraphicsBeginImageContextWithOptions(imageSize, YES, self.scale);
     CGContextRef context = UIGraphicsGetCurrentContext();
     CGContextConcatCTM(context, transform);
     CGContextDrawImage(context, CGRectMake(0, 0, imageSize.width, imageSize.height), self.CGImage);
@@ -845,10 +873,10 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
 
 - (UIImage *)imageConstrainedToSize:(CGSize)size contentMode:(UIViewContentMode)contentMode {
     CGImageRef imageRef = self.CGImage;
-    if (!imageRef || (size.width == 0 && size.height == 0)) {
+    CGSize imageSize = self.size;
+    if (!imageRef || (size.width == 0 && size.height == 0) || imageSize.height == 0) {
         return nil;
     }
-    CGSize imageSize = self.size;
     // 首先确定实际的image的大小, 先保证比例，然后找到和constrained比较接近的，计算出实际需要的imageSize。
     CGFloat width, height;
     CGFloat widthRate = imageSize.width / size.width, heightRate = imageSize.height / size.height;

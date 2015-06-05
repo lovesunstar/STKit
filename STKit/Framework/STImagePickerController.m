@@ -312,17 +312,17 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
     if (NSClassFromString(@"PHFetchResult")) {
         PHFetchResult *fetchResult = (PHFetchResult *)__fetchResult;
         PHAsset *asset = fetchResult.lastObject;
-
         NSString *title = @"所有照片";
         NSInteger count = fetchResult.count;
-
         [[PHImageManager defaultManager] cancelImageRequest:(PHImageRequestID)self.imageRequestID];
         self.imageRequestID = [[PHImageManager defaultManager]
             requestImageForAsset:asset
                       targetSize:CGSizeMake(57 * [UIScreen mainScreen].scale, 57 * [UIScreen mainScreen].scale)
                      contentMode:PHImageContentModeAspectFill
                          options:nil
-                   resultHandler:^(UIImage *result, NSDictionary *info) { [self setImage:result title:title count:count]; }];
+                   resultHandler:^(UIImage *result, NSDictionary *info) {
+                       [self setImage:result title:title count:count];
+                   }];
         [self setImage:nil title:title count:count];
     }
 
@@ -675,7 +675,9 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
 @end
 
 #pragma mark - AssetViewController
-@implementation _STAssetViewController
+@implementation _STAssetViewController {
+    BOOL _hasAppeared;
+}
 
 - (void)dealloc {
     self.collectionView.delegate = nil;
@@ -699,7 +701,9 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
         self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.backBarButton];
     }
     UIColor *tintColor = self.customNavigationController.navigationBar.titleTextAttributes[NSForegroundColorAttributeName];
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"完成" tintColor:tintColor target:self action:@selector(finishActionFired:)];
+    if (self.maximumNumberOfSelection > 1) {
+        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"完成" tintColor:tintColor target:self action:@selector(finishActionFired:)];
+    }
     
     self.navigationItem.rightBarButtonItem.enabled = NO;
     UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
@@ -730,17 +734,21 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
     edgeInsets.top += 5;
     edgeInsets.bottom += 5;
     self.collectionView.contentInset = edgeInsets;
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if (![self hasNextPage]) {
-            NSIndexPath *indexPath = [NSIndexPath indexPathForItem:[self.collectionView numberOfItemsInSection:0] - 1 inSection:0];
-            [self.collectionView scrollToItemAtIndexPath:indexPath atScrollPosition:UICollectionViewScrollPositionBottom animated:NO];
-        }
-    });
 }
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    if (_hasAppeared) {
+        return;
+    }
+    _hasAppeared = YES;
+    if (![self hasNextPage] && self.collectionView.numberOfSections > 0 && [self.collectionView numberOfItemsInSection:self.collectionView.numberOfSections - 1] > 0) {
+        [self.collectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:[self.collectionView numberOfItemsInSection:self.collectionView.numberOfSections - 1] - 1 inSection:self.collectionView.numberOfSections - 1] atScrollPosition:UICollectionViewScrollPositionBottom animated:NO];
+    }
 }
 
 - (void)backViewControllerActionFired:(id)sender {
@@ -829,6 +837,15 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+    if (self.maximumNumberOfSelection == 1) {
+        [collectionView deselectItemAtIndexPath:indexPath animated:YES];
+        NSArray *imageArray = [self compressedImageWithAssets:@[self.dataSource[indexPath.row]]];
+        [STIndicatorView hideInView:self.customNavigationController.view animated:YES];
+        if ([self.pickerDelegate respondsToSelector:@selector(assetViewController:didFinishWithPhotoArray:)]) {
+            [self.pickerDelegate assetViewController:self didFinishWithPhotoArray:imageArray];
+        }
+        return;
+    }
     NSInteger count = self.selectedAssets.count;
     if (count >= self.maximumNumberOfSelection) {
         STIndicatorView *indicatorView = [STIndicatorView showInView:self.view animated:NO];

@@ -80,7 +80,6 @@
     }
 }
 
-
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
@@ -118,48 +117,7 @@
     return gestureRecognizer.enabled;
 }
 
-#pragma mark - MethodsToFitIOS7
-- (void)setEdgesForExtendedLayout:(NSInteger)edgesForExtendedLayout {
-    if ([UIViewController instancesRespondToSelector:@selector(setEdgesForExtendedLayout:)]) {
-        [super setEdgesForExtendedLayout:edgesForExtendedLayout];
-    }
-}
-
-- (NSUInteger)edgesForExtendedLayout {
-    if ([UIViewController instancesRespondToSelector:@selector(edgesForExtendedLayout)]) {
-        return [super edgesForExtendedLayout];
-    }
-    return 0;
-}
-
-- (void)setExtendedLayoutIncludesOpaqueBars:(BOOL)extendedLayoutIncludesOpaqueBars {
-    if ([UIViewController instancesRespondToSelector:@selector(setExtendedLayoutIncludesOpaqueBars:)]) {
-        [super setExtendedLayoutIncludesOpaqueBars:extendedLayoutIncludesOpaqueBars];
-    }
-}
-
-- (BOOL)extendedLayoutIncludesOpaqueBars {
-    if ([UIViewController instancesRespondToSelector:@selector(extendedLayoutIncludesOpaqueBars)]) {
-        return [super extendedLayoutIncludesOpaqueBars];
-    }
-    return NO;
-}
-
-- (void)setAutomaticallyAdjustsScrollViewInsets:(BOOL)automaticallyAdjustsScrollViewInsets {
-    if ([UIViewController instancesRespondToSelector:@selector(setAutomaticallyAdjustsScrollViewInsets:)]) {
-        [super setAutomaticallyAdjustsScrollViewInsets:automaticallyAdjustsScrollViewInsets];
-    }
-}
-
-- (BOOL)automaticallyAdjustsScrollViewInsets {
-    if ([UIViewController instancesRespondToSelector:@selector(automaticallyAdjustsScrollViewInsets)]) {
-        return [super automaticallyAdjustsScrollViewInsets];
-    }
-    return NO;
-}
-
 - (UIViewController *)_st_toolBarController {
-
     return nil;
 }
 

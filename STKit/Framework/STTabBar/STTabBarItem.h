@@ -22,9 +22,6 @@
 @property(nonatomic, assign) CGRect imageFrame;
 @property(nonatomic, assign) CGRect titleFrame;
 
-//- (CGRect) imageRectForBounds:(CGRect) bounds;
-//- (CGRect) titleRectForBounds:(CGRect) bounds;
-
 @property(nonatomic, weak) UIView *itemView;
 /// UITabBarItem
 - (instancetype)initWithTitle:(NSString *)title image:(UIImage *)image selectedImage:(UIImage *)selectedImage;

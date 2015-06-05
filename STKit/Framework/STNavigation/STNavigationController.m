@@ -67,10 +67,11 @@ const CGFloat _STAnimationMaskViewMaximumAlpha = 0.2;
 @end
 
 @interface UIScrollView (STFitIOS7)
+- (CGFloat)st_contentInsetTopByNavigation;
+- (void)st_setContentInsetTopByNavigation:(CGFloat)contentInsetTop;
 
-@property(nonatomic, assign) CGFloat contentInsetTop;
-@property(nonatomic, assign) CGFloat contentInsetBottom;
-
+- (CGFloat)st_contentInsetBottomByNavigation;
+- (void)st_setContentInsetBottomByNavigation:(CGFloat)contentInsetBottom;
 @end
 
 @interface UINavigationItem (STNavigationChange)
@@ -315,13 +316,13 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
     void (^transition)(void) = ^{
         UIView *view = [self _wrapperViewForController:toWrapperViewController];
         [self.transitionView addSubview:view];
+        view.frame = self.transitionView.bounds;
         [self addChildViewController:toWrapperViewController];
     };
 
     void (^completion)(BOOL) = ^(BOOL finished) {
         [toWrapperViewController didMoveToParentViewController:self];
         [fromWrapperViewController.view removeFromSuperview];
-        self.visibleWrapperViewController = toWrapperViewController;
     };
     if (self.customTabBarController) {
         [self _layoutTabBarFromViewController:fromWrapperViewController toViewController:toWrapperViewController];
@@ -329,6 +330,7 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
     if (!animated) {
         transition();
         completion(YES);
+        self.visibleWrapperViewController = toWrapperViewController;
     } else {
         [self _setNeedTransitionToViewController:toWrapperViewController
                                  transitionType:STViewControllerTransitionTypePush
@@ -502,7 +504,7 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
             [needBarViewController.view bringSubviewToFront:tabBar];
         }
     } else if (!toHidesBottomBar) {
-        /// 如果两个都显示或者不显示，则加在 tabBar上面
+        /// 如果两个都显示，则加在 tabBar上面
         if (![self.customTabBarController.view isDescendantOfView:tabBar]) {
             [tabBar removeFromSuperview];
             [self.customTabBarController.view addSubview:tabBar];
@@ -510,6 +512,17 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
         } else {
             [self.customTabBarController.view bringSubviewToFront:tabBar];
         }
+    } else {
+        /// 如果两个都不显示，则加在 tabBar上面
+        if (![self.customTabBarController.view isDescendantOfView:tabBar]) {
+            [tabBar removeFromSuperview];
+            [self.customTabBarController.view addSubview:tabBar];
+            [self.customTabBarController.view sendSubviewToBack:tabBar];
+            [self layoutTabBar:tabBar withViewController:self.customTabBarController];
+        } else {
+            [self.customTabBarController.view sendSubviewToBack:tabBar];
+        }
+        
     }
     if (toRequireTabBar && [toViewController isKindOfClass:[_STWrapperViewController class]]) {
         [((_STWrapperViewController *)toViewController)_st_requireCustomTabBar];
@@ -805,12 +818,14 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
     fromView.frame = fromViewFrame;
     targetView.frame = toViewFrame;
     self.animationMaskView.frame = maskViewFrame;
+    self.animationMaskView.height = self.transitionView.height;
     self.animationMaskView.alphaView.alpha = maskViewAlpha;
 }
 
 - (void)_st_navigationController:(STNavigationController *)navigationController willBeginTransitionContext:(STNavigationControllerTransitionContext *)transitionContext {
     [self.animationMaskView removeFromSuperview];
-    [self.view addSubview:self.animationMaskView];
+    [self.view insertSubview:self.animationMaskView aboveSubview:self.transitionView];
+//    [self.view addSubview:self.animationMaskView];
     self.animationMaskView.alphaView.alpha = 0.0;
     transitionContext->_st_completion = 0;
     transitionContext->_st_transitionView = self.transitionView;
@@ -921,6 +936,7 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
             [self _st_navigationController:self didEndTransitionContext:transitionContext];
         }
         [[UIApplication sharedApplication] endIgnoringInteractionEvents];
+        self.visibleWrapperViewController = toWrapperViewController;
         if (completion) {
             completion(finished);
         }
@@ -952,7 +968,7 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
 
 - (UIView *)_wrapperViewForController:(UIViewController *)viewController {
     UIView *view = viewController.view;
-    self.transitionView.frame = self.view.bounds;
+//    self.transitionView.frame = self.view.bounds;
     view.bounds = self.transitionView.bounds;
     view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     view.clipsToBounds = YES;
@@ -1143,24 +1159,24 @@ CGFloat const STInteractivePopTransitionOffset = 80;
 
 @implementation UIScrollView (STFitIOS7)
 
-static NSString *const STScrollViewContentInsetTop = @"STScrollViewContentInsetTop";
-static NSString *const STScrollViewContentInsetBottom = @"STScrollViewContentInsetBottom";
+static NSString *const STScrollViewContentInsetTop = @"com.suen.STScrollViewContentInsetTop";
+static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewContentInsetBottom";
 
-- (CGFloat)contentInsetTop {
+- (CGFloat)st_contentInsetTopByNavigation {
     NSNumber *contentInsetTop = objc_getAssociatedObject(self, (__bridge const void *)(STScrollViewContentInsetTop));
     return contentInsetTop.floatValue;
 }
 
-- (void)setContentInsetTop:(CGFloat)contentInsetTop {
+- (void)st_setContentInsetTopByNavigation:(CGFloat)contentInsetTop {
     objc_setAssociatedObject(self, (__bridge const void *)(STScrollViewContentInsetTop), @(contentInsetTop), OBJC_ASSOCIATION_RETAIN);
 }
 
-- (CGFloat)contentInsetBottom {
+- (CGFloat)st_contentInsetBottomByNavigation {
     NSNumber *contentInsetTop = objc_getAssociatedObject(self, (__bridge const void *)(STScrollViewContentInsetBottom));
     return contentInsetTop.floatValue;
 }
 
-- (void)setContentInsetBottom:(CGFloat)contentInsetBottom {
+- (void)st_setContentInsetBottomByNavigation:(CGFloat)contentInsetBottom {
     objc_setAssociatedObject(self, (__bridge const void *)(STScrollViewContentInsetBottom), @(contentInsetBottom), OBJC_ASSOCIATION_RETAIN);
 }
 
@@ -1168,7 +1184,7 @@ static NSString *const STScrollViewContentInsetBottom = @"STScrollViewContentIns
 
 @interface _STWrapperViewController () {
     BOOL _navigationAnimating;
-    UIView *___________________previousTabBarSuperview;
+    UIView *_st_previousTabBarSuperview;
     BOOL _requiredTabBar;
 }
 
@@ -1395,10 +1411,14 @@ static NSString *const STScrollViewContentInsetBottom = @"STScrollViewContentIns
             }
         }
         if (!CGRectIsEmpty(scrollView.frame)) {
-            contentInset.top = (contentInset.top - scrollView.contentInsetTop + topInset);
+            contentInset.top = (contentInset.top - [scrollView st_contentInsetTopByNavigation] + topInset);
             scrollView.contentInset = contentInset;
             scrollView.scrollIndicatorInsets = contentInset;
-            scrollView.contentInsetTop = topInset;
+            if ([scrollView st_contentInsetTopByNavigation] == 0 && topInset != 0) {
+                scrollView.contentOffset = CGPointMake(0, - topInset);
+            }
+            [scrollView st_setContentInsetTopByNavigation:topInset];
+
         }
     }
 }
@@ -1411,10 +1431,10 @@ static NSString *const STScrollViewContentInsetBottom = @"STScrollViewContentIns
     NSArray *array = [self intersectChildScrollViewWithView:tabBar];
     for (UIScrollView *scrollView in array) {
         UIEdgeInsets insets = scrollView.contentInset;
-        insets.bottom = (insets.bottom - scrollView.contentInsetBottom + self.rootViewController.customTabBarController.actualTabBarHeight);
+        insets.bottom = (insets.bottom - [scrollView st_contentInsetBottomByNavigation] + self.rootViewController.customTabBarController.actualTabBarHeight);
         scrollView.contentInset = insets;
         scrollView.scrollIndicatorInsets = insets;
-        scrollView.contentInsetBottom = self.rootViewController.customTabBarController.actualTabBarHeight;
+        [scrollView st_setContentInsetBottomByNavigation:self.rootViewController.customTabBarController.actualTabBarHeight];
     }
 }
 
@@ -1440,12 +1460,12 @@ static NSString *const STScrollViewContentInsetBottom = @"STScrollViewContentIns
     if ([view isKindOfClass:[UIScrollView class]]) {
         UIScrollView *scrollView = (UIScrollView *)view;
         UIEdgeInsets contentInset = scrollView.contentInset;
-        contentInset.top -= scrollView.contentInsetTop;
-        contentInset.bottom -= scrollView.contentInsetBottom;
+        contentInset.top -= [scrollView st_contentInsetTopByNavigation];
+        contentInset.bottom -= [scrollView st_contentInsetBottomByNavigation];
         scrollView.contentInset = contentInset;
         scrollView.scrollIndicatorInsets = scrollView.contentInset;
-        scrollView.contentInsetTop = 0;
-        scrollView.contentInsetBottom = 0;
+        [scrollView st_setContentInsetTopByNavigation:0];
+        [scrollView st_setContentInsetBottomByNavigation:0];
     } else {
         for (UIView *subview in view.subviews) {
             [self resetUnsedContentInsetInView:subview];
@@ -1464,12 +1484,12 @@ static NSString *const STScrollViewContentInsetBottom = @"STScrollViewContentIns
         } else {
             UIScrollView *scrollView = (UIScrollView *)containerView;
             UIEdgeInsets contentInset = scrollView.contentInset;
-            contentInset.top -= scrollView.contentInsetTop;
-            contentInset.bottom -= scrollView.contentInsetBottom;
+            contentInset.top -= [scrollView st_contentInsetTopByNavigation];
+            contentInset.bottom -= [scrollView st_contentInsetBottomByNavigation];
             scrollView.contentInset = contentInset;
             scrollView.scrollIndicatorInsets = contentInset;
-            scrollView.contentInsetTop = 0;
-            scrollView.contentInsetBottom = 0;
+            [scrollView st_setContentInsetTopByNavigation:0];
+            [scrollView st_setContentInsetBottomByNavigation:0];
         }
     } else {
         [self addChildScrollViewFromView:containerView intersectView:view toArray:scrollViews];
@@ -1535,7 +1555,7 @@ static NSString *const STScrollViewContentInsetBottom = @"STScrollViewContentIns
         }
         _requiredTabBar = YES;
         UIView *tabBar = (UIView *)self.rootViewController.customTabBarController.tabBar;
-        ___________________previousTabBarSuperview = tabBar.superview;
+        _st_previousTabBarSuperview = tabBar.superview;
         [tabBar removeFromSuperview];
         [self.view insertSubview:tabBar aboveSubview:self.rootView];
 
@@ -1549,18 +1569,18 @@ static NSString *const STScrollViewContentInsetBottom = @"STScrollViewContentIns
 
 - (BOOL)_st_resignCustomTabBar {
     _requiredTabBar = NO;
-    if (self.rootViewController.customTabBarController && ___________________previousTabBarSuperview) {
+    if (self.rootViewController.customTabBarController && _st_previousTabBarSuperview) {
         if (self.rootViewController.hidesBottomBarWhenPushed) {
             return NO;
         }
         UIView *tabBar = (UIView *)self.rootViewController.customTabBarController.tabBar;
-        if (tabBar.superview == ___________________previousTabBarSuperview) {
+        if (tabBar.superview == _st_previousTabBarSuperview) {
             return YES;
         }
         [tabBar removeFromSuperview];
-        [___________________previousTabBarSuperview addSubview:tabBar];
+        [_st_previousTabBarSuperview addSubview:tabBar];
         CGRect frame = tabBar.frame;
-        frame.origin.y = CGRectGetHeight(___________________previousTabBarSuperview.bounds) - CGRectGetHeight(frame);
+        frame.origin.y = CGRectGetHeight(_st_previousTabBarSuperview.bounds) - CGRectGetHeight(frame);
         tabBar.frame = frame;
         return YES;
     }

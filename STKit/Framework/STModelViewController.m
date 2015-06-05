@@ -63,4 +63,8 @@
 - (void)model:(STModel *)model didReloadItemAtIndexPaths:(NSArray *)indexPaths {
     
 }
+
+- (void)model:(STModel *)model didDeleteItemAtIndexPaths:(NSArray *)indexPaths {
+    
+}
 @end

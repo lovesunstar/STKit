@@ -56,6 +56,8 @@ typedef enum STViewControllerTransitionType {
 ///
 @property(nonatomic, readonly) UIGestureRecognizer *interactivePopGestureRecognizer;
 
+@property(nonatomic, strong, readonly) UIView *transitionView;
+
 @end
 
 /// NavigationController Push/Pop时间

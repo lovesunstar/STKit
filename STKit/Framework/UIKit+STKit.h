@@ -8,10 +8,13 @@
 
 #import <UIKit/UIKit.h>
 #import <STKit/Foundation+STKit.h>
+#import <CoreGraphics/CoreGraphics.h>
 
 ST_EXTERN CGFloat STOnePixel();
 ST_EXTERN CGFloat STGetScreenWidth();
 ST_EXTERN CGFloat STGetScreenHeight();
+
+ST_EXTERN CGAffineTransform STTransformMakeRotation(CGPoint center, CGPoint anchorPoint, CGFloat angle);
 
 ST_EXTERN CGFloat STGetSystemVersion();
 ST_EXTERN NSString *STGetSystemVersionString();
@@ -347,6 +350,10 @@ typedef void (^STInvokeHandler)(void);
 @end
 
 @interface UIImage (STSubimage)
+
+- (UIImage *)imageRotatedByRadians:(CGFloat)radians;
+- (UIImage *)imageRotatedByDegrees:(CGFloat)degrees;
+
 + (UIImage *)imageWithColor:(UIColor *)color;
 + (UIImage *)imageWithColor:(UIColor *)color size:(CGSize)size;
 /// 某个rect下的子图像

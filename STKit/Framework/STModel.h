@@ -32,6 +32,8 @@ typedef enum STModelDataSourceType {
 // if indexPaths == nil, preferred to reloadData
 - (void)model:(STModel *)model didReloadItemAtIndexPaths:(NSArray *)indexPaths;
 
+- (void)model:(STModel *)model didDeleteItemAtIndexPaths:(NSArray *)indexPaths;
+
 @end
 
 @interface STModel : NSObject

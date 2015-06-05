@@ -800,6 +800,94 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
 
 @end
 
+
+@implementation NSDictionary (STSecureAccess)
+
+- (id)st_valueForKey:(NSString *)key {
+    if ([key isKindOfClass:[NSString class]] && key.length > 0) {
+        return [self valueForKey:key];
+    }
+    return nil;
+    
+}
+
+- (NSArray *)st_arrayValueForKey:(NSString *)key {
+    id value = [self st_valueForKey:key];
+    if ([value isKindOfClass:[NSArray class]]) {
+        return value;
+    }
+    return nil;
+}
+
+- (long long)st_longLongValueForKey:(NSString *)key {
+    id value = [self st_valueForKey:key];
+    if ([value respondsToSelector:@selector(longLongValue)]) {
+        return [value longLongValue];
+    }
+    return 0;
+}
+- (int)st_intValueForKey:(NSString *)key {
+    id value = [self st_valueForKey:key];
+    if ([value respondsToSelector:@selector(intValue)]) {
+        return [value intValue];
+    }
+    return 0;
+}
+
+- (BOOL)st_boolValueForKey:(NSString *)key {
+    id value = [self st_valueForKey:key];
+    if ([value respondsToSelector:@selector(boolValue)]) {
+        return [value boolValue];
+    }
+    return NO;
+}
+
+- (double)st_doubleValueForKey:(NSString *)key {
+    id value = [self st_valueForKey:key];
+    if ([value respondsToSelector:@selector(doubleValue)]) {
+        return [value doubleValue];
+    }
+    return 0.;
+}
+
+- (NSDictionary *)st_dictionaryValueForKey:(NSString *)key {
+    if (!key) {
+        return nil;
+    }
+    id value = [self valueForKey:key];
+    if ([value isKindOfClass:[NSDictionary class]]) {
+        return value;
+    }
+    return nil;
+}
+
+- (NSString *)st_stringValueForKey:(NSString *)key {
+    if (!key) {
+        return nil;
+    }
+    id value = [self valueForKey:key];
+    if ([value isKindOfClass:[NSString class]]) {
+        return value;
+    }
+    if ([value respondsToSelector:@selector(stringValue)]) {
+        return [value stringValue];
+    }
+    return nil;
+}
+
+- (NSInteger)st_integerValueForKey:(NSString *)key {
+    if (!key) {
+        return 0;
+    }
+    id value = [self valueForKey:key];
+    if ([value respondsToSelector:@selector(integerValue)]) {
+        return [value integerValue];
+    }
+    return 0;
+}
+
+@end
+
 @implementation NSArray (STClass)
 
 - (BOOL)containsClass:(Class)class {

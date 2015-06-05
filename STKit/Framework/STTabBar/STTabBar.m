@@ -74,9 +74,9 @@ const CGFloat STTitleOffset = 5;
     [super layoutSubviews];
 
     CGFloat viewHeight = CGRectGetHeight(self.bounds);
-    STTabBar *superview = (STTabBar *)[self superviewWithClass:[STTabBar class]];
-    if ([[superview valueForVar:@"_actualHeight"] floatValue] > 1) {
-        viewHeight = [[superview valueForVar:@"_actualHeight"] floatValue];
+    STTabBar *tabBar = (STTabBar *)[self superviewWithClass:[STTabBar class]];
+    if ([[tabBar valueForVar:@"_actualHeight"] floatValue] > 1) {
+        viewHeight = [[tabBar valueForVar:@"_actualHeight"] floatValue];
     }
     CGFloat contentOffset = CGRectGetHeight(self.bounds) - viewHeight;
     CGFloat height = (CGRectIsEmpty(self.imageFrame) ? CGRectGetHeight(self.imageView.frame) : CGRectGetHeight(self.imageFrame)) +
@@ -108,7 +108,10 @@ const CGFloat STTitleOffset = 5;
 
     if (CGRectIsEmpty(self.titleFrame)) {
         CGFloat leftMargin = (CGRectGetWidth(self.bounds) - CGRectGetWidth(self.titleLabel.frame)) / 2;
-        CGFloat topMargin = CGRectGetMaxY(self.imageView.frame) + offset;
+        CGFloat topMargin = (CGRectGetHeight(self.bounds) - CGRectGetHeight(self.titleLabel.frame)) / 2;
+        if (self.imageView.image) {
+             topMargin = CGRectGetMaxY(self.imageView.frame) + offset;
+        }
         CGRect frame = self.titleLabel.frame;
         frame.origin = CGPointMake(leftMargin, topMargin);
         self.titleLabel.frame = frame;
