@@ -146,18 +146,22 @@
         _mutableURLRequest.HTTPMethod = HTTPMethod;
     }
     NSArray *bodyHTTPMethods = @[@"PUT", @"POST", @"PATCH"];
+    NSMutableArray *unwrapParameters = [NSMutableArray arrayWithCapacity:self.parameters.count];
+    [self.parameters enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+        if ([obj isKindOfClass:[NSArray class]]) {
+            [obj enumerateObjectsUsingBlock:^(id element, NSUInteger idx, BOOL *stop) {
+                STHTTPBodyItem *item = [[STHTTPBodyItem alloc] initWithFieldName:key value:element];
+                [unwrapParameters addObject:item];
+            }];
+        } else {
+            STHTTPBodyItem *item = [[STHTTPBodyItem alloc] initWithFieldName:key value:obj];
+            [unwrapParameters addObject:item];
+        }
+    }];
     if ([bodyHTTPMethods containsObject:HTTPMethod]) {
-        [self reloadHTTPBodyCompressed:compressedRequest];
+        [self reloadHTTPBodyWithParameters:unwrapParameters compressed:compressedRequest];
     } else {
         NSMutableString *mutableString = [NSMutableString stringWithString:_URLString];
-        NSMutableArray *unwrapParameters = [NSMutableArray arrayWithCapacity:self.parameters.count];
-        [self.parameters enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
-            if ([obj isKindOfClass:[NSArray class]]) {
-                [obj enumerateObjectsUsingBlock:^(id element, NSUInteger idx, BOOL *stop) { [unwrapParameters addObject:@{key : element}]; }];
-            } else {
-                [unwrapParameters addObject:@{key : obj}];
-            }
-        }];
         NSString *parameterString = [unwrapParameters st_componentsJoinedUsingURLEncode];
         if (parameterString.length > 0) {
             [mutableString appendFormat:@"?%@", parameterString];
@@ -172,27 +176,17 @@
 
 
 #pragma mark - HTTPBody
-- (void)reloadHTTPBodyCompressed:(BOOL)compressed {
+/// parameters /*STHTTPBodyItem*/
+- (void)reloadHTTPBodyWithParameters:(NSArray *)parameters
+                          compressed:(BOOL)compressed {
     //    NSString * const kBoundary = @"STKitNetworkBoundary";
     STHTTPConfiguration *configuration = self.HTTPConfiguration?:[STHTTPConfiguration defaultConfiguration];
     NSString *const kBoundary = @"f235dec111be2681";
     NSString *HTTPMethod = _mutableURLRequest.HTTPMethod;
     if ([HTTPMethod isEqualToString:@"PUT"] || [HTTPMethod isEqualToString:@"POST"] || [HTTPMethod isEqualToString:@"PATCH"]) {
         /// 需要拼接form
-        NSMutableArray *unwrapParameters = [NSMutableArray arrayWithCapacity:self.parameters.count];
-        [self.parameters enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
-            if ([obj isKindOfClass:[NSArray class]]) {
-                [obj enumerateObjectsUsingBlock:^(id element, NSUInteger idx, BOOL *stop) {
-                    STHTTPBodyItem *item = [[STHTTPBodyItem alloc] initWithFieldName:key value:element];
-                    [unwrapParameters addObject:item];
-                }];
-            } else {
-                STHTTPBodyItem *item = [[STHTTPBodyItem alloc] initWithFieldName:key value:obj];
-                [unwrapParameters addObject:item];
-            }
-        }];
         __block BOOL containsMutilpartItem = NO;
-        [unwrapParameters enumerateObjectsUsingBlock:^(STHTTPBodyItem *obj, NSUInteger idx, BOOL *stop) {
+        [parameters enumerateObjectsUsingBlock:^(STHTTPBodyItem *obj, NSUInteger idx, BOOL *stop) {
             if ([obj isKindOfClass:[STHTTPBodyItem class]] && [obj.fieldValue isKindOfClass:[STMultipartItem class]]) {
                 containsMutilpartItem = YES;
                 *stop = YES;
@@ -204,7 +198,7 @@
             enctype = STHTTPRequestFormEnctypeMultipartData;
         }
         if (enctype == STHTTPRequestFormEnctypeMultipartData) {
-            [unwrapParameters enumerateObjectsUsingBlock:^(STHTTPBodyItem *parameter, NSUInteger idx, BOOL *stop) {
+            [parameters enumerateObjectsUsingBlock:^(STHTTPBodyItem *parameter, NSUInteger idx, BOOL *stop) {
                 if ([parameter isKindOfClass:[STHTTPBodyItem class]]) {
                     NSData *data = [parameter HTTPBodyDataWithBoundary:kBoundary];
                     if (data.length > 0) {
@@ -219,13 +213,13 @@
                       forHTTPHeaderField:@"Content-Type"];
         } else if (enctype == STHTTPRequestFormEnctypeTextPlain) {
             NSString *parameterString =
-            [[unwrapParameters st_componentsJoinedUsingSeparator:@"\r\n"] stringByReplacingOccurrencesOfString:@" " withString:@"+"];
+            [[parameters st_componentsJoinedUsingSeparator:@"\r\n"] stringByReplacingOccurrencesOfString:@" " withString:@"+"];
             [postData appendData:[parameterString dataUsingEncoding:NSUTF8StringEncoding]];
             NSString *charset =
             (__bridge NSString *)CFStringConvertEncodingToIANACharSetName(CFStringConvertNSStringEncodingToEncoding(NSUTF8StringEncoding));
             [_mutableURLRequest setValue:[NSString stringWithFormat:@"text/plain; charset=%@;", charset] forHTTPHeaderField:@"Content-Type"];
         } else {
-            NSString *parameterString = [unwrapParameters st_componentsJoinedUsingURLEncode];
+            NSString *parameterString = [parameters st_componentsJoinedUsingURLEncode];
             [postData appendData:[parameterString dataUsingEncoding:NSUTF8StringEncoding]];
             NSString *charset =
             (__bridge NSString *)CFStringConvertEncodingToIANACharSetName(CFStringConvertNSStringEncodingToEncoding(NSUTF8StringEncoding));
