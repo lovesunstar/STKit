@@ -10,10 +10,25 @@
 #import "UIKit+STKit.h"
 #import "STVisualBlurView.h"
 #import "STResourceManager.h"
+#import <objc/runtime.h>
 
-@interface STNavigationBar ()
+@interface UIButton (STNavigationBack)
+
+@property(nonatomic, strong, setter=st_setOriginalImage:) UIImage *st_originalImage;
+
+@end
+
+
+typedef NS_ENUM(NSInteger, STNavigationTintFlags) {
+    STNavigationTintFlagLeftItem = 1,
+    STNavigationTintFlagRightItem = 1 << 1,
+};
+
+@interface STNavigationBar () {
+    NSInteger _tintFlags;
+}
 @property(nonatomic, strong) UILabel *titleLabel;
-@property(nonatomic, strong) UIView *backgroundView;
+@property(nonatomic, strong) STVisualBlurView *backgroundView;
 @property(nonatomic, strong) UIView *transitionView;
 @property(nonatomic, strong) UIView *separatorView;
 @property(nonatomic, strong) UIView *contentView;
@@ -24,7 +39,7 @@
 @implementation STNavigationBar
 
 - (id)initWithFrame:(CGRect)frame {
-    CGFloat height = (STGetSystemVersion() >= 7) ? 64 : 44;
+    CGFloat height = 64;
     if (frame.size.height < height) {
         frame.size.height = height;
     }
@@ -39,10 +54,6 @@
         self.backgroundImageView.clipsToBounds = YES;
         [self addSubview:self.backgroundImageView];
         
-        if (!self.backgroundView) {
-            self.backgroundView = self.backgroundImageView;
-        }
-
         self.backgroundView.frame = self.bounds;
         self.backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         [self addSubview:self.backgroundView];
@@ -52,14 +63,14 @@
         self.transitionView = [[UIView alloc] initWithFrame:CGRectMake(0, topMargin, CGRectGetWidth(self.bounds), transitionHeight)];
         self.transitionView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         self.transitionView.clipsToBounds = YES;
-        [self addSubview:self.transitionView];
+        [self.backgroundView.contentView addSubview:self.transitionView];
 
         self.contentView = [[UIView alloc] initWithFrame:self.transitionView.bounds];
         [self.transitionView addSubview:self.contentView];
 
         self.titleLabel = [[UILabel alloc] initWithFrame:CGRectZero];
         self.titleLabel.textAlignment = NSTextAlignmentCenter;
-        self.titleLabel.textColor = [UIColor colorWithRGB:0xFF7300];
+        self.titleLabel.textColor = [UIColor st_colorWithRGB:0xFF7300];
         self.titleLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         self.titleLabel.font = [UIFont boldSystemFontOfSize:19.];
         self.titleLabel.backgroundColor = [UIColor clearColor];
@@ -67,13 +78,8 @@
         
         self.separatorView = [[UIView alloc] init];
         [self addSubview:self.separatorView];
-        
-        if (STGetSystemVersion() >= 7) {
-            self.separatorView.backgroundColor = [UIColor colorWithRGB:0x999999];
-        } else {
-            self.separatorView.backgroundColor = [UIColor colorWithRGB:0xcccccc];
-            self.backgroundImage = [STResourceManager imageWithResourceID:STImageResourceNavigationBarID];
-        }
+    
+        self.separatorView.backgroundColor = [UIColor st_colorWithRGB:0x999999];
     }
     return self;
 }
@@ -84,6 +90,14 @@
 
 - (UIImage *)backgroundImage {
     return self.backgroundImageView.image;
+}
+
+- (void)setBackgroundColor:(UIColor *)backgroundColor {
+    self.backgroundView.tintColor = backgroundColor;
+}
+
+- (UIColor *)backgroundColor {
+    return self.backgroundView.tintColor;
 }
 
 - (void)setTitle:(NSString *)title {
@@ -166,13 +180,13 @@
         if (sideItemWidth == 0) {
             sideItemWidth = 60;
         }
+        sideItemWidth = MAX(sideItemWidth, 60);
     }
-    sideItemWidth = MIN(sideItemWidth, 60);
     CGFloat titleWidth = self.titleView.width;
-    if (titleWidth == 0 || titleWidth > CGRectGetWidth(self.bounds) - 2 * sideItemWidth) {
-        titleWidth = CGRectGetWidth(self.bounds) - 2 * sideItemWidth;
+    if (titleWidth == 0 || titleWidth > CGRectGetWidth(self.frame) - 2 * sideItemWidth) {
+        titleWidth = CGRectGetWidth(self.frame) - 2 * sideItemWidth;
     }
-    CGFloat titleLeft = (CGRectGetWidth(self.bounds) - titleWidth) / 2;
+    CGFloat titleLeft = (CGRectGetWidth(self.frame) - titleWidth) / 2;
     self.leftBarView.frame = CGRectMake(0, 0, sideItemWidth, CGRectGetHeight(self.leftBarView.frame));
     self.titleView.frame = CGRectMake(titleLeft, 0, titleWidth, CGRectGetHeight(self.titleView.frame));
     self.rightBarView.frame = CGRectMake(CGRectGetWidth(self.bounds) - sideItemWidth, 0, sideItemWidth, CGRectGetHeight(self.rightBarView.frame));
@@ -182,15 +196,10 @@
     [self fitLocationWithView:self.rightBarView];
 }
 
-- (void)setBarTintColor:(UIColor *)barTintColor {
-    if (self.backgroundView == self.backgroundImageView && self.backgroundImageView.image) {
-        return;
-    }
-    if ([self.backgroundView respondsToSelector:@selector(setTintColor:)]) {
-        [self.backgroundView performSelector:@selector(setTintColor:) withObject:barTintColor];
-    } else {
-        self.backgroundView.backgroundColor = barTintColor;
-    }
+- (void)setBarTintColor:(UIColor * __nullable)barTintColor {
+    _barTintColor = barTintColor;
+    self.backgroundView.color = barTintColor;
+    self.backgroundColor = barTintColor;
 }
 
 - (void)setTitleTextAttributes:(NSDictionary *)titleTextAttributes {
@@ -206,35 +215,113 @@
         _titleLabel.shadowColor = shadow.shadowColor;
         _titleLabel.shadowOffset = shadow.shadowOffset;
     }
-
     _titleTextAttributes = titleTextAttributes;
+    [self _retintItems];
 }
+
+- (void)setTranslucent:(BOOL)translucent {
+    _translucent = translucent;
+    self.backgroundView.hasBlurEffect = translucent;
+}
+
+- (void)_retintItems {
+    if (!!(_tintFlags & STNavigationTintFlagLeftItem)) {
+        /// retint Left
+        [self _tintView:self.leftBarView usingTextAttributes:self.titleTextAttributes];
+    }
+    if (!!(_tintFlags & STNavigationTintFlagRightItem)) {
+        /// re tintRight
+        [self _tintView:self.rightBarView usingTextAttributes:self.titleTextAttributes];
+    }
+}
+
+
+- (void)_tintView:(UIView *)view usingTextAttributes:(NSDictionary *)textAttributes {
+    if ([view isKindOfClass:[UIButton class]]) {
+        UIButton *button = (UIButton *)view;
+        if (textAttributes[NSForegroundColorAttributeName]) {
+            UIColor *color = textAttributes[NSForegroundColorAttributeName];
+            if ([color isKindOfClass:[UIColor class]] || !color) {
+                UIColor *normalColor = color, *highlightedColor = [color colorWithAlphaComponent:0.7], *disabledColor = [color colorWithAlphaComponent:0.4];
+                [button setTitleColor:normalColor forState:UIControlStateNormal];
+                [button setTitleColor:highlightedColor forState:UIControlStateHighlighted];
+                [button setTitleColor:disabledColor forState:UIControlStateDisabled];
+                if (button.st_originalImage) {
+                    [button setImage:[button.st_originalImage st_imageWithRenderingTintColor:color] forState:UIControlStateNormal];
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [button setImage:[button.st_originalImage st_imageWithRenderingTintColor:highlightedColor] forState:UIControlStateHighlighted];
+                        [button setImage:[button.st_originalImage st_imageWithRenderingTintColor:disabledColor] forState:UIControlStateDisabled];
+                    });
+                }
+            }
+        }
+        NSShadow *shadow = textAttributes[NSShadowAttributeName];
+        button.titleLabel.shadowColor = shadow.shadowColor;
+        button.titleLabel.shadowOffset = shadow.shadowOffset;
+    }
+}
+
+@end
+
+@interface _STBackButton : UIButton
+
+@end
+
+@implementation _STBackButton
+
+- (CGRect)titleRectForContentRect:(CGRect)contentRect {
+    return CGRectMake(25, 10, CGRectGetWidth(contentRect) - 30 , 24);
+}
+
+- (CGRect)imageRectForContentRect:(CGRect)contentRect {
+    return CGRectMake(10, 10, 18, 24);
+}
+
 @end
 
 
 @implementation UIBarButtonItem (STKit)
+
+static NSString *const STNavItemConstructUsingSTKitKey = @"STNavItemConstructUsingSTKitKey";
+- (BOOL)st_constructUsingSTKit {
+    id value = objc_getAssociatedObject(self, (__bridge const void *)(STNavItemConstructUsingSTKitKey));
+    if ([value isKindOfClass:[NSNumber class]]) {
+        return [value boolValue];
+    }
+    return NO;
+}
+
+- (void)st_setConstructUsingSTKit:(BOOL)usingSTKit {
+    objc_setAssociatedObject(self, (__bridge const void *)(STNavItemConstructUsingSTKitKey), @(usingSTKit), OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
 
 + (instancetype)backBarButtonItemWithTarget:(id)target action:(SEL)action {
     return [[self alloc] initWithBarButtonCustomItem:STBarButtonCustomItemBack target:target action:action];
 }
 
 - (instancetype)initWithBarButtonCustomItem:(STBarButtonCustomItem)customItem target:(id)target action:(SEL)action {
-    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
-    button.frame = CGRectMake(0, 0, 70, 44);
+    _STBackButton *button = [_STBackButton buttonWithType:UIButtonTypeCustom];
+    button.frame = CGRectMake(0, 0, 60, 44);
     button.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
-    [button setImage:[STResourceManager imageWithResourceID:STImageResourceNavigationItemBackID] forState:UIControlStateNormal];
-    button.imageEdgeInsets = UIEdgeInsetsMake(10, 10, 10, 24);
-    button.titleEdgeInsets = UIEdgeInsetsMake(0, 7, 0, 0);
+    UIImage *image = [STResourceManager imageWithResourceID:STImageResourceNavigationItemBackID];
+    button.st_originalImage = image;
+    [button setImage:image forState:UIControlStateNormal];
+    button.titleLabel.font=  [UIFont systemFontOfSize:16.f];
+    button.titleLabel.adjustsFontSizeToFitWidth = YES;
+    button.titleLabel.minimumScaleFactor = 0.5;
     [button setTitle:@"返回" forState:UIControlStateNormal];
-    [button setTitleColor:[UIColor colorWithRGB:0xFF7300] forState:UIControlStateNormal];
-    [button setTitleColor:[UIColor colorWithRGB:0x883D00] forState:UIControlStateHighlighted];
+    [button setTitleColor:[UIColor st_colorWithRGB:0xFF7300] forState:UIControlStateNormal];
+    [button setTitleColor:[UIColor st_colorWithRGB:0x883D00] forState:UIControlStateHighlighted];
     button.titleLabel.textAlignment = NSTextAlignmentLeft;
     [button addTarget:target action:action forControlEvents:UIControlEventTouchUpInside];
-    return [self initWithCustomView:button];
+    
+    UIBarButtonItem *buttonItem = [self initWithCustomView:button];
+    [buttonItem st_setConstructUsingSTKit:YES];
+    return buttonItem;
 }
 
 - (instancetype)initWithTitle:(NSString *)title target:(id)target action:(SEL)action {
-    return [self initWithTitle:title tintColor:[UIColor colorWithRGB:0xFF7300] target:target action:action];
+    return [self initWithTitle:title tintColor:[UIColor st_colorWithRGB:0xFF7300] target:target action:action];
 }
 
 - (instancetype)initWithTitle:(NSString *)title tintColor:(UIColor *)tintColor target:(id)target action:(SEL)action {
@@ -245,11 +332,50 @@
     button.frame = CGRectMake(0, 0, 60, 44);
     [button setTitle:title forState:UIControlStateNormal];
     button.titleLabel.font=  [UIFont systemFontOfSize:16.f];
+    button.titleLabel.adjustsFontSizeToFitWidth = YES;
+    button.titleLabel.minimumScaleFactor = 0.5;
     [button setTitleColor:tintColor forState:UIControlStateNormal];
     [button setTitleColor:[tintColor colorWithAlphaComponent:0.7] forState:UIControlStateHighlighted];
     [button setTitleColor:[tintColor colorWithAlphaComponent:0.4] forState:UIControlStateDisabled];
     [button addTarget:target action:action forControlEvents:UIControlEventTouchUpInside];
-    return [self initWithCustomView:button];
+    UIBarButtonItem *buttonItem = [self initWithCustomView:button];
+    [buttonItem st_setConstructUsingSTKit:YES];
+    return buttonItem;
+}
+
+- (UIView *)st_customView {
+    if (!self.customView) {
+        NSString *title = self.title;
+        UIImage *image = self.image;
+        UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+        button.frame = CGRectMake(0, 0, 60, 44);
+        [button addTarget:self.target action:self.action forControlEvents:UIControlEventTouchUpInside];
+        if (!title && !image) {
+            title = @"Item";
+        }
+        [button setImage:image forState:UIControlStateNormal];
+        button.imageEdgeInsets = self.imageInsets;
+        [button setTitle:title forState:UIControlStateNormal];
+        button.titleLabel.adjustsFontSizeToFitWidth = YES;
+        button.titleLabel.minimumScaleFactor = 0.5;
+        self.customView = button;
+        [self st_setConstructUsingSTKit:YES];
+    }
+    return self.customView;
+}
+
+@end
+
+
+@implementation UIButton (STNavigationBack)
+
+static NSString *const STNavigationBackButtonImageKey = @"STNavigationBackButtonImageKey";
+- (UIImage *)st_originalImage {
+    return objc_getAssociatedObject(self, (__bridge const void *)(STNavigationBackButtonImageKey));
+}
+
+- (void)st_setOriginalImage:(UIImage *)st_originalImage {
+    objc_setAssociatedObject(self, (__bridge const void *)(STNavigationBackButtonImageKey), st_originalImage, OBJC_ASSOCIATION_COPY_NONATOMIC);
 }
 
 @end

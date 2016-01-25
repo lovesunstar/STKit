@@ -121,7 +121,7 @@ static STGIFProperty *_defaultProperty;
                 if (self.preferredImageSize.width == 0 || self.preferredImageSize.height == 0) {
                     frameImage = image;
                 } else {
-                    frameImage = [image imageConstrainedToSize:self.preferredImageSize contentMode:UIViewContentModeScaleAspectFit];
+                    frameImage = [image st_imageConstrainedToSize:self.preferredImageSize contentMode:UIViewContentModeScaleAspectFit];
                 }
                 CGImageDestinationAddImage(destination, frameImage.CGImage, (CFDictionaryRef)GIFProperties);
             }

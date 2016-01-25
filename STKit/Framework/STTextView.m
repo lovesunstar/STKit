@@ -20,10 +20,9 @@
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
-- (id)initWithFrame:(CGRect)frame {
-    self = [super initWithFrame:frame];
+- (id)initWithFrame:(CGRect)frame textContainer:(NSTextContainer *)textContainer {
+    self = [super initWithFrame:frame textContainer:textContainer];
     if (self) {
-        // Initialization code
         [self _commonInitializer];
     }
     return self;

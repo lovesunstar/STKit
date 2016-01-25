@@ -66,9 +66,12 @@
 }
 
 - (void)saveDataToCache {
+
 }
+
 /// 清除缓存
 - (void)invalidateData {
+    
 }
 
 - (void)requestDidFinishWithObject:(id)object {
@@ -102,6 +105,22 @@
 
 - (void)_applicationDidEnterBackground:(NSNotification *)notification {
     [self saveDataToCache];
+}
+
+- (void)insertItem:(id)item atIndexPath:(NSIndexPath *)indexPath {
+    
+}
+
+- (void)deleteItemAtIndexPath:(NSIndexPath *)indexPath {
+    
+}
+
+- (void)deleteItemsAtIndexPaths:(NSArray *)indexPaths {
+    
+}
+
+- (NSArray *)itemsAtIndexPaths:(NSArray *)indexPaths {
+    return nil;
 }
 
 @end

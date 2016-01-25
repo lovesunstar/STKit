@@ -21,8 +21,6 @@ extern NSString *const STImageResourceRefreshControlArrowID;
 extern NSString *const STImageResourceAccessoryDataZeroID;
 /// 导航返回按钮
 extern NSString *const STImageResourceNavigationItemBackID;
-/// push导航侧边阴影
-extern NSString *const STImageResourceViewControllerShadowID;
 /// 相册选中效果
 extern NSString *const STImageResourceImagePickerSelectedID;
 extern NSString *const STImageResourceImagePickerLockedID;

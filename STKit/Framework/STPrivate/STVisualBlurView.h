@@ -9,12 +9,14 @@
 #import <UIKit/UIKit.h>
 #import <STKit/UIKit+STKit.h>
 
+ST_ASSUME_NONNULL_BEGIN
 @interface STVisualBlurView : UIView
 
-- (instancetype)initWithBlurEffectStyle:(STBlurEffectStyle)blurEffectStyle;
-
-@property (nonatomic, strong, readonly) UIView  *contentView;
-@property (nonatomic, strong) UIColor           *tintColor;
-@property (nonatomic, assign) BOOL              hasBlurEffect;
+- (instancetype)initWithBlurEffectStyle:(STBlurEffectStyle)blurEffectStyle NS_DESIGNATED_INITIALIZER;
+/// subviews must add to contentView
+@property(nonatomic, strong, readonly) UIView         *contentView;
+@property(STPROPERTYNULLABLE nonatomic, copy) UIColor *color;
+@property(nonatomic, getter=hasBlurEffect) BOOL hasBlurEffect;
 
 @end
+ST_ASSUME_NONNULL_END

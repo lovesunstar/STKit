@@ -72,7 +72,7 @@ static STNetworkConfiguration * _sharedConfiguration;
             if (obj.data) {
                 data = data;
             } else if (obj.base64String.length > 0) {
-                data = [NSData dataWithBase64EncodedString:obj.base64String];
+                data = [NSData st_dataWithBase64EncodedString:obj.base64String];
             } else if (obj.filePath.length > 0) {
                 data =[NSData dataWithContentsOfFile:obj.filePath];
             }

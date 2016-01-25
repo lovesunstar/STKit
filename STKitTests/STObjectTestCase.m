@@ -10,9 +10,9 @@
 
 @interface STAnimal : STObject
 
-@property (nonatomic, copy) NSString * name;
+@property (nonatomic, copy) NSString *name;
 
-@property (nonatomic, strong) STAnimal * parent;
+@property (nonatomic, strong) STAnimal *parent;
 @end
 
 @implementation STAnimal
@@ -24,35 +24,35 @@
 
 @property (nonatomic, assign) NSInteger    age;
 
-@property (nonatomic, strong) STPeople      * partner;
-@property (nonatomic, copy)   NSArray       * friends;
+@property (nonatomic, strong) STPeople      *partner;
+@property (nonatomic, copy)   NSArray       *friends;
 
 @end
 
 @implementation STPeople
 
-+ (Class) friendsClass {
++ (Class)friendsClass {
     return [STAnimal class];
 }
 
-+ (NSDictionary *) relationship {
++ (NSDictionary *)relationship {
     return @{@"age":@"age_key"};
 }
 
 @end
 
 @interface STObjectTestCase : XCTestCase {
-    NSString     * _name;
-    NSInteger      _age;
-    NSString     * _parentName;
-    NSString     * _partnerName;
-    NSInteger      _partnerAge;
-    NSDictionary * _dictionary;
-    NSDictionary * _relationshipDictionary;
+    NSString     *_name;
+    NSInteger     _age;
+    NSString     *_parentName;
+    NSString     *_partnerName;
+    NSInteger     _partnerAge;
+    NSDictionary *_dictionary;
+    NSDictionary *_relationshipDictionary;
     
-    NSDictionary * _itemDictionary;
+    NSDictionary *_itemDictionary;
     
-    NSDictionary * _itemsDictionary;
+    NSDictionary *_itemsDictionary;
 }
 
 @end
@@ -84,18 +84,18 @@
     XCTAssertNil(animal.parent, @"the animal's parent should be nil because of nil value");
 }
 
-- (void) testInitWithDictionary {
-    STAnimal * testObject = [[STAnimal alloc] initWithDictinoary:_dictionary];
+- (void)testInitWithDictionary {
+    STAnimal * testObject = [[STAnimal alloc] initWithDictionary:_dictionary];
     XCTAssertEqual(testObject.name, _name, @"the name should be assign to the object");
 }
 
-- (void) testCreateObjectWithRelationship {
+- (void)testCreateObjectWithRelationship {
     STPeople * people = STObjectCreate([STPeople class], _relationshipDictionary);
     XCTAssertEqual(_age, people.age, @"The relationship_age in dictionary should be assign to object");
     XCTAssertEqual(people.name, _name, @"the name should be assign to the object");
 }
 
-- (void) testCreateObjectContainsItem {
+- (void)testCreateObjectContainsItem {
     STPeople * people = STObjectCreate([STPeople class], _itemDictionary);
     STPeople * partner = people.partner;
     STAnimal * parent = people.parent;
@@ -103,7 +103,7 @@
     XCTAssertEqual(parent.name, _parentName, @"the name should be assign to the object's property ");
 }
 
-- (void) testCreateObjectContainsItems {
+- (void)testCreateObjectContainsItems {
     STPeople * people = STObjectCreate([STPeople class], _itemsDictionary);
     XCTAssert([people.friends isKindOfClass:[NSArray class]], @"people's friend must be class array");
     STAnimal * aFriend = people.friends[0];

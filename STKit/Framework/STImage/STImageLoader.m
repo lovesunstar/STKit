@@ -63,7 +63,7 @@ static STImageLoader *_imageLoader;
         self.downloadQueue = [[NSOperationQueue alloc] init];
         self.downloadQueue.maxConcurrentOperationCount = 6;
         self.downloadQueue.name = @"com.suen.network.ImageDownloadQueue";
-        [self.network setValue:self.downloadQueue forVar:@"_networkQueue"];
+        [self.network st_setValue:self.downloadQueue forVar:@"_networkQueue"];
         
         _decodeQueue = dispatch_queue_create("com.suen.network.ImageDecodeQueue", DISPATCH_QUEUE_CONCURRENT);
         self.network.callbackQueue = _decodeQueue;
@@ -101,7 +101,7 @@ static STImageLoader *_imageLoader;
             if (error) {
                 [self secureInvokeFinishedHandlerOnMainThread:finishedHandler withImage:nil URLString:URLString usingCache:NO error:error];
             } else {
-                UIImage *image = [UIImage imageWithSTData:response];
+                UIImage *image = [UIImage st_imageWithSTData:response];
                 dispatch_async(_cacheQueue, ^{ [STImageCache cacheImage:image forKey:URLString]; });
                 [self secureInvokeFinishedHandlerOnMainThread:finishedHandler withImage:image URLString:URLString usingCache:NO error:nil];
             }

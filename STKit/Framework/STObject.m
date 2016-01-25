@@ -241,7 +241,7 @@ ST_EXTERN void _STObjectSetPropertyValue(NSObject *object, NSString *propertyNam
         } else {
             /// 基本类型,但是传入的数据有问题，比如 int varA 传入 字符串的 @"123"
             if ([value isKindOfClass:[NSString class]] || !value) {
-                value = [value stringByTrimingWhitespace];
+                value = [value st_stringByTrimingWhitespace];
                 NSNumber *numberValue;
                 const char *cType = type.UTF8String;
                 if (strcmp(cType, @encode(BOOL)) == 0) {
@@ -275,7 +275,7 @@ ST_EXTERN void _STObjectSetPropertyValue(NSObject *object, NSString *propertyNam
             if (attribute.policy & STPropertyPolicyCopy) {
                 propertyValue = [propertyValue copy];
             }
-            [object setValue:propertyValue forVar:varName];
+            [object st_setValue:propertyValue forVar:varName];
         }
     }
 }
@@ -375,7 +375,7 @@ ST_EXTERN NSDictionary *STClassGetPropertyRelationship(Class _class) {
     return [[self alloc] initWithDictionary:dictionary];
 }
 
-- (instancetype)initWithDictinoary:(NSDictionary *)dictionary {
+- (instancetype)initWithDictionary:(NSDictionary *)dictionary {
     self = [super init];
     if (self) {
         STObjectResetValue(self, dictionary);

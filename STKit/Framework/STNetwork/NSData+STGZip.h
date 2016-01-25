@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 
 // 需要引入 zib
-#define STKit_STDefines_GZip 1
+#define STKit_STDefines_GZip 0
 #if STKit_STDefines_GZip
 #import <zlib.h>
 @interface NSData (STGZip)

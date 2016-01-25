@@ -16,10 +16,10 @@ static NSString *const STAlertViewDelegateKey = @"STAlertViewDelegateKey";
 @implementation UIAlertView (STBlock)
 
 + (void)load {
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(setDelegate:)), class_getInstanceMethod(self, @selector(st_setDelegate:)));
+    STExchangeSelectors(self, @selector(setDelegate:), @selector(st_setDelegate:));
 }
 
-- (void)showWithDismissBlock:(STAlertViewDismissBlock)block {
+- (void)st_showWithDismissBlock:(STAlertViewDismissBlock)block {
     self.dismissBlock = block;
     if (!self.delegate) {
         self.delegate = self;

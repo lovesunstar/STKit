@@ -16,7 +16,7 @@ ST_INLINE CGRect STRunGetRect(CTLineRef line, CTRunRef run, CGPoint lineOrigin) 
     CGFloat ascent, descent, leading;
     CGFloat width = CTRunGetTypographicBounds(run, CFRangeMake(0, 0), &ascent, &descent, &leading);
     runBounds.size.width = width;
-    CGFloat lineHeight = ascent + fabsf(descent) + leading;
+    CGFloat lineHeight = ascent + fabs(descent) + leading;
     runBounds.size.height = lineHeight;
     CGFloat xOffset = CTLineGetOffsetForStringIndex(line, CTRunGetStringRange(run).location, NULL);
     runBounds.origin.x = lineOrigin.x + xOffset;
@@ -125,7 +125,7 @@ ST_INLINE CGRect STRunGetRect(CTLineRef line, CTRunRef run, CGPoint lineOrigin) 
     if (self.textCheckingTypes & STTextCheckingTypeCustomLink) {
         NSString *const regex = @"<link([^>]*)>(.*?)</link>";
         NSArray *subranges, *regexRanges;
-        NSArray *substrings = [text componentsSeparatedByRegex:regex ranges:&subranges checkingResults:&regexRanges];
+        NSArray *substrings = [text st_componentsSeparatedByRegex:regex ranges:&subranges checkingResults:&regexRanges];
         NSMutableArray *systemLinkObjects = [NSMutableArray arrayWithCapacity:5];
         [substrings enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
             [systemLinkObjects addObjectsFromArray:[self _linkObjectsInString:obj subrange:NSRangeFromString(subranges[idx])]];
@@ -153,22 +153,22 @@ ST_INLINE CGRect STRunGetRect(CTLineRef line, CTRunRef run, CGPoint lineOrigin) 
                                               NSString *colorString = [attrs valueForKey:@"color"];
                                               if (colorString.length > 0) {
                                                   colorString = [colorString stringByReplacingOccurrencesOfString:@"#" withString:@"0x"];
-                                                  linkObject.linkColor = [UIColor colorWithHexString:colorString];
+                                                  linkObject.linkColor = [UIColor st_colorWithHexString:colorString];
                                               }
                                               NSString *backgroundColorString = [attrs valueForKey:@"backgroundColor"];
                                               if (backgroundColorString.length > 0) {
                                                   backgroundColorString = [backgroundColorString stringByReplacingOccurrencesOfString:@"#" withString:@"0x"];
-                                                  linkObject.backgroundColor = [UIColor colorWithHexString:backgroundColorString];
+                                                  linkObject.backgroundColor = [UIColor st_colorWithHexString:backgroundColorString];
                                               }
                                               NSString *highlightedColor = [attrs valueForKey:@"highlightedColor"];
                                               if (highlightedColor.length > 0) {
                                                   highlightedColor = [highlightedColor stringByReplacingOccurrencesOfString:@"#" withString:@"0x"];
-                                                  linkObject.highlightLinkColor = [UIColor colorWithHexString:highlightedColor];
+                                                  linkObject.highlightLinkColor = [UIColor st_colorWithHexString:highlightedColor];
                                               }
                                               NSString *highlightBackgroundColor = [attrs valueForKey:@"highlightBackgroundColor"];
                                               if (highlightBackgroundColor) {
                                                   highlightBackgroundColor = [highlightBackgroundColor stringByReplacingOccurrencesOfString:@"#" withString:@"0x"];
-                                                  linkObject.highlightBackgroundColor = [UIColor colorWithHexString:highlightBackgroundColor];
+                                                  linkObject.highlightBackgroundColor = [UIColor st_colorWithHexString:highlightBackgroundColor];
                                               }
                                               linkObject.range = range;
                                               linkObject.content = content;
@@ -328,6 +328,9 @@ ST_INLINE CGRect STRunGetRect(CTLineRef line, CTRunRef run, CGPoint lineOrigin) 
 
 - (void)enumerateLinesUsingBlock:(void (^)(CTLineRef line, CGPoint lineOrigin, NSUInteger index, BOOL *stop))block {
     if (!block) {
+        return;
+    }
+    if (!_frame) {
         return;
     }
     CFArrayRef lines = CTFrameGetLines(_frame);
@@ -493,6 +496,9 @@ ST_INLINE CGRect STRunGetRect(CTLineRef line, CTRunRef run, CGPoint lineOrigin) 
             __lineOrigin = lineOrigin;
         }
     }];
+    if (!__line) {
+        return NO;
+    }
     location.x -= __lineOrigin.x;
     CFIndex index = CTLineGetStringIndexForPosition(__line, location);
     for (STLinkObject *linkObject in self.linkObjects) {
@@ -532,11 +538,14 @@ ST_INLINE CGRect STRunGetRect(CTLineRef line, CTRunRef run, CGPoint lineOrigin) 
 }
 
 + (NSString *)displayTextWithTextCheckingType:(NSTextCheckingType)textCheckingTypes text:(NSString *)text {
+    if (!text) {
+        return nil;
+    }
     NSMutableString *displayString = [NSMutableString stringWithString:text];
     if (textCheckingTypes & STTextCheckingTypeCustomLink) {
         NSString *regex = @"<link([^>]*)>(.*?)(</link>)";
         NSArray *regexRanges;
-        [text componentsSeparatedByRegex:regex ranges:nil checkingResults:&regexRanges];
+        [text st_componentsSeparatedByRegex:regex ranges:nil checkingResults:&regexRanges];
         [regexRanges enumerateObjectsWithOptions:NSEnumerationReverse
                                       usingBlock:^(NSTextCheckingResult *result, NSUInteger idx, BOOL *stop) {
                                           NSInteger rangeCount = [result numberOfRanges];
@@ -581,7 +590,7 @@ ST_INLINE CGRect STRunGetRect(CTLineRef line, CTRunRef run, CGPoint lineOrigin) 
     CGSize size =
         CTFramesetterSuggestFrameSizeWithConstraints(framesetter, CFRangeMake(0, attributedString.length), NULL, constrainedSize, &fitRange);
     CFRelease(framesetter);
-    return CGSizeMake(size.width + 2, size.height);
+    return CGSizeMake(size.width + 2, size.height + 5);
 }
 
 @end

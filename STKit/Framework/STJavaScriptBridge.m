@@ -46,7 +46,7 @@
 @implementation UIWebView (STJavaScriptBridge)
 
 + (void)load {
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(setDelegate:)), class_getInstanceMethod(self, @selector(st_setDelegate:)));
+    STExchangeSelectors(self, @selector(setDelegate:), @selector(st_setDelegate:));
 }
 
 - (void)st_setDelegate:(id<UIWebViewDelegate>)delegate {

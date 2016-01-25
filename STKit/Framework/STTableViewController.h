@@ -17,7 +17,7 @@
 @property(nonatomic, weak, readonly) STRefreshControl *refreshControl;
 @property(nonatomic, weak, readonly) STPaginationControl *paginationControl;
 /// designed initializer
-- (instancetype)initWithStyle:(UITableViewStyle)style;
+- (instancetype)initWithStyle:(UITableViewStyle)style NS_DESIGNATED_INITIALIZER;
 //// 触发刷新方法
 - (void)refreshData;
 - (void)refreshDataUsingRefreshControl;

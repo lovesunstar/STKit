@@ -151,8 +151,8 @@ const CGSize STPlatformCellDefaultSize = {320, 60};
     UIButton *payButton = [UIButton buttonWithType:UIButtonTypeCustom];
     payButton.frame = CGRectMake(10, 10, CGRectGetWidth(tableFooterView.bounds) - 20, 40);
     payButton.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    payButton.layer.borderColor = [UIColor colorWithRGB:0xFF8400].CGColor;
-    payButton.backgroundColor = [UIColor colorWithRGB:0xFF8400];
+    payButton.layer.borderColor = [UIColor st_colorWithRGB:0xFF8400].CGColor;
+    payButton.backgroundColor = [UIColor st_colorWithRGB:0xFF8400];
     [payButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
     [payButton setTitle:@"确认支付" forState:UIControlStateNormal];
     [tableFooterView addSubview:payButton];
@@ -162,11 +162,11 @@ const CGSize STPlatformCellDefaultSize = {320, 60};
     if (self.payHandler) {
         self.payHandler(self.payItem, STPayResultCancelled, nil);
     }
-    if (self.customNavigationController) {
-        if (self.customNavigationController.viewControllers.count > 1) {
-            [self.customNavigationController popViewControllerAnimated:YES];
+    if (self.st_navigationController) {
+        if (self.st_navigationController.viewControllers.count > 1) {
+            [self.st_navigationController popViewControllerAnimated:YES];
         } else {
-            [self.customNavigationController dismissViewControllerAnimated:YES completion:NULL];
+            [self.st_navigationController dismissViewControllerAnimated:YES completion:NULL];
         }
     } else if (self.navigationController) {
         if (self.navigationController.viewControllers.count > 1) {

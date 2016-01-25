@@ -19,12 +19,12 @@
 @implementation UIAlertView (STApplicationContext)
 
 + (void)load {
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(show)), class_getInstanceMethod(self, @selector(st_show)));
+    STExchangeSelectors(self, @selector(show), @selector(st_show));
 }
 
 - (void)st_show {
     STApplicationContext *context = [STApplicationContext sharedContext];
-    NSHashTable *hashTable = [context valueForVar:@"_alertViewHashTable"];
+    NSHashTable *hashTable = [context st_valueForVar:@"_alertViewHashTable"];
     if ([hashTable isKindOfClass:[NSHashTable class]]) {
         [hashTable addObject:self];
     }
@@ -83,11 +83,6 @@ static STApplicationContext *_sharedContext;
     return [[_alertViewHashTable allObjects] copy];
 }
 
-- (UIViewController *)topmostViewController {
-    UIViewController *rootViewController = self.mainWindow.rootViewController;
-    return [self _visibleViewController:rootViewController];
-}
-
 - (UIWindow *)mainWindow {
     UIApplication *application = [UIApplication sharedApplication];
     id appDelegate = application.delegate;
@@ -113,18 +108,35 @@ static STApplicationContext *_sharedContext;
     return mainWindow;
 }
 
-- (UIViewController *)_visibleViewController:(UIViewController *)viewController {
+- (UIViewController *)topmostViewController {
+    return [self topmostViewControllerExcludeClasses:@[@"UIAlertController"]];
+}
+
+- (UIViewController *)topmostViewControllerExcludeClasses:(NSArray<NSString *> *)classes {
+    UIViewController *rootViewController = self.mainWindow.rootViewController;
+    return [self _visibleViewController:rootViewController excludeClasses:classes];
+}
+
+- (UIViewController *)_visibleViewController:(UIViewController *)viewController excludeClasses:(NSArray<NSString *> *)classes {
     if ([viewController respondsToSelector:@selector(selectedViewController)]) {
         UITabBarController *tabbarController = (UITabBarController *)viewController;
-        return [self _visibleViewController:tabbarController.selectedViewController];
+        return [self _visibleViewController:tabbarController.selectedViewController excludeClasses:classes];
     }
     if ([viewController respondsToSelector:@selector(visibleViewController)]) {
         UINavigationController *navigationController = (UINavigationController *)viewController;
-        return [self _visibleViewController:navigationController.visibleViewController];
+        UIViewController *visibleVC = navigationController.visibleViewController;
+        NSString *visibleClass = NSStringFromClass(visibleVC.class);
+        if ([classes containsObject:visibleClass]) {
+            visibleVC = navigationController.topViewController;
+        }
+        return [self _visibleViewController:visibleVC excludeClasses:classes];
     }
-    if ([viewController isKindOfClass:[UIViewController class]]) {
-        if (viewController.presentedViewController) {
-            return [self _visibleViewController:viewController.presentedViewController];
+    NSString *visibleClass = NSStringFromClass(viewController.class);
+    if ([viewController isKindOfClass:[UIViewController class]] && ![classes containsObject:visibleClass]) {
+        UIViewController *presentedVC = viewController.presentedViewController;
+        NSString *presentedClass = NSStringFromClass(viewController.class);
+        if (presentedVC && (![classes containsObject:presentedClass])) {
+            return [self _visibleViewController:presentedVC excludeClasses:classes];
         }
         return viewController;
     }

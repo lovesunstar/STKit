@@ -134,5 +134,3 @@ typedef void (^STHTTPFinishedHandler)(STHTTPOperation *operation, NSData *data, 
 - (STHTTPConfiguration *)HTTPConfiguration;
 
 @end
-
-const NSInteger STNetworkErrorCodeUserCancelled;

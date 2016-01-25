@@ -14,25 +14,30 @@ ST_EXTERN CGFloat STOnePixel();
 ST_EXTERN CGFloat STGetScreenWidth();
 ST_EXTERN CGFloat STGetScreenHeight();
 
+ST_EXTERN UIView * ST_NULLABLE STGetStatusBarWindow();
+
 ST_EXTERN CGAffineTransform STTransformMakeRotation(CGPoint center, CGPoint anchorPoint, CGFloat angle);
 
 ST_EXTERN CGFloat STGetSystemVersion();
-ST_EXTERN NSString *STGetSystemVersionString();
+ST_EXTERN NSString * ST_NONNULL STGetSystemVersionString();
 
 ST_EXTERN CGPoint STConvertPointBetweenSize(CGPoint point, CGSize fromSize, CGSize toSize);
 ST_EXTERN CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize toSize);
 
 #pragma mark - UIColor Extension
+ST_ASSUME_NONNULL_BEGIN
 /// 给UIColor增加rgb的构造方法
 @interface UIColor (STExtension)
-/// 使用rgbValue构造UIColor [UIColor colorWithRGB:0xCB553B];
-+ (UIColor *)colorWithRGB:(NSInteger)rgb;
-/// 使用rgbValue构造UIColor [UIColor colorWithRGB:0xCB553B alpha:0.3];
-+ (UIColor *)colorWithRGB:(NSInteger)rgb alpha:(CGFloat)alpha;
-/// 使用rgb 16进制String构造UIColor [UIColor colorWithHexString:@"0xFFFFFF"];
-+ (UIColor *)colorWithHexString:(NSString *)hexString;
-+ (UIColor *)colorWithHexString:(NSString *)hexString alpha:(CGFloat)alpha;
+/// 使用rgbValue构造UIColor [UIColor st_colorWithRGB:0xCB553B];
++ (UIColor *)st_colorWithRGB:(NSInteger)rgb;
+/// 使用rgbValue构造UIColor [UIColor st_colorWithRGB:0xCB553B alpha:0.3];
++ (UIColor *)st_colorWithRGB:(NSInteger)rgb alpha:(CGFloat)alpha;
+/// 使用rgb 16进制String构造UIColor [UIColor st_colorWithHexString:@"0xFFFFFF"];
++ (STNULLABLE UIColor *)st_colorWithHexString:(STNULLABLE NSString *)hexString;
++ (STNULLABLE UIColor *)st_colorWithHexString:(STNULLABLE NSString *)hexString alpha:(CGFloat)alpha;
+
 @end
+ST_ASSUME_NONNULL_END
 
 #pragma mark - UIView Extension
 
@@ -107,7 +112,7 @@ ST_EXTERN CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize
 /**
  * @abstract view's viewController if the view has one
  */
-- (UIViewController *)viewController;
+- (STNULLABLE UIViewController *)viewController;
 
 /**
  * @abstract view的superview中，是否包含某一类的view
@@ -115,7 +120,7 @@ ST_EXTERN CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize
  * @param viewClass  superview 的 class
  * @return           view是否被添加到 类型为viewClass的superview上面
  */
-- (BOOL)isDescendantOfClass:(Class)viewClass;
+- (BOOL)st_isDescendantOfClass:(STNONNULL Class)viewClass;
 
 /**
  * @abstract    递归查找view的superview，直到找到类型为viewClass的view
@@ -123,7 +128,7 @@ ST_EXTERN CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize
  * @param viewClass  superview 的 class
  * @return           第一个满足类型为viewClass的superview
  */
-- (UIView *)superviewWithClass:(Class)viewClass;
+- (STNULLABLE UIView *)st_superviewWithClass:(STNONNULL Class)viewClass;
 
 /**
  * @abstract 递归遍历该view，找到该view中的所有subview类型为class的view
@@ -131,7 +136,7 @@ ST_EXTERN CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize
  * @param viewClass  subview 的 class
  * @return           所有类型为class的subview
  */
-- (NSArray *)viewWithClass:(Class) class;
+- (STNULLABLE NSArray *)st_viewWithClass:(STNONNULL Class)viewClass;
 
 /**
  * @abstract 为该View添加轻拍手势
@@ -139,8 +144,8 @@ ST_EXTERN CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize
  * @param target 接受手势通知的对象
  * @param action 回调方法
  */
-- (void)addTouchTarget:(id)target action:(SEL)action;
-- (void)removeTouchTarget:(id)target action:(SEL)action;
+- (void)st_addTouchTarget:(STNULLABLE id)target action:(STNULLABLE SEL)action;
+- (void)st_removeTouchTarget:(STNULLABLE id)target action:(STNULLABLE SEL)action;
 
 /**
  * Return the x coordinate on the screen, taking into account scroll views.
@@ -171,7 +176,7 @@ ST_EXTERN CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize
  *
  * otherView should be a parent view of this view.
  */
-- (CGPoint)offsetFromView:(UIView *)otherView;
+- (CGPoint)st_offsetFromView:(STNONNULL UIView *)otherView;
 
 @property(nonatomic) CGPoint    anchorPoint;
 
@@ -187,6 +192,18 @@ ST_EXTERN CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize
 
 @end
 
+ST_ASSUME_NONNULL_BEGIN
+typedef BOOL (^STPanGestureShouldBeginHandler)(UIScrollView *, UIPanGestureRecognizer *);
+@interface UIScrollView (STGestureShouldBegin)
+//
+//(CollectionView, UIPanGestureRecognizer) -> Bool
+@property(STPROPERTYNULLABLE nonatomic, strong, setter=st_setPanGestureShouldHandler:, getter=st_panGestureShouldHandler) STPanGestureShouldBeginHandler st_panGestureShouldHandler;
+
+@end
+
+ST_ASSUME_NONNULL_END
+
+ST_ASSUME_NONNULL_BEGIN
 @interface UIResponder (STResponder)
 
 /**
@@ -195,13 +212,16 @@ ST_EXTERN CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize
  * @param class  nextResponder 的 class
  * @return       第一个满足类型为class的UIResponder
  */
-- (UIResponder *)nextResponderWithClass:(Class) class;
+- (STNULLABLE UIResponder *)st_nextResponderWithClass:(Class)aClass;
 
 /// 查找firstResponder
-- (UIResponder *)findFirstResponder;
+- (STNULLABLE UIResponder *)st_findFirstResponder;
 
 
 @end
+ST_ASSUME_NONNULL_END
+
+ST_ASSUME_NONNULL_BEGIN
 
 /**
  * @abstract hitTestBlock
@@ -211,15 +231,16 @@ ST_EXTERN CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize
  * 
  * @discussion 切记，千万不要在这个block中调用self hitTest:withPoint,否则则会造成递归调用。这个方法就是hitTest:withEvent的一个代替。
  */
-typedef UIView * (^STHitTestViewBlock)(CGPoint point, UIEvent *event, BOOL *returnSuper);
+typedef UIView * ST_NULLABLE (^STHitTestViewBlock)(CGPoint point, UIEvent *event, BOOL *returnSuper);
 typedef BOOL (^STPointInsideBlock)(CGPoint point, UIEvent *event, BOOL *returnSuper);
 
 @interface UIView (STHitTest)
 /// althought this is strong ,but i deal it with copy
-@property(nonatomic, strong) STHitTestViewBlock hitTestBlock;
-@property(nonatomic, strong) STPointInsideBlock pointInsideBlock;
+@property(STPROPERTYNULLABLE nonatomic, strong) STHitTestViewBlock hitTestBlock;
+@property(STPROPERTYNULLABLE nonatomic, strong) STPointInsideBlock pointInsideBlock;
 
 @end
+ST_ASSUME_NONNULL_END
 
 /// 是否弹起系统Menu菜单（选择/复制/拷贝等等）
 @interface UITextField (STMenuController)
@@ -242,7 +263,7 @@ typedef BOOL (^STPointInsideBlock)(CGPoint point, UIEvent *event, BOOL *returnSu
  *
  * @param  STImageDataTypeUnknown 未知类型
  */
-typedef enum {
+typedef NS_ENUM(NSInteger, STImageDataType) {
     STImageDataTypeUnknown,
     STImageDataTypePCX,  // 文件头  共1字节  0A
     STImageDataTypeBMP,  // 文件头  共2字节  42 4d
@@ -250,7 +271,7 @@ typedef enum {
     STImageDataTypePNG,  // 文件头  共8字节  89 50 4e 47 0d 0a 1a 0a
     STImageDataTypeGIF,  // 文件头  共6字节  47 49 46 38 39/37 61
     STImageDataTypeWebP,  // 文件头  共6字节  47 49 46 38 39/37 61
-} STImageDataType;
+};
 
 /**
  * @abstract 根据Data内容，解析文件头。
@@ -266,7 +287,7 @@ typedef enum {
  */
 @interface UIImage (STImage)
 /// 判断图片类型，支持GIF解析
-+ (UIImage *)imageWithSTData:(NSData *)data;
++ (STNULLABLE UIImage *)st_imageWithSTData:(STNULLABLE NSData *)data;
 
 @end
 
@@ -283,85 +304,103 @@ typedef enum {
  * STBlurEffectStyleExtraLight  系统从最底部往上滑动的设置毛玻璃效果
  * STBlurEffectStyleDark        通知中心的毛玻璃效果
  */
-typedef enum STBlurEffectStyle {
+typedef NS_ENUM(NSInteger, STBlurEffectStyle) {
     STBlurEffectStyleNone,
     STBlurEffectStyleExtraLight,
     STBlurEffectStyleLight,
     STBlurEffectStyleDark
-} STBlurEffectStyle;
+};
 
+ST_ASSUME_NONNULL_BEGIN
 /// 给图片添加毛玻璃效果
 @interface UIImage (STBlurImage)
 
-- (UIImage *)blurImageWithStyle:(STBlurEffectStyle)style;
+- (UIImage *)st_blurImageWithStyle:(STBlurEffectStyle)style;
 
-- (UIImage *)blurImageWithTintColor:(UIColor *)tintColor;
+- (UIImage *)st_blurImageWithTintColor:(STNULLABLE UIColor *)tintColor;
 
-- (UIImage *)blurImageWithRadius:(CGFloat)blurRadius tintColor:(UIColor *)tintColor saturationDeltaFactor:(CGFloat)saturationDeltaFactor;
+- (UIImage *)st_blurImageWithRadius:(CGFloat)blurRadius
+                          tintColor:(STNULLABLE UIColor *)tintColor
+              saturationDeltaFactor:(CGFloat)saturationDeltaFactor;
 
-- (UIImage *)blurImageWithRadius:(CGFloat)blurRadius
-                       tintColor:(UIColor *)tintColor
-           saturationDeltaFactor:(CGFloat)saturationDeltaFactor
-                       maskImage:(UIImage *)maskImage;
+- (UIImage *)st_blurImageWithRadius:(CGFloat)blurRadius
+                          tintColor:(STNULLABLE UIColor *)tintColor
+              saturationDeltaFactor:(CGFloat)saturationDeltaFactor
+                          maskImage:(STNULLABLE UIImage *)maskImage;
+
+- (UIImage *)st_imageWithRenderingTintColor:(STNULLABLE UIColor *)tintColor;
 @end
+ST_ASSUME_NONNULL_END
 
+ST_ASSUME_NONNULL_BEGIN
 /// UIView 截图
 @interface UIView (STSnapshot)
 /// 截图后的image
-- (UIImage *)snapshotImage;
+- (UIImage *)st_snapshotImage;
 /// 截取View中的某一小块
-- (UIImage *)snapshotImageInRect:(CGRect)rect;
+- (UIImage *)st_snapshotImageInRect:(CGRect)rect;
 /// 把 UIView的transform也放进截图中
-- (UIImage *)transformedSnapshotImage;
+- (UIImage *)st_transformedSnapshotImage;
 
 @end
+ST_ASSUME_NONNULL_END
 
+ST_ASSUME_NONNULL_BEGIN
 @interface UIView (STBlur)
 
-- (UIImage *)blurImage;
+- (UIImage *)st_blurImage;
 
-- (UIView *)statusBarWindow;
+- (STNULLABLE UIView *)st_statusBarWindow;
 
 @end
+ST_ASSUME_NONNULL_END
 
+ST_ASSUME_NONNULL_BEGIN
 typedef void (^STInvokeHandler)(void);
 
 @interface UICollectionView (STReloadData)
-@property(nonatomic, strong) STInvokeHandler willReloadData;
-@property(nonatomic, strong) STInvokeHandler didReloadData;
+@property(STPROPERTYNULLABLE nonatomic, strong) STInvokeHandler willReloadData;
+@property(STPROPERTYNULLABLE nonatomic, strong) STInvokeHandler didReloadData;
 
 @end
+ST_ASSUME_NONNULL_END
 
-
+ST_ASSUME_NONNULL_BEGIN
 @interface UITableView (STReloadData)
-@property(nonatomic, strong) STInvokeHandler willReloadData;
-@property(nonatomic, strong) STInvokeHandler didReloadData;
-
+@property(STPROPERTYNULLABLE nonatomic, strong) STInvokeHandler willReloadData;
+@property(STPROPERTYNULLABLE nonatomic, strong) STInvokeHandler didReloadData;
 @end
+ST_ASSUME_NONNULL_END
 
+ST_ASSUME_NONNULL_BEGIN
 @interface UIActionSheet (STKit)
 
-- (instancetype)initWithTitle:(NSString *)title
-                     delegate:(id<UIActionSheetDelegate>)delegate
-            cancelButtonTitle:(NSString *)cancelButtonTitle
-       destructiveButtonTitle:(NSString *)destructiveButtonTitle
-        otherButtonTitleArray:(NSArray *)otherButtonTitleArray;
+- (instancetype)initWithTitle:(STNULLABLE NSString *)title
+                     delegate:(STNULLABLE id<UIActionSheetDelegate>)delegate
+            cancelButtonTitle:(STNULLABLE NSString *)cancelButtonTitle
+       destructiveButtonTitle:(STNULLABLE NSString *)destructiveButtonTitle
+        otherButtonTitleArray:(STNULLABLE NSArray *)otherButtonTitleArray;
 
 @end
+ST_ASSUME_NONNULL_END
 
+ST_ASSUME_NONNULL_BEGIN
 @interface UIImage (STSubimage)
 
-- (UIImage *)imageRotatedByRadians:(CGFloat)radians;
-- (UIImage *)imageRotatedByDegrees:(CGFloat)degrees;
+- (UIImage *)st_fixedOrientationImage;
 
-+ (UIImage *)imageWithColor:(UIColor *)color;
-+ (UIImage *)imageWithColor:(UIColor *)color size:(CGSize)size;
+- (UIImage *)st_imageRotatedByRadians:(CGFloat)radians;
+- (UIImage *)st_imageRotatedByDegrees:(CGFloat)degrees;
+
++ (UIImage *)st_imageWithColor:(UIColor *)color;
++ (UIImage *)st_imageWithColor:(UIColor *)color size:(CGSize)size;
 /// 某个rect下的子图像
-- (UIImage *)subimageInRect:(CGRect)rect;
+- (UIImage *)st_subimageInRect:(CGRect)rect;
 
-- (UIImage *)imageWithTransform:(CGAffineTransform)transform;
+- (UIImage *)st_imageWithTransform:(CGAffineTransform)transform;
 
-- (UIImage *)imageConstrainedToSize:(CGSize)size;
-- (UIImage *)imageConstrainedToSize:(CGSize)size contentMode:(UIViewContentMode)contentMode;
+- (UIImage *)st_imageConstrainedToSize:(CGSize)size;
+- (UIImage *)st_imageConstrainedToSize:(CGSize)size contentMode:(UIViewContentMode)contentMode;
 
 @end
+ST_ASSUME_NONNULL_END

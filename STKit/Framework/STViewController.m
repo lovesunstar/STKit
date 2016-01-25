@@ -16,11 +16,7 @@
 @interface STViewController () {
   @private
     STIdentifier             _st_imageContextIdentifier;
-    UIStatusBarStyle         _st_previousStatusBarStyle;
-    __weak STViewController *_st_toolBarController;
 }
-
-- (void)setNavigationBarHidden:(BOOL)hidden animated:(BOOL)animated customAnimations:(void (^)(void))animations;
 
 @end
 
@@ -29,8 +25,18 @@
 - (void)dealloc {
     if ([self class] != NSClassFromString(@"_STWrapperViewController")) {
         STImageCachePopContext(_st_imageContextIdentifier);
-        [UIApplication sharedApplication].statusBarStyle = _st_previousStatusBarStyle;
     }
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+    self = [super initWithCoder:aDecoder];
+    if (self) {
+        if ([self class] != NSClassFromString(@"_STWrapperViewController")) {
+            _st_imageContextIdentifier = STImageCacheBeginContext();
+            STImageCachePushContext(_st_imageContextIdentifier);
+        }
+    }
+    return self;
 }
 
 - (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
@@ -45,7 +51,6 @@
         if ([self class] != NSClassFromString(@"_STWrapperViewController")) {
             _st_imageContextIdentifier = STImageCacheBeginContext();
             STImageCachePushContext(_st_imageContextIdentifier);
-            self.statusBarStyle = UIStatusBarStyleDefault;
         }
     }
     return self;
@@ -60,13 +65,12 @@
         frame.size = [UIScreen mainScreen].applicationFrame.size;
     }
     self.view.frame = frame;
-    self.view.backgroundColor = [UIColor colorWithRGB:0xFFFFFF];
-    if (self.customNavigationController.viewControllers.count > 1) {
+    self.view.backgroundColor = [UIColor st_colorWithRGB:0xFFFFFF];
+    if (self.st_navigationController.viewControllers.count > 1) {
         self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonCustomItem:STBarButtonCustomItemBack
                                                                                               target:self
                                                                                               action:@selector(backViewControllerActionFired:)];
     }
-    _st_previousStatusBarStyle = [UIApplication sharedApplication].statusBarStyle;
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -75,9 +79,6 @@
 
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
-    if (self.class != NSClassFromString(@"_STWrapperViewController")) {
-        [UIApplication sharedApplication].statusBarStyle = self.statusBarStyle;
-    }
 }
 
 - (void)didReceiveMemoryWarning {
@@ -90,8 +91,8 @@
 }
 
 - (void)backViewControllerAnimated:(BOOL)animated {
-    if (self.customNavigationController) {
-        [self.customNavigationController popViewControllerAnimated:animated];
+    if (self.st_navigationController) {
+        [self.st_navigationController popViewControllerAnimated:animated];
     } else {
         [self.navigationController popViewControllerAnimated:animated];
     }
@@ -99,8 +100,8 @@
 
 - (void)setInteractivePopGestureEnabled:(BOOL)interactivePopGestureEnabled {
     UIGestureRecognizer *gestureRecognizer = nil;
-    if ([self.customNavigationController respondsToSelector:@selector(interactivePopGestureRecognizer)]) {
-        gestureRecognizer = self.customNavigationController.interactivePopGestureRecognizer;
+    if ([self.st_navigationController respondsToSelector:@selector(interactivePopGestureRecognizer)]) {
+        gestureRecognizer = self.st_navigationController.interactivePopGestureRecognizer;
     } else if ([self.navigationController respondsToSelector:@selector(interactivePopGestureRecognizer)]) {
         gestureRecognizer = self.navigationController.interactivePopGestureRecognizer;
     }
@@ -109,28 +110,12 @@
 
 - (BOOL)isInteractivePopGestureEnabled {
     UIGestureRecognizer *gestureRecognizer = nil;
-    if ([self.customNavigationController respondsToSelector:@selector(interactivePopGestureRecognizer)]) {
-        gestureRecognizer = [self.customNavigationController performSelector:@selector(interactivePopGestureRecognizer)];
+    if ([self.st_navigationController respondsToSelector:@selector(interactivePopGestureRecognizer)]) {
+        gestureRecognizer = [self.st_navigationController performSelector:@selector(interactivePopGestureRecognizer)];
     } else if ([self.navigationController respondsToSelector:@selector(interactivePopGestureRecognizer)]) {
         gestureRecognizer = self.navigationController.interactivePopGestureRecognizer;
     }
     return gestureRecognizer.enabled;
-}
-
-- (UIViewController *)_st_toolBarController {
-    return nil;
-}
-
-- (void)setNavigationBarHidden:(BOOL)hidden animated:(BOOL)animated {
-    [_st_toolBarController setNavigationBarHidden:hidden animated:animated customAnimations:NULL];
-}
-
-- (void)setNavigationBarHidden:(BOOL)hidden animated:(BOOL)animated customAnimations:(void (^)(void))animations {
-    [_st_toolBarController setNavigationBarHidden:hidden animated:YES customAnimations:animations];
-}
-
-- (void)setNavigationBarHidden:(BOOL)hidden animations:(void (^)(void))animations {
-    [_st_toolBarController setNavigationBarHidden:hidden animated:YES customAnimations:animations];
 }
 
 @end

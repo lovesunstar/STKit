@@ -78,7 +78,7 @@ CGSize const STAccessoryViewMinimumSize = {200, 100};
         if ([self titleForState:STScrollDirectorStatePaginationFailed]) {
             [paginatinControl setTitle:[self titleForState:STScrollDirectorStatePaginationFailed] forState:STPaginationControlStateFailed];
         }
-        if ([self titleForState:STPaginationControlStateReachedEnd]) {
+        if ([self titleForState:STScrollDirectorStatePaginationReachedEnd]) {
             [paginatinControl setTitle:[self titleForState:STScrollDirectorStatePaginationReachedEnd] forState:STPaginationControlStateReachedEnd];
         }
         _paginationControl = paginatinControl;
@@ -131,11 +131,11 @@ CGSize const STAccessoryViewMinimumSize = {200, 100};
     NSString *key = [NSString stringWithFormat:@"%ld", (long)state];
     [self.titleDictionary setValue:title forKey:key];
     if (state < 10) {
-        if (_refreshControl && [_refreshControl isKindOfClass:[STDefaultRefreshControl class]]) {
+        if ([_refreshControl isKindOfClass:[STDefaultRefreshControl class]]) {
             [((STDefaultRefreshControl *)_refreshControl)setTitle:title forState:state - 1];
         }
     } else {
-        if (_paginationControl && [_paginationControl isKindOfClass:[STDefaultPaginationControl class]]) {
+        if ([_paginationControl isKindOfClass:[STDefaultPaginationControl class]]) {
             [((STDefaultPaginationControl *)_paginationControl)setTitle:title forState:state - 11];
         }
     }

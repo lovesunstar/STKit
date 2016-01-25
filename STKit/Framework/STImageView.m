@@ -96,7 +96,7 @@
             self.progressView.hidden = NO;
         }
         __weak STImageView *this = self;
-        [self setImageWithURLString:URLString
+        [self st_setImageWithURLString:URLString
             progressHandler:^(CGFloat completion) { [this.progressView setCompletion:completion animated:YES]; }
             finishedHandler:^(UIImage *image, NSString *URLString, BOOL usingCache, NSError *error) { this.progressView.hidden = YES; }];
         _URLString = URLString;

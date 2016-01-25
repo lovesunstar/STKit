@@ -9,6 +9,13 @@
 #import "STReachability.h"
 #import "Foundation+STKit.h"
 
+#import <sys/socket.h>
+#import <netinet/in.h>
+#import <netinet6/in6.h>
+#import <arpa/inet.h>
+#import <ifaddrs.h>
+#import <netdb.h>
+
 #import <SystemConfiguration/SystemConfiguration.h>
 
 static void STReachabilityCallback(SCNetworkReachabilityRef target, SCNetworkReachabilityFlags flags, void *info) {
@@ -40,11 +47,32 @@ static void STReachabilityCallback(SCNetworkReachabilityRef target, SCNetworkRea
     return [[self alloc] initWithHost:host];
 }
 
+static STReachability *_defaultReachability;
++ (instancetype)defaultReachability {
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        struct sockaddr_in zeroAddress;
+        bzero(&zeroAddress, sizeof(zeroAddress));
+        zeroAddress.sin_len = sizeof(zeroAddress);
+        zeroAddress.sin_family = AF_INET;
+        _defaultReachability = [[self alloc] initWithSocketAddress:&zeroAddress];
+    });
+    return _defaultReachability;
+}
+
 - (void)dealloc {
     [self stopNotification];
     if (_reachabilityRef) {
         CFRelease(_reachabilityRef);
     }
+}
+
+- (instancetype)initWithSocketAddress:(const struct sockaddr_in*)hostAddress {
+    self = [super init];
+    if (self) {
+        _reachabilityRef = SCNetworkReachabilityCreateWithAddress(kCFAllocatorDefault, (const struct sockaddr*)hostAddress);
+    }
+    return self;
 }
 
 - (instancetype)initWithHost:(NSString *)host {
@@ -132,7 +160,7 @@ static void STReachabilityCallback(SCNetworkReachabilityRef target, SCNetworkRea
     NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithCapacity:2];
     [userInfo setValue:self.host forKey:@"STReachabilityHost"];
     [userInfo setValue:@([self reachabilityStatus]) forKey:@"STReachabilityStatus"];
-    [[NSNotificationCenter defaultCenter] postNotificationOnMainThreadWithName:STReachabilityDidChangedNotification object:self userInfo:userInfo];
+    [[NSNotificationCenter defaultCenter] st_postNotificationOnMainThreadWithName:STReachabilityDidChangedNotification object:self userInfo:userInfo];
 }
 
 @end
@@ -160,5 +188,14 @@ static void STReachabilityCallback(SCNetworkReachabilityRef target, SCNetworkRea
 }
 
 @end
+
+BOOL STIsNetworkConnected() {
+    return [[STReachability defaultReachability] reachable];
+}
+
+BOOL STIsWIFIConnected() {
+    return [[STReachability defaultReachability] reachWIFI];
+}
+
 
 NSString *const STReachabilityDidChangedNotification = @"STReachabilityDidChangedNotification";

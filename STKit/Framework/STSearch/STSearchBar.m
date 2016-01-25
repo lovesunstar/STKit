@@ -44,7 +44,7 @@ const CGSize STDefaultSearchEditViewSize = {50, STSearchViewDefaultHeight};
                               initWithFrame:CGRectMake(20, 11, CGRectGetWidth(frame) - 40, 20)];
         self.editTextField.autoresizingMask =
         UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-        self.editTextField.textColor = [UIColor colorWithRGB:0x636363];
+        self.editTextField.textColor = [UIColor st_colorWithRGB:0x636363];
         self.editTextField.placeholder = @"请输入关键字";
         self.editTextField.returnKeyType = UIReturnKeySearch;
         [self addSubview:self.editTextField];
@@ -67,7 +67,7 @@ const CGSize STDefaultSearchEditViewSize = {50, STSearchViewDefaultHeight};
 
 - (void)reloadInputState {
     self.deleteButton.hidden =
-    [self.editTextField.text stringByTrimingWhitespace].length <= 0;
+    [self.editTextField.text st_stringByTrimingWhitespace].length <= 0;
 }
 
 - (BOOL)canBecomeFirstResponder {

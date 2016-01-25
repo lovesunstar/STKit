@@ -26,6 +26,8 @@
 @property(nonatomic, assign) BOOL displayingEmptyView;
 @property(nonatomic, assign) BOOL displayingExceptionView;
 
+- (instancetype)initWithCoder:(NSCoder *)aDecoder NS_DESIGNATED_INITIALIZER;
+
 @end
 
 @implementation STTableViewController
@@ -45,6 +47,14 @@
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
     return [self initWithStyle:UITableViewStylePlain];
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+    self = [super initWithCoder:aDecoder];
+    if (self) {
+        self.model = [[[[self class] modelClass] alloc] init];
+    }
+    return self;
 }
 
 - (void)setModel:(STModel *)model {

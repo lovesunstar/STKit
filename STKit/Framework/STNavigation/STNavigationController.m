@@ -52,7 +52,6 @@
     return _st_transitionView;
 }
 
-
 @end
 
 const CGFloat _STAnimationMaskViewMaximumAlpha = 0.2;
@@ -60,7 +59,7 @@ const CGFloat _STAnimationMaskViewMaximumAlpha = 0.2;
 @interface _STAnimationMaskView : UIView
 
 @property(nonatomic, strong) UIView *alphaView;
-@property(nonatomic, strong) UIImageView *shadowView;
+@property(nonatomic, strong) STShadow *shadow;
 
 + (_STAnimationMaskView *)animationMaskView;
 
@@ -91,10 +90,10 @@ static char *const STNavigationItemChangedKey = "STNavigationItemChangedKey";
 }
 
 + (void)load {
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(setTitle:)), class_getInstanceMethod(self, @selector(st_setTitle:)));
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(setTitleView:)), class_getInstanceMethod(self, @selector(st_setTitleView:)));
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(setRightBarButtonItem:)), class_getInstanceMethod(self, @selector(st_setRightBarButtonItem:)));
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(setLeftBarButtonItem:)), class_getInstanceMethod(self, @selector(st_setLeftBarButtonItem:)));
+    STExchangeSelectors(self, @selector(setTitle:), @selector(st_setTitle:));
+    STExchangeSelectors(self, @selector(setTitleView:), @selector(st_setTitleView:));
+    STExchangeSelectors(self, @selector(setRightBarButtonItem:), @selector(st_setRightBarButtonItem:));
+    STExchangeSelectors(self, @selector(setLeftBarButtonItem:), @selector(st_setLeftBarButtonItem:));
 }
 
 - (void)st_setTitle:(NSString *)title {
@@ -167,6 +166,26 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
 
 @end
 
+@interface UIViewController (_STWrapperControllerAssocity)
+
+@property(nonatomic, assign, setter=st_setWrapperViewController:, getter=st_wrapperViewController) _STWrapperViewController *st_wrapperViewController;
+
+@end
+
+@implementation UIViewController (_STWrapperControllerAssocity)
+
+static char *const STViewControllerWrapperControllerKey = "_STViewControllerWrapperControllerKey";
+
+- (void)st_setWrapperViewController:(_STWrapperViewController *)wrapperViewController {
+    objc_setAssociatedObject(self, STViewControllerWrapperControllerKey, wrapperViewController, OBJC_ASSOCIATION_ASSIGN);
+}
+
+- (_STWrapperViewController *)st_wrapperViewController {
+    return objc_getAssociatedObject(self, STViewControllerWrapperControllerKey);
+}
+
+@end
+
 #pragma mark - STNavigationController
 
 @interface STNavigationController () <UIGestureRecognizerDelegate> {
@@ -202,6 +221,10 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
 
 - (void)dealloc {
     self.interactivePopGestureRecognizer.delegate = nil;
+    [_shadow removeObserver:self forKeyPath:@"shadowOpacity"];
+    [_shadow removeObserver:self forKeyPath:@"shadowOffset"];
+    [_shadow removeObserver:self forKeyPath:@"shadowRadius"];
+    [_shadow removeObserver:self forKeyPath:@"shadowColor"];
 }
 
 - (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
@@ -211,12 +234,24 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
 - (instancetype)initWithRootViewController:(UIViewController *)rootViewController {
     self = [super initWithNibName:nil bundle:nil];
     if (self) {
-        self.maximumInteractivePopEdgeDistance = 30;
+        self.st_maximumInteractivePopEdgeDistance = 30;
         _viewControllers = [NSMutableArray arrayWithCapacity:1];
         self.wrapperControllerDictionary = [NSMutableDictionary dictionaryWithCapacity:2];
         if (rootViewController) {
             [self pushViewController:rootViewController animated:NO];
         }
+        _shadow = [[STShadow alloc] init];
+        _shadow.shadowColor = [UIColor blackColor];
+        _shadow.shadowOffset = CGSizeMake(- 3, 0);
+        _shadow.shadowRadius = 3.0;
+        _shadow.shadowOpacity = 0.1;
+        
+        [_shadow addObserver:self forKeyPath:@"shadowOpacity" options:NSKeyValueObservingOptionNew context:NULL];
+        [_shadow addObserver:self forKeyPath:@"shadowOffset" options:NSKeyValueObservingOptionNew context:NULL];
+        [_shadow addObserver:self forKeyPath:@"shadowRadius" options:NSKeyValueObservingOptionNew context:NULL];
+        [_shadow addObserver:self forKeyPath:@"shadowColor" options:NSKeyValueObservingOptionNew context:NULL];
+        
+        self.maximumPopAnimationMaskAlpha = _STAnimationMaskViewMaximumAlpha;
     }
     return self;
 }
@@ -226,13 +261,7 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
     // Do any additional setup after loading the view.
     self.view.backgroundColor = [UIColor whiteColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    CGRect frame = CGRectZero;
-    if (STGetSystemVersion() >= 7) {
-        frame = [UIScreen mainScreen].bounds;
-    } else {
-        frame.size = [UIScreen mainScreen].applicationFrame.size;
-    }
-    self.view.frame = frame;
+    self.view.frame = [UIScreen mainScreen].bounds;
     
     self.transitionView = [[UIView alloc] initWithFrame:self.view.bounds];
     self.transitionView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -258,9 +287,9 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
             return (UIView *)nil;
         }
         UIViewController *topVC = [weakSelf.viewControllers lastObject];
-        CGFloat maximumDistance = topVC.maximumInteractivePopEdgeDistance;
+        CGFloat maximumDistance = topVC.st_maximumInteractivePopEdgeDistance;
 
-        if (point.x < MIN(15, maximumDistance) && point.y > 64 * !(topVC.navigationBarHidden)) {
+        if (point.x < MIN(15, maximumDistance) && point.y > 64 * !(topVC.st_navigationBarHidden)) {
             return (UIView *)weakSelf.transitionView;
         }
         *returnSuper = YES;
@@ -277,14 +306,15 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
             return [weakSelf.transitionView hitTest:point withEvent:event];
         }
         UIViewController *topVC = [weakSelf.viewControllers lastObject];
-        CGFloat maximumDistance = topVC.maximumInteractivePopEdgeDistance;
-        if (point.x < maximumDistance && point.y > 64 * !(topVC.navigationBarHidden)) {
+        CGFloat maximumDistance = topVC.st_maximumInteractivePopEdgeDistance;
+        if (point.x < maximumDistance && point.y > 64 * !(topVC.st_navigationBarHidden)) {
             return (UIView *)nil;
         }
         return [weakSelf.transitionView hitTest:point withEvent:event];
     };
 
     [self.view addSubview:hitTestView];
+    [self _updateShadow];
 }
 
 - (void)viewDidLayoutSubviews {
@@ -324,7 +354,7 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
         [toWrapperViewController didMoveToParentViewController:self];
         [fromWrapperViewController.view removeFromSuperview];
     };
-    if (self.customTabBarController) {
+    if (self.st_tabBarController) {
         [self _layoutTabBarFromViewController:fromWrapperViewController toViewController:toWrapperViewController];
     }
     if (!animated) {
@@ -332,6 +362,8 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
         completion(YES);
         self.visibleWrapperViewController = toWrapperViewController;
     } else {
+        NSMutableArray *effectedViewControllers = [NSMutableArray arrayWithCapacity:2];
+        [effectedViewControllers addObject:viewController];
         [self _setNeedTransitionToViewController:toWrapperViewController
                                  transitionType:STViewControllerTransitionTypePush
                                      transition:transition
@@ -369,7 +401,7 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
         return nil;
     }
 
-    NSMutableArray *popedViewController = [NSMutableArray arrayWithCapacity:2];
+    NSMutableArray *popedViewControllers = [NSMutableArray arrayWithCapacity:2];
     while (self.topViewController != viewController) {
         UIViewController *topViewController = self.topViewController;
         NSString *key = [NSString stringWithFormat:@"%llu", (unsigned long long)topViewController.hash];
@@ -378,13 +410,13 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
         [wrapperViewController removeFromParentViewController];
         [self.wrapperControllerDictionary removeObjectForKey:key];
         [_viewControllers removeObject:topViewController];
-        [popedViewController addObject:topViewController];
+        [popedViewControllers addObject:topViewController];
     }
 
     UIViewController *fromWrapperViewController = self.visibleWrapperViewController;
     UIViewController *toWrapperViewController = [self _wrapperViewController:viewController];
 
-    if (self.customTabBarController) {
+    if (self.st_tabBarController) {
         [self _layoutTabBarFromViewController:fromWrapperViewController toViewController:toWrapperViewController];
     }
 
@@ -398,15 +430,23 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
         [fromWrapperViewController removeFromParentViewController];
         toWrapperViewController.view.frame = self.transitionView.bounds;
         [self setCustomNavigationController:nil forController:[self unwrapViewController:fromWrapperViewController]];
+        for (UIViewController *viewController in popedViewControllers) {
+            if ([viewController respondsToSelector:@selector(st_didPopViewControllerAnimated:)]) {
+                [viewController st_didPopViewControllerAnimated: animated];
+            }
+        }
     };
     if (!animated) {
         transition();
         completion(YES);
     } else {
-        [self _setNeedTransitionToViewController:toWrapperViewController transitionType:STViewControllerTransitionTypePop transition:transition completion:completion];
+        [self _setNeedTransitionToViewController:toWrapperViewController
+                                  transitionType:STViewControllerTransitionTypePop
+                                      transition:transition
+                                      completion:completion];
     }
 
-    return popedViewController;
+    return popedViewControllers;
 }
 
 #pragma mark - topAndVisibleController
@@ -422,7 +462,7 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
 }
 
 - (void)setCustomNavigationController:(STNavigationController *)navigationController forController:(UIViewController *)viewController {
-    SEL selector = NSSelectorFromString(@"setCustomNavigationController:");
+    SEL selector = NSSelectorFromString(@"st_setNavigationController:");
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
     if ([viewController respondsToSelector:selector]) {
@@ -486,12 +526,12 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
 - (void)_layoutTabBarFromViewController:(UIViewController *)fromViewController toViewController:(UIViewController *)toViewController {
     BOOL fromHidesBottomBar = fromViewController.hidesBottomBarWhenPushed;
     BOOL toHidesBottomBar = toViewController.hidesBottomBarWhenPushed;
-    BOOL toRequireTabBar = [[toViewController valueForVar:@"_requiredTabBar"] boolValue];
+    BOOL toRequireTabBar = [[toViewController st_valueForVar:@"_requiredTabBar"] boolValue];
 
     if (toRequireTabBar && [toViewController isKindOfClass:[_STWrapperViewController class]]) {
         [((_STWrapperViewController *)toViewController)_st_resignCustomTabBar];
     }
-    STTabBar *tabBar = self.customTabBarController.tabBar;
+    STTabBar *tabBar = self.st_tabBarController.tabBar;
     tabBar.autoresizingMask = UIViewAutoresizingFlexibleTopMargin;
     if (fromHidesBottomBar != toHidesBottomBar) {
         UIViewController *needBarViewController = toHidesBottomBar ? fromViewController : toViewController;
@@ -505,22 +545,22 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
         }
     } else if (!toHidesBottomBar) {
         /// 如果两个都显示，则加在 tabBar上面
-        if (![self.customTabBarController.view isDescendantOfView:tabBar]) {
+        if (![self.st_tabBarController.view isDescendantOfView:tabBar]) {
             [tabBar removeFromSuperview];
-            [self.customTabBarController.view addSubview:tabBar];
-            [self layoutTabBar:tabBar withViewController:self.customTabBarController];
+            [self.st_tabBarController.view addSubview:tabBar];
+            [self layoutTabBar:tabBar withViewController:self.st_tabBarController];
         } else {
-            [self.customTabBarController.view bringSubviewToFront:tabBar];
+            [self.st_tabBarController.view bringSubviewToFront:tabBar];
         }
     } else {
         /// 如果两个都不显示，则加在 tabBar上面
-        if (![self.customTabBarController.view isDescendantOfView:tabBar]) {
+        if (![self.st_tabBarController.view isDescendantOfView:tabBar]) {
             [tabBar removeFromSuperview];
-            [self.customTabBarController.view addSubview:tabBar];
-            [self.customTabBarController.view sendSubviewToBack:tabBar];
-            [self layoutTabBar:tabBar withViewController:self.customTabBarController];
+            [self.st_tabBarController.view addSubview:tabBar];
+            [self.st_tabBarController.view sendSubviewToBack:tabBar];
+            [self layoutTabBar:tabBar withViewController:self.st_tabBarController];
         } else {
-            [self.customTabBarController.view sendSubviewToBack:tabBar];
+            [self.st_tabBarController.view sendSubviewToBack:tabBar];
         }
         
     }
@@ -534,8 +574,8 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
     if (gestureRecognizer == self.interactivePopGestureRecognizer) {
         CGPoint point = [touch locationInView:self.transitionView];
         UIViewController *topVC = [self.viewControllers lastObject];
-        CGFloat maximumDistance = topVC.maximumInteractivePopEdgeDistance;
-        return self.viewControllers.count > 1 && point.x < maximumDistance && point.y > 64 * !(topVC.navigationBarHidden);
+        CGFloat maximumDistance = topVC.st_maximumInteractivePopEdgeDistance;
+        return self.viewControllers.count > 1 && point.x < maximumDistance && point.y > 64 * !(topVC.st_navigationBarHidden);
     }
     return YES;
 }
@@ -543,7 +583,7 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
 - (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer {
     UIPanGestureRecognizer *panGestureRecognizer = (UIPanGestureRecognizer *)self.interactivePopGestureRecognizer;
     CGPoint velocity = [panGestureRecognizer velocityInView:gestureRecognizer.view];
-    return (fabs(velocity.x) > fabs(velocity.y));
+    return (fabs(velocity.x) > fabs(velocity.y)) && velocity.x > -10;
 }
 
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer
@@ -609,6 +649,9 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
     } else {
         [self _st_navigationController:self willBeginTransitionContext:transitionContext];
     }
+    
+    [self.transitionView insertSubview:panToView belowSubview:panFromView];
+    [self addChildViewController:self.panTargetViewController];
 }
 
 - (void)_panGestureRecognizerDidChange:(UIPanGestureRecognizer *)panGestureRecognizer {
@@ -623,8 +666,6 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
     if (!_panGestureAnimating) {
         _panGestureAnimating = YES;
         _panGestureStartPoint.y = currentPoint.y;
-        [self.transitionView insertSubview:panToView belowSubview:panFromView];
-        [self addChildViewController:self.panTargetViewController];
         
     }
     CGFloat dX = MAX(currentPoint.x - _panGestureStartPoint.x, 0);
@@ -714,7 +755,11 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
             
             [panFromView removeFromSuperview];
             [self.panFromViewController removeFromParentViewController];
-            [self setCustomNavigationController:nil forController:[self unwrapViewController:self.panFromViewController]];
+            UIViewController *viewController = [self unwrapViewController:self.panFromViewController];
+            if ([viewController respondsToSelector:@selector(st_didPopViewControllerAnimated:)]) {
+                [viewController st_didPopViewControllerAnimated:true];
+            }
+            [self setCustomNavigationController:nil forController:viewController];
             self.visibleWrapperViewController = self.panTargetViewController;
             if (completionHandler) {
                 completionHandler(finished);
@@ -803,18 +848,20 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
     CGRect fromViewFrame = fromView.frame, toViewFrame = targetView.frame, maskViewFrame = self.animationMaskView.frame;
     CGFloat maskViewAlpha = 0.0;
     if (type == STViewControllerTransitionTypePop) {
-        CGFloat panOffset = MAX(MIN(fromViewController.interactivePopTransitionOffset, CGRectGetWidth(self.transitionView.bounds)), 0);
+        CGFloat panOffset = MAX(MIN(fromViewController.st_interactivePopTransitionOffset, CGRectGetWidth(self.transitionView.bounds)), 0);
         fromViewFrame.origin.x = completion * CGRectGetWidth(self.transitionView.bounds);
         toViewFrame.origin.x = -panOffset + completion * panOffset;
         maskViewFrame.origin.x = CGRectGetMinX(fromViewFrame) - CGRectGetWidth(maskViewFrame);
-        maskViewAlpha = _STAnimationMaskViewMaximumAlpha - _STAnimationMaskViewMaximumAlpha * completion;
+        maskViewAlpha = self.maximumPopAnimationMaskAlpha - self.maximumPopAnimationMaskAlpha * completion;
     } else {
-        CGFloat panOffset = MAX(MIN(targetViewController.interactivePopTransitionOffset, CGRectGetWidth(self.transitionView.bounds)), 0);
+        CGFloat panOffset = MAX(MIN(targetViewController.st_interactivePopTransitionOffset, CGRectGetWidth(self.transitionView.bounds)), 0);
         fromViewFrame.origin.x = -panOffset + (1.0 - completion) *panOffset;
+        
         toViewFrame.origin.x = (1.0-completion) *CGRectGetWidth(self.transitionView.bounds);
         maskViewFrame.origin.x = CGRectGetMinX(toViewFrame) - CGRectGetWidth(maskViewFrame);
-        maskViewAlpha = _STAnimationMaskViewMaximumAlpha - _STAnimationMaskViewMaximumAlpha * (1.0 - completion);
+        maskViewAlpha = self.maximumPopAnimationMaskAlpha - self.maximumPopAnimationMaskAlpha * (1.0 - completion);
     }
+    
     fromView.frame = fromViewFrame;
     targetView.frame = toViewFrame;
     self.animationMaskView.frame = maskViewFrame;
@@ -825,7 +872,6 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
 - (void)_st_navigationController:(STNavigationController *)navigationController willBeginTransitionContext:(STNavigationControllerTransitionContext *)transitionContext {
     [self.animationMaskView removeFromSuperview];
     [self.view insertSubview:self.animationMaskView aboveSubview:self.transitionView];
-//    [self.view addSubview:self.animationMaskView];
     self.animationMaskView.alphaView.alpha = 0.0;
     transitionContext->_st_completion = 0;
     transitionContext->_st_transitionView = self.transitionView;
@@ -850,6 +896,7 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
                             transitionType:(STViewControllerTransitionType)transitionType
                                 transition:(void (^)(void))transition
                                 completion:(void (^)(BOOL))completion {
+    
     if (!_updatingVisibleController) {
         __weak STNavigationController *weakSelf = self;
         if (self.animating || self.operationQueue.count > 0) {
@@ -954,6 +1001,7 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
 - (_STAnimationMaskView *)animationMaskView {
     if (!_animationMaskView) {
         _animationMaskView = [_STAnimationMaskView animationMaskView];
+        _animationMaskView.shadow = self.shadow;
     }
     return _animationMaskView;
 }
@@ -968,8 +1016,7 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
 
 - (UIView *)_wrapperViewForController:(UIViewController *)viewController {
     UIView *view = viewController.view;
-//    self.transitionView.frame = self.view.bounds;
-    view.bounds = self.transitionView.bounds;
+    view.frame = self.transitionView.bounds;
     view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     view.clipsToBounds = YES;
     return view;
@@ -980,7 +1027,6 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
         return NO;
     }
     return YES;
-    return (!viewController.navigationBarHidden) || (viewController.customTabBarController && !viewController.hidesBottomBarWhenPushed);
 }
 
 - (UIViewController *)_wrapperViewController:(UIViewController *)viewController {
@@ -1019,7 +1065,7 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
 }
 
 - (UIView *)_keyboardFromViewController:(UIViewController *)viewController {
-    UIResponder *firstResponder = viewController.view.findFirstResponder;
+    UIResponder *firstResponder = viewController.view.st_findFirstResponder;
     if ([firstResponder respondsToSelector:@selector(setInputAccessoryView:)] && !firstResponder.inputAccessoryView) {
         [firstResponder performSelector:@selector(setInputAccessoryView:) withObject:UIView.new];
         [firstResponder reloadInputViews];
@@ -1050,6 +1096,21 @@ static char *const STViewControllerKeyboardSnapshotView = "STViewControllerKeybo
     viewController.keyboardView = nil;
 }
 
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+    if (object == self.shadow) {
+        [self _updateShadow];
+    } else {
+        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+    }
+}
+
+- (void)_updateShadow {
+    if (self.isViewLoaded) {
+        _animationMaskView.shadow = self.shadow;
+    }
+}
+
 @end
 
 CGFloat const STTransitionViewControllerAnimationDuration = 0.35;
@@ -1063,37 +1124,40 @@ static NSString *const STNavigationControllerTransitionOffsetKey = @"STNavigatio
 
 @implementation UIViewController (STNavigationController)
 
-- (void)setCustomNavigationBar:(STNavigationBar *)customNavigationBar {
-    objc_setAssociatedObject(self, (__bridge const void *)(STNavigationBarKey), customNavigationBar, OBJC_ASSOCIATION_ASSIGN);
+- (void)st_setNavigationBar:(STNavigationBar *)navigationBar {
+    objc_setAssociatedObject(self, (__bridge const void *)(STNavigationBarKey), navigationBar, OBJC_ASSOCIATION_ASSIGN);
 }
 
-- (STNavigationBar *)customNavigationBar {
+- (STNavigationBar *)st_navigationBar {
     return objc_getAssociatedObject(self, (__bridge const void *)(STNavigationBarKey));
 }
 
-- (BOOL)navigationBarHidden {
+- (BOOL)st_navigationBarHidden {
     NSNumber *hidden = objc_getAssociatedObject(self, (__bridge const void *)(STNavigationBarHiddenKey));
     return hidden.boolValue;
 }
 
-- (void)setNavigationBarHidden:(BOOL)navigationBarHidden {
+
+- (void)st_setNavigationBarHidden:(BOOL)navigationBarHidden {
     objc_setAssociatedObject(self, (__bridge const void *)(STNavigationBarHiddenKey), @(navigationBarHidden), OBJC_ASSOCIATION_COPY);
 }
 
-- (STNavigationController *)customNavigationController {
+- (STNavigationController *)st_navigationController {
     return objc_getAssociatedObject(self, (__bridge const void *)(STNavigationControllerKey));
 }
 
-- (void)setCustomNavigationController:(STNavigationController *)navigationController {
+
+- (void)st_setNavigationController:(STNavigationController *)navigationController {
     objc_setAssociatedObject(self, (__bridge const void *)(STNavigationControllerKey), navigationController, OBJC_ASSOCIATION_ASSIGN);
 }
 
-- (void)setMaximumInteractivePopEdgeDistance:(CGFloat)maximumInteractivePopEdgeDistance {
+
+- (void)st_setMaximumInteractivePopEdgeDistance:(CGFloat)maximumInteractivePopEdgeDistance {
     objc_setAssociatedObject(self, (__bridge const void *)(STNavigationControllerSideOffsetKey), @(maximumInteractivePopEdgeDistance),
                              OBJC_ASSOCIATION_COPY);
 }
 
-- (CGFloat)maximumInteractivePopEdgeDistance {
+- (CGFloat)st_maximumInteractivePopEdgeDistance {
     NSNumber *maxNumber = objc_getAssociatedObject(self, (__bridge const void *)(STNavigationControllerSideOffsetKey));
     if (!maxNumber) {
         return STMaximumInteractivePopEdgeDistance;
@@ -1101,12 +1165,13 @@ static NSString *const STNavigationControllerTransitionOffsetKey = @"STNavigatio
     return maxNumber.floatValue;
 }
 
-- (void)setInteractivePopTransitionOffset:(CGFloat)interactivePopTransitionOffset {
+//
+- (void)st_setInteractivePopTransitionOffset:(CGFloat)interactivePopTransitionOffset {
     objc_setAssociatedObject(self, (__bridge const void *)(STNavigationControllerTransitionOffsetKey), @(ABS(interactivePopTransitionOffset)),
                              OBJC_ASSOCIATION_COPY);
 }
 
-- (CGFloat)interactivePopTransitionOffset {
+- (CGFloat)st_interactivePopTransitionOffset {
     NSNumber *maxNumber = objc_getAssociatedObject(self, (__bridge const void *)(STNavigationControllerTransitionOffsetKey));
     if (!maxNumber) {
         return STInteractivePopTransitionOffset;
@@ -1120,7 +1185,9 @@ CGFloat const STInteractivePopTransitionOffset = 80;
 
 #pragma mark - Private Implements
 
-@implementation _STAnimationMaskView
+@implementation _STAnimationMaskView {
+    UIView *_shadowView;
+}
 
 + (_STAnimationMaskView *)animationMaskView {
     CGRect frame = [UIScreen mainScreen].bounds;
@@ -1141,16 +1208,29 @@ CGFloat const STInteractivePopTransitionOffset = 80;
         [self addSubview:self.alphaView];
 
         CGRect frame = self.bounds;
-        frame.origin.x = CGRectGetWidth(frame) - 10;
-        frame.size.width = 10;
-        UIImageView *shadowView = [[UIImageView alloc] initWithFrame:frame];
+        frame.origin.x = CGRectGetWidth(frame);
+        frame.size.width = STOnePixel();
+        
+        UIView *shadowView = [[UIView alloc] initWithFrame:frame];
         shadowView.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleLeftMargin;
-        shadowView.image =
-            [[STResourceManager imageWithResourceID:STImageResourceViewControllerShadowID] resizableImageWithCapInsets:UIEdgeInsetsMake(5, 5, 5, 5)
-                                                                                                          resizingMode:UIImageResizingModeStretch];
+        
         [self addSubview:shadowView];
+        _shadowView = shadowView;
     }
     return self;
+}
+
+- (void)setShadow:(STShadow *)shadow {
+    CGFloat offset = ABS(shadow.shadowOffset.width);
+    CGRect pathRect = CGRectOffset(_shadowView.bounds, - offset, 0);
+    pathRect.size.width += offset;
+    _shadowView.layer.shadowPath = [UIBezierPath bezierPathWithRect:pathRect].CGPath;
+    _shadowView.layer.shadowOpacity = shadow.shadowOpacity;
+    _shadowView.layer.shadowColor = shadow.shadowColor.CGColor;
+    _shadowView.layer.shadowRadius = shadow.shadowRadius;
+    
+    _shadow = shadow;
+    
 }
 
 @end
@@ -1200,7 +1280,12 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
 @implementation _STWrapperViewController
 
 - (void)dealloc {
-    [self.rootViewController setValue:nil forVar:@"_st_toolBarController"];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+    SEL selector = NSSelectorFromString(@"st_setSuperView:");
+    [self.rootViewController st_performSelector:selector withObjects:nil, nil];
+#pragma clang diagnostic pop
+    self.rootViewController.st_wrapperViewController = nil;
     self.rootViewController.navigationItem.changedHandler = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
@@ -1209,8 +1294,8 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
     self = [super initWithNibName:nil bundle:nil];
     if (self) {
         self.rootViewController = rootViewController;
-        self.navigationBarHidden = rootViewController.navigationBarHidden;
-        [rootViewController setValue:self forVar:@"_st_toolBarController"];
+        self.st_navigationBarHidden = rootViewController.st_navigationBarHidden;
+        self.rootViewController.st_wrapperViewController = self;
     }
     return self;
 }
@@ -1223,11 +1308,15 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
     [super viewDidLoad];
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-    SEL selector = NSSelectorFromString(@"setCustomNavigationBar:");
+    SEL selector = NSSelectorFromString(@"st_setNavigationBar:");
     if ([self.rootViewController respondsToSelector:selector]) {
         [self.rootViewController performSelector:selector withObject:self.navigationBar];
     }
+    SEL selector1 = NSSelectorFromString(@"st_setSuperView:");
+    [self.rootViewController st_performSelector:selector1 withObjects:self.view, nil];
 #pragma clang diagnostic pop
+    self.navigationBar.barTintColor = self.rootViewController.st_navigationController.navigationBar.barTintColor;
+    
     self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     
@@ -1235,6 +1324,7 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
     self.rootView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.rootView.backgroundColor = [UIColor clearColor];
     [self.view addSubview:self.rootView];
+    
     if (self.rootViewController.view) {
         [self addChildViewController:self.rootViewController];
         self.rootViewController.view.frame = self.rootView.bounds;
@@ -1243,12 +1333,36 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
         [self.rootViewController didMoveToParentViewController:self];
     }
     [self.view bringSubviewToFront:self.navigationBar];
-    self.navigationBar.barTintColor = self.rootViewController.customNavigationController.navigationBar.barTintColor;
-
+    
+    {
+        STNavigationController *navigationController = self.rootViewController.st_navigationController;
+        UINavigationItem *navigationItem = self.rootViewController.navigationItem;
+        UIBarButtonItem *leftBarButtonItem = navigationItem.leftBarButtonItem;
+        if (navigationController.viewControllers.count > 1 && !leftBarButtonItem &&
+            (navigationController.viewControllers[0] != self.rootViewController) && ![self.rootViewController isKindOfClass:[STViewController class]] && !navigationItem.hidesBackButton) {
+            navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonCustomItem:STBarButtonCustomItemBack
+                                                                                             target:self
+                                                                                             action:@selector(backRootViewControllerAnimated:)];
+        }
+        
+        NSDictionary *titleTextAttributes = self.navigationBar.titleTextAttributes;
+        if (!titleTextAttributes) {
+            titleTextAttributes = navigationController.navigationBar.titleTextAttributes;
+        }
+        self.navigationBar.titleTextAttributes = titleTextAttributes;
+        
+        UIImage *backgroundImage = self.navigationBar.backgroundImage;
+        if (!backgroundImage) {
+            backgroundImage = navigationController.navigationBar.backgroundImage;
+        }
+        self.navigationBar.backgroundImage = backgroundImage;
+        self.navigationBar.hidden = self.rootViewController.st_navigationBarHidden;
+    }
+    
     [self updateNavigationViewIfNeeded];
-    UIViewController *basedViewController = self.rootViewController.customNavigationController;
+    UIViewController *basedViewController = self.rootViewController.st_navigationController;
     if (!basedViewController) {
-        basedViewController = self.rootViewController.customTabBarController;
+        basedViewController = self.rootViewController.st_tabBarController;
     }
     if ([UIViewController instancesRespondToSelector:@selector(traitCollection)]) {
         [self customLayoutSubviewsWithTraitCollection:basedViewController.traitCollection];
@@ -1260,11 +1374,11 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
     self.rootViewController.navigationItem.changedHandler = ^() {
         [weakSelf updateNavigationViewIfNeeded];
     };
-    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(statusBarDidChangeNotification) name:UIApplicationDidChangeStatusBarFrameNotification object:nil];
 }
 
 - (STNavigationBar *)navigationBar {
-    if (!self.rootViewController.customNavigationController) {
+    if (!self.rootViewController.st_navigationController) {
         return nil;
     }
     if (!_navigationBar) {
@@ -1274,33 +1388,61 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
     return _navigationBar;
 }
 
+- (void)statusBarDidChangeNotification {
+    [self.view setNeedsLayout];
+    if ([UIViewController instancesRespondToSelector:@selector(traitCollection)]) {
+        [self customLayoutSubviewsWithTraitCollection:self.traitCollection];
+    } else {
+        [self customLayoutSubviewsWithTraitCollection:nil];
+    }
+}
+
 - (void)updateNavigationViewIfNeeded {
     if (!_navigationBar) {
         return;
     }
-    self.navigationBar.hidden = self.rootViewController.navigationBarHidden;
     UINavigationItem *navigationItem = self.rootViewController.navigationItem;
     UIBarButtonItem *leftBarButtonItem = navigationItem.leftBarButtonItem;
-
-    STNavigationController *navigationController = self.rootViewController.customNavigationController;
-    if (navigationController.viewControllers.count > 1 && !leftBarButtonItem &&
-        (navigationController.viewControllers[0] != self.rootViewController) && ![self.rootViewController isKindOfClass:[STViewController class]]) {
-        leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonCustomItem:STBarButtonCustomItemBack
-                                                                          target:self
-                                                                          action:@selector(backRootViewControllerAnimated:)];
-    }
-    self.navigationBar.leftBarView = leftBarButtonItem.customView;
+    self.navigationBar.translucent = (self.rootViewController.edgesForExtendedLayout & UIRectEdgeTop);
+    UIView *leftBarView = [leftBarButtonItem st_customView];
+    self.navigationBar.leftBarView = leftBarView;
     self.navigationBar.title = navigationItem.title;
     if (navigationItem.titleView) {
         self.navigationBar.titleView = navigationItem.titleView;
     }
-    self.navigationBar.rightBarView = navigationItem.rightBarButtonItem.customView;
-    self.navigationBar.titleTextAttributes = navigationController.navigationBar.titleTextAttributes;
-    self.navigationBar.backgroundImage = navigationController.navigationBar.backgroundImage;
+    UIView *rightBarView = [navigationItem.rightBarButtonItem st_customView];
+    self.navigationBar.rightBarView = rightBarView;
+    BOOL leftConstructUsingSTKit = NO, rightConstructUsingSTKit = NO;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+    SEL selector = NSSelectorFromString(@"st_constructUsingSTKit");
+    id returnValue0 = [navigationItem.leftBarButtonItem st_performSelector:selector withObjects:nil, nil] ;
+    if ([returnValue0 respondsToSelector:@selector(boolValue)]) {
+        leftConstructUsingSTKit = [returnValue0 boolValue];
+    }
+    id returnValue1 = [navigationItem.rightBarButtonItem st_performSelector:selector withObjects:nil, nil];
+    if ([returnValue1 respondsToSelector:@selector(boolValue)]) {
+        rightConstructUsingSTKit = [returnValue1 boolValue];
+    }
+#pragma clang diagnostic pop
+    NSInteger flags = 0;
+    if (leftConstructUsingSTKit) {
+        flags |= 1;
+    }
+    if (rightConstructUsingSTKit) {
+        flags |= (1 << 1);
+    }
+    [self.navigationBar st_setValue:@(flags) forVar:@"_tintFlags"];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+    SEL selector1 = NSSelectorFromString(@"_retintItems");
+    [self.navigationBar st_performSelector:selector1 withObjects:nil, nil];
+#pragma clang diagnostic pop
+    
 }
 
 - (void)backRootViewControllerAnimated:(id)sender {
-    [self.rootViewController.customNavigationController popViewControllerAnimated:YES];
+    [self.rootViewController.st_navigationController popViewControllerAnimated:YES];
 }
 
 - (CGRect)navigationViewFrameForTraitCollection:(UITraitCollection *)traitCollection {
@@ -1312,17 +1454,17 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
             height = 44;
         }
     } else {
-        height = (STGetSystemVersion() >= 7) ? 64 : 44;
+        height = 64;
     }
-    rect.size.height = height - (height * self.navigationBarHidden);
+    rect.size.height = height - (height * self.st_navigationBarHidden);
     return rect;
 }
 
 - (CGRect)navigationViewFrameForController:(UIViewController *)viewController {
     CGRect rect = CGRectZero;
     rect.size.width = CGRectGetWidth(self.view.frame);
-    CGFloat height = (STGetSystemVersion() >= 7) ? 64 : 44;
-    rect.size.height = height - (height * self.navigationBarHidden);
+    CGFloat height = 64;
+    rect.size.height = height - (height * self.st_navigationBarHidden);
     return rect;
 }
 
@@ -1332,11 +1474,9 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
 
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
-    if (STGetSystemVersion() >= 7) {
-        CGRect frame = self.view.frame;
-        frame.origin.y = 0;
-        self.view.frame = frame;
-    }
+    CGRect frame = self.view.frame;
+    frame.origin.y = 0;
+    self.view.frame = frame;
     if ([UIViewController instancesRespondToSelector:@selector(traitCollection)]) {
         [self customLayoutSubviewsWithTraitCollection:self.traitCollection];
     } else {
@@ -1350,29 +1490,23 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
     } else {
         self.navigationBar.frame = [self navigationViewFrameForController:self.rootViewController];
     }
-    if (STGetSystemVersion() >= 7) {
-        [self fitsIOS7EdgeExtendedLayout];
-    } else {
-        CGRect frame = self.rootView.frame;
-        frame.origin.y = CGRectGetMaxY(self.navigationBar.frame) * (!self.navigationBarHidden);
-        frame.size.height = CGRectGetHeight(self.view.bounds) - frame.origin.y;
-        if (self.rootViewController.customTabBarController && !self.rootViewController.hidesBottomBarWhenPushed) {
-            frame.size.height -= self.rootViewController.customTabBarController.actualTabBarHeight;
-        }
-        self.rootView.frame = frame;
-    }
+    [self fitsIOS7EdgeExtendedLayout];
 }
 
 - (void)fitsIOS7EdgeExtendedLayout {
     UIRectEdge edge = self.rootViewController.edgesForExtendedLayout;
     BOOL topExtended = !!(edge & UIRectEdgeTop);
+    /// TODO:待优化。 navigationBar不透明会出发off-screen渲染，这里可以优化以减少off-screen渲染。
+//    if (!topExtended && !self.navigationBar.translucent) {
+//        self.navigationBar.translucent = NO;
+//    }
     BOOL bottomExtended = !!(edge & UIRectEdgeBottom);
     CGFloat top = 0, height = CGRectGetHeight(self.view.bounds);
-    top = (!topExtended) * (!self.navigationBarHidden) * CGRectGetMaxY(self.navigationBar.frame);
+    top = (!topExtended) * (!self.st_navigationBarHidden) * CGRectGetMaxY(self.navigationBar.frame);
     height -= top;
-    if ((self.rootViewController.tabBarController || self.rootViewController.customTabBarController) &&
+    if ((self.rootViewController.tabBarController || self.rootViewController.st_tabBarController) &&
         !self.rootViewController.hidesBottomBarWhenPushed) {
-        height -= self.rootViewController.customTabBarController.actualTabBarHeight * (!bottomExtended);
+        height -= self.rootViewController.st_tabBarController.actualTabBarHeight * (!bottomExtended);
     }
     CGRect frame = self.rootViewController.view.frame;
     frame.origin.y = top;
@@ -1389,7 +1523,7 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
     if (topExtended) {
          [self fitTopChildScrollViewEdgeInsets];
     }
-    if (bottomExtended && (self.rootViewController.tabBarController || self.rootViewController.customTabBarController) &&
+    if (bottomExtended && (self.rootViewController.tabBarController || self.rootViewController.st_tabBarController) &&
         !self.rootViewController.hidesBottomBarWhenPushed) {
          [self fitBottomChildScrollViewEdgeInsets];
     }
@@ -1397,7 +1531,7 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
 
 - (void)fitTopChildScrollViewEdgeInsets {
     UIView *navigationBar = self.navigationBar;
-    if (self.navigationBarHidden) {
+    if (self.st_navigationBarHidden) {
         navigationBar = nil;
     }
     NSArray *array = [self intersectChildScrollViewWithView:navigationBar];
@@ -1415,26 +1549,25 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
             scrollView.contentInset = contentInset;
             scrollView.scrollIndicatorInsets = contentInset;
             if ([scrollView st_contentInsetTopByNavigation] == 0 && topInset != 0) {
-                scrollView.contentOffset = CGPointMake(0, - topInset);
+                scrollView.contentOffset = CGPointMake(0, - contentInset.top);
             }
             [scrollView st_setContentInsetTopByNavigation:topInset];
-
         }
     }
 }
 
 - (void)fitBottomChildScrollViewEdgeInsets {
-    if (!(self.rootViewController.customTabBarController || self.rootViewController.tabBarController)) {
+    if (!(self.rootViewController.st_tabBarController || self.rootViewController.tabBarController)) {
         return;
     }
-    UIView *tabBar = self.rootViewController.customTabBarController.tabBar;
+    UIView *tabBar = self.rootViewController.st_tabBarController.tabBar;
     NSArray *array = [self intersectChildScrollViewWithView:tabBar];
     for (UIScrollView *scrollView in array) {
         UIEdgeInsets insets = scrollView.contentInset;
-        insets.bottom = (insets.bottom - [scrollView st_contentInsetBottomByNavigation] + self.rootViewController.customTabBarController.actualTabBarHeight);
+        insets.bottom = (insets.bottom - [scrollView st_contentInsetBottomByNavigation] + self.rootViewController.st_tabBarController.actualTabBarHeight);
         scrollView.contentInset = insets;
         scrollView.scrollIndicatorInsets = insets;
-        [scrollView st_setContentInsetBottomByNavigation:self.rootViewController.customTabBarController.actualTabBarHeight];
+        [scrollView st_setContentInsetBottomByNavigation:self.rootViewController.st_tabBarController.actualTabBarHeight];
     }
 }
 
@@ -1503,7 +1636,7 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
         return;
     }
     _navigationAnimating = YES;
-    self.navigationBarHidden = navigationBarHidden;
+    self.st_navigationBarHidden = navigationBarHidden;
     if (!navigationBarHidden) {
         self.navigationBar.hidden = NO;
     }
@@ -1525,7 +1658,7 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
     void (^completion)(BOOL) = ^(BOOL finished) {
         _navigationAnimating = NO;
         self.navigationBar.hidden = navigationBarHidden;
-        self.rootViewController.navigationBarHidden = navigationBarHidden;
+        self.rootViewController.st_navigationBarHidden = navigationBarHidden;
     };
     if (animated) {
         [UIView animateWithDuration:0.25 animations:animations completion:completion];
@@ -1540,7 +1673,7 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
 }
 
 - (CGFloat)interactivePopTransitionOffset {
-    return self.rootViewController.interactivePopTransitionOffset;
+    return self.rootViewController.st_interactivePopTransitionOffset;
 }
 
 - (BOOL)hidesBottomBarWhenPushed {
@@ -1549,12 +1682,12 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
 
 /// 以下两个方法非常私有，谨慎使用
 - (BOOL)_st_requireCustomTabBar {
-    if (self.rootViewController.customTabBarController) {
+    if (self.rootViewController.st_tabBarController) {
         if (self.rootViewController.hidesBottomBarWhenPushed) {
             return NO;
         }
         _requiredTabBar = YES;
-        UIView *tabBar = (UIView *)self.rootViewController.customTabBarController.tabBar;
+        UIView *tabBar = (UIView *)self.rootViewController.st_tabBarController.tabBar;
         _st_previousTabBarSuperview = tabBar.superview;
         [tabBar removeFromSuperview];
         [self.view insertSubview:tabBar aboveSubview:self.rootView];
@@ -1569,11 +1702,11 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
 
 - (BOOL)_st_resignCustomTabBar {
     _requiredTabBar = NO;
-    if (self.rootViewController.customTabBarController && _st_previousTabBarSuperview) {
+    if (self.rootViewController.st_tabBarController && _st_previousTabBarSuperview) {
         if (self.rootViewController.hidesBottomBarWhenPushed) {
             return NO;
         }
-        UIView *tabBar = (UIView *)self.rootViewController.customTabBarController.tabBar;
+        UIView *tabBar = (UIView *)self.rootViewController.st_tabBarController.tabBar;
         if (tabBar.superview == _st_previousTabBarSuperview) {
             return YES;
         }
@@ -1590,6 +1723,51 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
 - (void)willTransitionToTraitCollection:(UITraitCollection *)newCollection withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
     [super willTransitionToTraitCollection:newCollection withTransitionCoordinator:coordinator];
     [self customLayoutSubviewsWithTraitCollection:newCollection];
+}
+
+@end
+
+@implementation UIViewController (STNavigationCallback)
+
+- (void)st_didPopViewControllerAnimated:(BOOL)animated {
     
 }
+
+@end
+
+@implementation UIViewController (STNavigationScreenView)
+
+static char *const STViewControllerSuperview = "STViewControllerSuperview";
+
+- (UIView *)st_superview {
+    if (!self.isViewLoaded) {
+        return nil;
+    }
+    UIView *associatedView = objc_getAssociatedObject(self, STViewControllerSuperview);
+    if (!associatedView) {
+        return self.view.superview;
+    }
+    return associatedView;
+}
+
+- (void)st_setSuperView:(UIView *)superview {
+    objc_setAssociatedObject(self, STViewControllerSuperview, superview, OBJC_ASSOCIATION_ASSIGN);
+}
+
+@end
+
+@implementation UIViewController (STNavigationBarVisiblity)
+
+- (void)st_setNavigationBarHidden:(BOOL)st_navigationBarHidden animated:(BOOL)animated {
+    if ([self.st_wrapperViewController isKindOfClass:[_STWrapperViewController class]]) {
+        [self.st_wrapperViewController setNavigationBarHidden:st_navigationBarHidden animated:animated customAnimations:nil];
+    }
+}
+
+- (void)st_setNavigationBarHidden:(BOOL)st_navigationBarHidden animated:(BOOL)animated alongWithAnimations:(void(^)(void))animations {
+    if ([self.st_wrapperViewController isKindOfClass:[_STWrapperViewController class]]) {
+        [self.st_wrapperViewController setNavigationBarHidden:st_navigationBarHidden animated:animated customAnimations:animations];
+    }
+}
+
 @end

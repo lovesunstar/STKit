@@ -10,7 +10,8 @@
 
 #import "STImageLoader.h"
 #import "STHTTPOperation.h"
-
+#import "STHTTPNetwork.h"
+#import "STImageCache.h"
 #import <objc/runtime.h>
 
 @implementation UIImageView (STImageLoader)
@@ -35,47 +36,47 @@ NSString *const STImageRequestIdentifierKey = @"STImageRequestIdentifierKey";
 }
 
 NSString *const STImageStateKey = @"STImageStateKey";
-- (void)setState:(STImageState)state {
+- (void)st_setState:(STImageState)state {
     objc_setAssociatedObject(self, (__bridge const void *)(STImageStateKey), @(state), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
-- (STImageState)state {
+- (STImageState)st_state {
     NSNumber *number = objc_getAssociatedObject(self, (__bridge const void *)(STImageStateKey));
     return (STImageState)[number integerValue];
 }
 
 NSString *const STPlaceholderImageKey = @"STPlaceholderImageKey";
-- (void)setPlaceholderImage:(UIImage *)placeholderImage {
+- (void)st_setPlaceholderImage:(UIImage *)placeholderImage {
     objc_setAssociatedObject(self, (__bridge const void *)(STPlaceholderImageKey), placeholderImage, OBJC_ASSOCIATION_RETAIN);
 }
 
-- (UIImage *)placeholderImage {
+- (UIImage *)st_placeholderImage {
     return objc_getAssociatedObject(self, (__bridge const void *)(STPlaceholderImageKey));
 }
 
-- (BOOL)isFinished {
-    return self.state == STImageStateDownloadFinished;
+- (BOOL)st_isFinished {
+    return self.st_state == STImageStateDownloadFinished;
 }
 
-- (void)setImageWithURLString:(NSString *)URLString {
-    [self setImageWithURLString:URLString finishedHandler:nil];
+- (void)st_setImageWithURLString:(NSString *)URLString {
+    [self st_setImageWithURLString:URLString finishedHandler:nil];
 }
 
-- (void)setImageWithURLString:(NSString *)URLString finishedHandler:(STImageLoaderHandler)finishedHandler {
-    [self setImageWithURLString:URLString progressHandler:nil finishedHandler:finishedHandler];
+- (void)st_setImageWithURLString:(NSString *)URLString finishedHandler:(STImageLoaderHandler)finishedHandler {
+    [self st_setImageWithURLString:URLString progressHandler:nil finishedHandler:finishedHandler];
 }
 
-- (void)setImageWithURLString:(NSString *)URLString
-              progressHandler:(STImageProgressHandler)progressHandler
-              finishedHandler:(STImageLoaderHandler)finishedHandler {
+- (void)st_setImageWithURLString:(NSString *)URLString
+                 progressHandler:(STImageProgressHandler)progressHandler
+                 finishedHandler:(STImageLoaderHandler)finishedHandler {
     if ([[self imageRequestURLString] isEqualToString:URLString] &&
-        (self.state == STImageStateDownloading || (self.state == STImageStateDownloadFinished && self.image))) {
+        (self.st_state == STImageStateDownloading || (self.st_state == STImageStateDownloadFinished && self.image)) && [STImageCache hasCachedImageForKey:URLString]) {
         return;
     }
-    self.image = self.placeholderImage;
+    self.image = self.st_placeholderImage;
     [[STImageLoader imageLoader] cancelLoadImageWithIdentifier:self.imageRequestIdentifier];
     [self setImageRequestURLString:URLString];
-    self.state = STImageStateDownloading;
+    [self st_setState:STImageStateDownloading];
     __weak UIImageView *weakSelf = self;
     self.imageRequestIdentifier = [[STImageLoader imageLoader] loadImageWithURLString:URLString
                                         progressHandler:progressHandler
@@ -85,14 +86,14 @@ NSString *const STPlaceholderImageKey = @"STPlaceholderImageKey";
                                                 return;
                                             }
                                             if (!error) {
-                                                weakSelf.state = STImageStateDownloadFinished;
+                                                [self st_setState:STImageStateDownloadFinished];
                                                 weakSelf.image = image;
-                                            } else if (error.code != STNetworkErrorCodeUserCancelled && error.code != 0) {
-                                                weakSelf.state = STImageStateDownloadFailed;
-                                                weakSelf.image = weakSelf.placeholderImage;
+                                            } else if (error.code != STHTTPNetworkErrorCodeUserCancelled && error.code != 0) {
+                                                [self st_setState:STImageStateDownloadFailed];
+                                                weakSelf.image = weakSelf.st_placeholderImage;
                                             }
                                             // cancel 的不回调
-                                            if (!error || error.code != STNetworkErrorCodeUserCancelled) {
+                                            if (!error || error.code != STHTTPNetworkErrorCodeUserCancelled) {
                                                 if (finishedHandler) {
                                                     finishedHandler(image, _URLString, usingCache, error);
                                                 }
@@ -100,7 +101,7 @@ NSString *const STPlaceholderImageKey = @"STPlaceholderImageKey";
                                         }];
 }
 
-- (void)cancelLoadImageWithURLString:(NSString *)URLString {
+- (void)st_cancelLoadImageWithURLString:(NSString *)URLString {
     if (URLString.length == 0) {
         return;
     }

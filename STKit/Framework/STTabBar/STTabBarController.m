@@ -36,6 +36,16 @@
     return self;
 }
 
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+    self = [super initWithCoder:aDecoder];
+    if (self) {
+        _selectedIndex = -1;
+        self.tabBarHeight = STCustomTabBarHeight;
+        self.actualTabBarHeight = STCustomTabBarHeight;
+    }
+    return self;
+}
+
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
@@ -51,7 +61,7 @@
 - (void)setViewControllers:(NSArray *)viewControllers animated:(BOOL)animated {
     [self willChangeValueForKey:@"viewControllers"];
     [_viewControllers enumerateObjectsUsingBlock:^(UIViewController *obj, NSUInteger idx, BOOL *stop) {
-        SEL selector = NSSelectorFromString(@"setCustomTabBarController:");
+        SEL selector = NSSelectorFromString(@"st_setTabBarController:");
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
         if ([obj respondsToSelector:selector]) {
@@ -65,14 +75,14 @@
     [viewControllers enumerateObjectsUsingBlock:^(UIViewController *obj, NSUInteger idx, BOOL *stop) {
         [self addChildViewController:obj];
         [obj didMoveToParentViewController:self];
-        SEL selector = NSSelectorFromString(@"setCustomTabBarController:");
+        SEL selector = NSSelectorFromString(@"st_setTabBarController:");
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
         if ([obj respondsToSelector:selector]) {
             [obj performSelector:selector withObject:self];
         }
 #pragma clang diagnostic pop
-        STTabBarItem *tabBarItem = obj.customTabBarItem;
+        STTabBarItem *tabBarItem = obj.st_tabBarItem;
         [items addObject:tabBarItem];
     }];
     _viewControllers = viewControllers;
@@ -203,60 +213,50 @@
 
     fromViewController.view.transform = CGAffineTransformIdentity;
     toViewController.view.transform = CGAffineTransformMakeTranslation(delta, 0);
-
-    [UIView animateWithDuration:0.0
-                     animations:NULL
-                     completion:^(BOOL finished) {
-                         [UIView animateWithDuration:0
-                                               delay:0
-                                             options:0
-                                          animations:NULL
-                                          completion:^(BOOL finished) {
-                                              [UIView animateWithDuration:0.15
-                                                  delay:0
-                                                  options:UIViewAnimationOptionCurveEaseIn
-                                                  animations:^{
-                                                      fromViewController.view.transform = CGAffineTransformMakeTranslation(-delta, 0);
-                                                      toViewController.view.transform = CGAffineTransformIdentity;
-                                                  }
-                                                  completion:^(BOOL finished) {
-                                                      fromViewController.view.transform = CGAffineTransformIdentity;
-                                                      [fromViewController.view removeFromSuperview];
-                                                  }];
-                                              [visibleView enumerateObjectsWithOptions:NSEnumerationReverse
-                                                                            usingBlock:^(UIView *tableSubview, NSUInteger idx, BOOL *stop) {
-                                                                                NSTimeInterval delay = ((float)idx / (float)visibleView.count) * 0.15;
-                                                                                tableSubview.transform = CGAffineTransformMakeTranslation(delta, 0);
-                                                                                void (^animation)() =
-                                                                                    ^{ tableSubview.transform = CGAffineTransformIdentity; };
-                                                                                void (^completion)(BOOL) = ^(BOOL finished) {
-                                                                                    tableSubview.transform = CGAffineTransformIdentity;
-                                                                                };
-                                                                                if (STGetSystemVersion() >= 7) {
-                                                                                    [UIView animateWithDuration:0.55
-                                                                                                          delay:0.15 + delay
-                                                                                         usingSpringWithDamping:0.75
-                                                                                          initialSpringVelocity:1
-                                                                                                        options:UIViewAnimationOptionCurveEaseInOut
-                                                                                                     animations:animation
-                                                                                                     completion:completion];
-                                                                                } else {
-                                                                                    [UIView animateWithDuration:0.55
-                                                                                                          delay:0.15 + delay
-                                                                                                        options:UIViewAnimationOptionCurveEaseInOut
-                                                                                                     animations:animation
-                                                                                                     completion:completion];
-                                                                                }
-                                                                            }];
-                                              dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.25 * NSEC_PER_SEC)),
-                                                             dispatch_get_main_queue(), ^{
-                                                  if (finishCompletion) {
-                                                      finishCompletion(YES);
-                                                  }
-                                              });
-
-                                          }];
-                     }];
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [UIView animateWithDuration:0.15
+                              delay:0
+                            options:UIViewAnimationOptionCurveEaseIn
+                         animations:^{
+                             fromViewController.view.transform = CGAffineTransformMakeTranslation(-delta, 0);
+                             toViewController.view.transform = CGAffineTransformIdentity;
+                         }
+                         completion:^(BOOL finished) {
+                             fromViewController.view.transform = CGAffineTransformIdentity;
+                             [fromViewController.view removeFromSuperview];
+                         }];
+        [visibleView enumerateObjectsWithOptions:NSEnumerationReverse
+                                      usingBlock:^(UIView *tableSubview, NSUInteger idx, BOOL *stop) {
+                                          NSTimeInterval delay = ((float)idx / (float)visibleView.count) * 0.15;
+                                          tableSubview.transform = CGAffineTransformMakeTranslation(delta, 0);
+                                          void (^animation)() =
+                                          ^{ tableSubview.transform = CGAffineTransformIdentity; };
+                                          void (^completion)(BOOL) = ^(BOOL finished) {
+                                              tableSubview.transform = CGAffineTransformIdentity;
+                                          };
+                                          if (STGetSystemVersion() >= 7) {
+                                              [UIView animateWithDuration:0.55
+                                                                    delay:0.15 + delay
+                                                   usingSpringWithDamping:0.75
+                                                    initialSpringVelocity:1
+                                                                  options:UIViewAnimationOptionCurveEaseInOut
+                                                               animations:animation
+                                                               completion:completion];
+                                          } else {
+                                              [UIView animateWithDuration:0.55
+                                                                    delay:0.15 + delay
+                                                                  options:UIViewAnimationOptionCurveEaseInOut
+                                                               animations:animation
+                                                               completion:completion];
+                                          }
+                                      }];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.25 * NSEC_PER_SEC)),
+                       dispatch_get_main_queue(), ^{
+                           if (finishCompletion) {
+                               finishCompletion(YES);
+                           }
+                       });
+    });
 }
 
 - (void)setSelectedIndex:(NSUInteger)selectedIndex {
@@ -275,7 +275,7 @@
 - (void)privateSetSelectedController:(UIViewController *)controller {
     _selectedViewController = controller;
     _selectedIndex = [self.viewControllers indexOfObject:_selectedViewController];
-    self.tabBar.selectedItem = _selectedViewController.customTabBarItem;
+    self.tabBar.selectedItem = _selectedViewController.st_tabBarItem;
 }
 
 - (void)updateTabBarFrameWithTopViewController:(UIViewController *)topViewController {
@@ -288,11 +288,12 @@
 }
 
 - (void)updateVisibleChildController {
-    if (self.viewControllers.count <= 0) {
+    if (self.viewControllers.count == 0) {
         return;
     }
     if (!_selectedViewController) {
         _selectedViewController = [self.viewControllers objectAtIndex:0];
+        _selectedIndex = 0;
     }
     /// 如果view没有加载先不用管，view加载了以后迟早还会掉用这个方法
     if (!self.isViewLoaded) {
@@ -308,7 +309,7 @@
     if (self.tabBarItems) {
         [self.tabBar setItems:self.tabBarItems];
     }
-    self.tabBar.selectedItem = self.selectedViewController.customTabBarItem;
+    self.tabBar.selectedItem = self.selectedViewController.st_tabBarItem;
     [self updateTabBarFrameWithTopViewController:self.selectedViewController];
 }
 
@@ -320,7 +321,7 @@
         }
         _tabBar = [[STTabBar alloc] initWithFrame:CGRectMake(0, screenSize.height - self.tabBarHeight, screenSize.width, self.tabBarHeight)];
         _tabBar.delegate = self;
-        [_tabBar setValue:@(self.actualTabBarHeight) forVar:@"_actualHeight"];
+        [_tabBar st_setValue:@(self.actualTabBarHeight) forVar:@"_actualHeight"];
     }
     return _tabBar;
 }
@@ -335,7 +336,7 @@
 - (void)setActualTabBarHeight:(CGFloat)actualTabBarHeight {
     _actualTabBarHeight = actualTabBarHeight;
     if (_tabBar) {
-        [_tabBar setValue:@(actualTabBarHeight) forVar:@"_actualHeight"];
+        [_tabBar st_setValue:@(actualTabBarHeight) forVar:@"_actualHeight"];
     }
 }
 
@@ -356,32 +357,32 @@ static NSString *const STCustomTabBarItemKey = @"STCustomTabBarItemKey";
 static NSString *const STCustomTabBarControllerKey = @"STCustomTabBarControllerKey";
 @implementation UIViewController (STTabBarControllerItem)
 
-- (STTabBarItem *)customTabBarItem {
+- (STTabBarItem *)st_tabBarItem {
     STTabBarItem *tabBarItem = objc_getAssociatedObject(self, (__bridge const void *)(STCustomTabBarItemKey));
     if (!tabBarItem) {
         tabBarItem = [[STTabBarItem alloc] initWithTitle:nil image:nil selectedImage:nil];
-        [self setCustomTabBarItem:tabBarItem];
+        [self st_setTabBarItem:tabBarItem];
     }
     return tabBarItem;
 }
 
-- (void)setCustomTabBarItem:(STTabBarItem *)customTabBarItem {
+- (void)st_setTabBarItem:(STTabBarItem *)customTabBarItem {
     objc_setAssociatedObject(self, (__bridge const void *)(STCustomTabBarItemKey), customTabBarItem, OBJC_ASSOCIATION_RETAIN);
 }
 
-- (STTabBarController *)customTabBarController {
+- (STTabBarController *)st_tabBarController {
     STTabBarController *tabBarController = objc_getAssociatedObject(self, (__bridge const void *)(STCustomTabBarControllerKey));
     if (!tabBarController) {
         if (self.navigationController) {
-            return self.navigationController.customTabBarController;
+            return self.navigationController.st_tabBarController;
         } else {
-            return self.customNavigationController.customTabBarController;
+            return self.st_navigationController.st_tabBarController;
         }
     }
     return tabBarController;
 }
 
-- (void)setCustomTabBarController:(STTabBarController *)customTabBarController {
+- (void)st_setTabBarController:(STTabBarController *)customTabBarController {
     objc_setAssociatedObject(self, (__bridge const void *)(STCustomTabBarControllerKey), customTabBarController, OBJC_ASSOCIATION_ASSIGN);
 }
 

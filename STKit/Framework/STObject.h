@@ -95,7 +95,7 @@ ST_EXTERN NSDictionary *STClassGetPropertyRelationship(Class class);
 
 + (instancetype)objectWithDictionary:(NSDictionary *)dictionary;
 
-- (instancetype)initWithDictinoary:(NSDictionary *)dictionary;
+- (instancetype)initWithDictionary:(NSDictionary *)dictionary;
 
 /**
  * @abstract 根据dict更新Object中对应的属性

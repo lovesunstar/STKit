@@ -24,8 +24,24 @@
     [super tearDown];
 }
 
+/**
+ 
+ let parameters = [
+ "foo": "bar",
+ "baz": ["a", 1],
+ "qux": [
+ "x": 1,
+ "y": 2,
+ "z": 3
+ ]
+ ]
+ 
+ */
 - (void)testExample {
     XCTFail(@"No implementation for \"%s\"", __PRETTY_FUNCTION__);
+    
+    NSDictionary *parameters = @{@"foo" : @"bar"};
+    NSLog(@"%@", [parameters st_compontentsJoinedUsingURLStyle]);
 }
 
 @end

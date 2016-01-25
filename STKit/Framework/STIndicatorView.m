@@ -11,9 +11,20 @@
 #import "UIKit+STKit.h"
 #import "STPersistence.h"
 #import "STVisualBlurView.h"
+#import "STApplicationContext.h"
+
+@interface _STIndicatorWindow : UIWindow
+
+@end
+
+@implementation _STIndicatorWindow
+
+
+@end
 
 @interface STIndicatorView () {
     CGAffineTransform _rotationTransform;
+    NSDate *_showTime;
 }
 
 @property(nonatomic, weak)   UIView  *parentView;
@@ -31,6 +42,16 @@
 
 @implementation STIndicatorView
 
+static UIWindow * _indicatorWindow;
++ (UIWindow *)indicatorWindow {
+    if (!_indicatorWindow) {
+        _indicatorWindow = [[_STIndicatorWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+        _indicatorWindow.userInteractionEnabled = NO;
+        _indicatorWindow.windowLevel = UIWindowLevelAlert + 5;
+    }
+    return _indicatorWindow;
+}
+
 - (void)dealloc {
 
     [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -40,6 +61,14 @@
 
     [_detailLabel removeObserver:self forKeyPath:@"text"];
     [_detailLabel removeObserver:self forKeyPath:@"font"];
+}
+
++ (instancetype)showInWindow:(UIWindow *)window animated:(BOOL)animated {
+    if (!window) {
+        window = [[self class] indicatorWindow];
+        [window makeKeyAndVisible];
+    }
+    return [self showInView:window animated:animated];
 }
 
 + (instancetype)showInView:(UIView *)view animated:(BOOL)animated {
@@ -87,7 +116,7 @@
     if (self) {
         self.minimumSize = CGSizeMake(80, 80);
         self.parentView = view;
-
+        self.minimumDisplayDuration = 0.3;
         _rotationTransform = CGAffineTransformIdentity;
         if ([view isKindOfClass:[UIWindow class]]) {
             [self transformCurrentOrientationAnimated:NO];
@@ -118,7 +147,7 @@
 
         _detailLabel = [[UILabel alloc] initWithFrame:self.bounds];
         _detailLabel.textAlignment = NSTextAlignmentCenter;
-        _detailLabel.font = [UIFont systemFontOfSize:12.];
+        _detailLabel.font = [UIFont systemFontOfSize:13.];
         _detailLabel.adjustsFontSizeToFitWidth = NO;
         _detailLabel.opaque = NO;
         _detailLabel.backgroundColor = [UIColor clearColor];
@@ -149,11 +178,23 @@
     return [self initWithView:[UIApplication sharedApplication].keyWindow];
 }
 
+- (void)setUserInteractionEnabled:(BOOL)userInteractionEnabled {
+    [super setUserInteractionEnabled:userInteractionEnabled];
+    
+    if (self.parentView == _indicatorWindow) {
+        _indicatorWindow.userInteractionEnabled = userInteractionEnabled;
+    }
+}
+
 - (void)showAnimated:(BOOL)animated {
     if (!self.superview) {
         [self.parentView addSubview:self];
     }
     self.alpha = 1.0;
+    if (_indicatorWindow) {
+        _indicatorWindow.userInteractionEnabled = self.userInteractionEnabled;
+    }
+    _showTime = [NSDate date];
     if (animated) {
         self.alpha = 0.0f;
         self.transform = CGAffineTransformConcat(_rotationTransform, CGAffineTransformMakeScale(0.5f, 0.5f));
@@ -179,6 +220,10 @@
 
 - (void)hideAnimated:(BOOL)animated afterDelay:(NSTimeInterval)delay completion:(void (^)(void))completion {
     self.removeWhenStopped = YES;
+    NSTimeInterval timeInterval = [[NSDate date] timeIntervalSinceDate:_showTime];
+    if (delay + timeInterval < self.minimumDisplayDuration) {
+        delay = self.minimumDisplayDuration - timeInterval;
+    }
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         [self _hideAnimated:animated
                  completion:^(BOOL finished) {
@@ -314,7 +359,7 @@
         if (self.blurEffectStyle == STBlurEffectStyleNone || self.blurEffectStyle == STBlurEffectStyleDark) {
             indicatorView.color = [UIColor whiteColor];
         } else {
-            indicatorView.color = [UIColor colorWithRGB:0x999999 alpha:0.8];
+            indicatorView.color = [UIColor st_colorWithRGB:0x999999 alpha:0.8];
         }
     }
 
@@ -322,18 +367,33 @@
         self.textLabel.textColor = [UIColor whiteColor];
         self.detailLabel.textColor = [UIColor whiteColor];
     } else {
-        self.textLabel.textColor = [UIColor colorWithRGB:0x0 alpha:0.8];
-        self.detailLabel.textColor = [UIColor colorWithRGB:0x0 alpha:0.8];
+        self.textLabel.textColor = [UIColor st_colorWithRGB:0x0 alpha:0.8];
+        self.detailLabel.textColor = [UIColor st_colorWithRGB:0x0 alpha:0.8];
     }
 
     [self setNeedsDisplay];
+}
+
+
++ (NSArray *)allValidIndicatorInView:(UIView *)view {
+    if (!view) {
+        return nil;
+    }
+    NSMutableArray *indicatorViews = [NSMutableArray array];
+    NSArray *subviews = view.subviews;
+    for (UIView *subview in subviews) {
+        if ([subview isKindOfClass:[self class]] && !subview.hidden) {
+            [indicatorViews addObject:subview];
+        }
+    }
+    return [NSArray arrayWithArray:indicatorViews];
 }
 
 - (void)_hideAnimated:(BOOL)animated completion:(void (^)(BOOL))_completion {
     [self setNeedsDisplay];
     void (^completion)(BOOL) = ^(BOOL finished) {
         self.alpha = 0.0f;
-        [(NSObject *)self.delegate performSelector:@selector(indicatorViewDidHidden:) withObjects:nil];
+        [(NSObject *)self.delegate st_performSelector:@selector(indicatorViewDidHidden:) withObjects:nil];
         if (self.removeWhenStopped) {
             [self removeFromSuperview];
         }
@@ -350,6 +410,16 @@
                          completion:completion];
     } else {
         completion(YES);
+    }
+}
+
+- (void)removeFromSuperview {
+    UIView *superView = self.superview;
+    [super removeFromSuperview];
+    if ([superView isKindOfClass:[_STIndicatorWindow class]]) {
+        if ([[self class] allIndicatorInView:superView].count == 0) {
+            _indicatorWindow = nil;
+        }
     }
 }
 
@@ -431,16 +501,16 @@
 
 - (void)setBlurEffectStyle:(STBlurEffectStyle)blurEffectStyle {
     [self.backgroundView removeAllSubviews];
-    STVisualBlurView *blurView = [[STVisualBlurView alloc] initWithBlurEffectStyle:blurEffectStyle];
-    blurView.frame = self.bounds;
-    blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    if (blurView) {
+    if (blurEffectStyle != STBlurEffectStyleNone) {
+        STVisualBlurView *blurView = [[STVisualBlurView alloc] initWithBlurEffectStyle:blurEffectStyle];
+        blurView.frame = self.bounds;
+        blurView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         [self.backgroundView addSubview:blurView];
-        _blurEffectStyle = blurEffectStyle;
         [self displayBlurImage];
     } else {
         self.backgroundView.backgroundColor = [UIColor colorWithWhite:0.11 alpha:0.73];
     }
+    _blurEffectStyle = blurEffectStyle;
 }
 
 - (void)setCornerRadius:(CGFloat)cornerRadius {

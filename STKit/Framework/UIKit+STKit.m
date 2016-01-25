@@ -24,6 +24,16 @@ CGFloat STGetScreenHeight() {
     return CGRectGetHeight([UIScreen mainScreen].bounds);
 }
 
+UIView *STGetStatusBarWindow() {
+    UIView *statusBar = nil;
+    NSData *data = [NSData dataWithBytes:(unsigned char[]) { 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x42, 0x61, 0x72 } length:9];
+    NSString *key = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
+    id object = [UIApplication sharedApplication];
+    if ([object respondsToSelector:NSSelectorFromString(key)]) {
+        statusBar = [object valueForKey:key];
+    }
+    return statusBar;
+}
 
 CGAffineTransform STTransformMakeRotation(CGPoint center, CGPoint anchorPoint, CGFloat angle) {
     CGFloat x = anchorPoint.x - center.x;
@@ -61,18 +71,18 @@ CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize toSize) {
 
 
 @implementation UIColor (STExtension)
-+ (UIColor *)colorWithRGB:(NSInteger)rgb {
-    return [self colorWithRGB:rgb alpha:1.0];
++ (UIColor *)st_colorWithRGB:(NSInteger)rgb {
+    return [self st_colorWithRGB:rgb alpha:1.0];
 }
 
-+ (UIColor *)colorWithRGB:(NSInteger)rgb alpha:(CGFloat)alpha {
++ (UIColor *)st_colorWithRGB:(NSInteger)rgb alpha:(CGFloat)alpha {
     return [self colorWithRed:(CGFloat)((rgb & 0xFF0000) >> 16) / 255.0
                         green:(CGFloat)((rgb & 0x00FF00) >> 8) / 255.0f
                          blue:(CGFloat)(rgb & 0x0000FF) / 255.0
                         alpha:alpha];
 }
 
-+ (UIColor *)colorWithHexString:(NSString *)hexString {
++ (UIColor *)st_colorWithHexString:(NSString *)hexString {
     if (![hexString isKindOfClass:[NSString class]] || hexString.length == 0) {
         return nil;
     }
@@ -81,14 +91,6 @@ CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize toSize) {
     }
     if ([hexString hasPrefix:@"#"]) {
         hexString = [hexString substringFromIndex:1];
-    }
-    static NSPredicate *_predicate;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        _predicate = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", @"^(([0-9a-fA-F]{3})|([0-9a-fA-F]{6,8}))$"];
-    });
-    if (![_predicate evaluateWithObject:hexString]) {
-        return nil;
     }
     if (hexString.length == 3) {
         // 处理F12 为 FF1122
@@ -113,17 +115,18 @@ CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize toSize) {
     if (![scanner scanHexInt:&rgb]) {
         return nil;
     }
-    return [self colorWithRGB:rgb alpha:alpha / 255.0];
+    return [self st_colorWithRGB:rgb alpha:alpha / 255.0];
 }
 
-+ (UIColor *)colorWithHexString:(NSString *)hexString alpha:(CGFloat)alpha {
++ (UIColor *)st_colorWithHexString:(NSString *)hexString alpha:(CGFloat)alpha {
     NSScanner *scanner = [NSScanner scannerWithString:hexString];
     unsigned rgb = 0;
     if ([scanner scanHexInt:&rgb]) {
-        return [self colorWithRGB:rgb alpha:alpha];
+        return [self st_colorWithRGB:rgb alpha:alpha];
     }
     return [UIColor clearColor];
 }
+
 @end
 
 #pragma mark - UIView Extension
@@ -292,7 +295,7 @@ CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize toSize) {
  * @abstract view's viewController if the view has one
  */
 - (UIViewController *)viewController {
-    return (UIViewController *)[self nextResponderWithClass:UIViewController.class];
+    return (UIViewController *)[self st_nextResponderWithClass:UIViewController.class];
 }
 
 /**
@@ -301,7 +304,7 @@ CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize toSize) {
  * @param viewClass  superview 的 class
  * @return           view是否被添加到 类型为viewClass的parentview上面
  */
-- (BOOL)isDescendantOfClass : (Class)viewClass {
+- (BOOL)st_isDescendantOfClass:(Class)viewClass {
     if (![viewClass isSubclassOfClass:[UIView class]]) {
         return NO;
     }
@@ -321,7 +324,7 @@ CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize toSize) {
  * @param viewClass  superview 的 class
  * @return           第一个满足类型为viewClass的superview
  */
-- (UIView *)superviewWithClass:(Class)viewClass {
+- (UIView *)st_superviewWithClass:(Class)viewClass {
     UIView *superview = self.superview;
     while (superview) {
         if ([superview isKindOfClass:viewClass]) {
@@ -338,13 +341,13 @@ CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize toSize) {
  * @param viewClass  subview 的 class
  * @return           所有类型为class的subview
  */
-- (NSArray *)viewWithClass:(Class) class {
+- (NSArray *)st_viewWithClass:(Class) class {
     NSMutableArray *subviews = [NSMutableArray arrayWithCapacity:2];
     [self _subviewFromView:self ofClass:class array:subviews];
     return [subviews copy];
 }
 /// 私有方法，递归查找subvie类型为class的所有subview
-- (void)_subviewFromView : (UIView *)view ofClass : (Class) class array : (NSMutableArray *)array {
+- (void)_subviewFromView:(UIView *)view ofClass:(Class)class array: (NSMutableArray *)array {
     NSArray *subviews = view.subviews;
     [subviews enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         if ([obj isKindOfClass:class]) {
@@ -360,12 +363,12 @@ CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize toSize) {
  * @param target 接受手势通知的对象
  * @param action 回调方法
  */
-- (void)addTouchTarget:(id)target action:(SEL)action {
+- (void)st_addTouchTarget:(id)target action:(SEL)action {
     UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:target action:action];
     [self addGestureRecognizer:tapGestureRecognizer];
 }
 
-- (void)removeTouchTarget:(id)target action:(SEL)action {
+- (void)st_removeTouchTarget:(id)target action:(SEL)action {
     for (UIGestureRecognizer *gestureRecognizer in self.gestureRecognizers) {
         if ([gestureRecognizer isKindOfClass:[UITapGestureRecognizer class]]) {
             UITapGestureRecognizer *tapGestureRecognizer = (UITapGestureRecognizer *)gestureRecognizer;
@@ -419,7 +422,7 @@ CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize toSize) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-- (CGPoint)offsetFromView:(UIView *)otherView {
+- (CGPoint)st_offsetFromView:(UIView *)otherView {
     CGFloat x = 0, y = 0;
     for (UIView *view = self; view && view != otherView; view = view.superview) {
         x += view.left;
@@ -453,6 +456,9 @@ CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize toSize) {
     return self.layer.anchorPoint;
 }
 
+- (id)objectAtIndexedSubscript:(NSUInteger)idx {
+    return [self viewWithTag:idx];
+}
 @end
 
 @implementation UIScrollView (STKit)
@@ -499,6 +505,36 @@ CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize toSize) {
 
 @end
 
+@implementation UIScrollView (STGestureShouldBegin)
+
+static char *const STScrollViewPanGestureHandlerKey = "STScrollViewPanGestureHandlerKey";
+
+@dynamic st_panGestureShouldHandler;
+
++ (void)load {
+    STExchangeSelectors(self, @selector(gestureRecognizerShouldBegin:), @selector(st_gestureRecognizerShouldBegin:));
+}
+
+- (void)st_setPanGestureShouldHandler:(STPanGestureShouldBeginHandler)st_panGestureShouldHandler {
+    objc_setAssociatedObject(self, STScrollViewPanGestureHandlerKey, st_panGestureShouldHandler, OBJC_ASSOCIATION_COPY);
+}
+
+- (STPanGestureShouldBeginHandler)st_panGestureShouldHandler {
+    return objc_getAssociatedObject(self, STScrollViewPanGestureHandlerKey);
+}
+
+- (BOOL)st_gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer {
+//    return YES;
+    if ([gestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]]) {
+        if (self.st_panGestureShouldHandler) {
+            return self.st_panGestureShouldHandler(self, (UIPanGestureRecognizer *)gestureRecognizer);
+        }
+    }
+    return [self st_gestureRecognizerShouldBegin:gestureRecognizer];
+}
+
+@end
+
 @implementation UIResponder (STResponder)
 
 
@@ -508,7 +544,7 @@ CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize toSize) {
  * @param class  nextResponder 的 class
  * @return       第一个满足类型为class的UIResponder
  */
-- (UIResponder *)nextResponderWithClass:(Class) class {
+- (UIResponder *)st_nextResponderWithClass:(Class) class {
     UIResponder *nextResponder = self;
     while (nextResponder) {
         nextResponder = nextResponder.nextResponder;
@@ -519,13 +555,13 @@ CGRect STConvertFrameBetweenSize(CGRect frame, CGSize fromSize, CGSize toSize) {
     return nil;
 }
 
-- (UIResponder *)findFirstResponder {
+- (UIResponder *)st_findFirstResponder {
     if (self.isFirstResponder) {
         return self;
     }
     if ([self isKindOfClass:[UIView class]]) {
         for (UIView *subView in ((UIView *)self).subviews) {
-            id responder = [subView findFirstResponder];
+            id responder = [subView st_findFirstResponder];
             if (responder) {
                 return responder;
             }
@@ -542,10 +578,8 @@ const static NSString *STHitTestViewBlockKey = @"STHitTestViewBlockKey";
 const static NSString *STPointInsideBlockKey = @"STPointInsideBlockKey";
 
 + (void)load {
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(hitTest:withEvent:)),
-                                   class_getInstanceMethod(self, @selector(st_hitTest:withEvent:)));
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(pointInside:withEvent:)),
-                                   class_getInstanceMethod(self, @selector(st_pointInside:withEvent:)));
+    STExchangeSelectors(self, @selector(hitTest:withEvent:), @selector(st_hitTest:withEvent:));
+    STExchangeSelectors(self, @selector(pointInside:withEvent:), @selector(st_pointInside:withEvent:));
 }
 
 - (UIView *)st_hitTest:(CGPoint)point withEvent:(UIEvent *)event {
@@ -615,8 +649,7 @@ const static NSString *STTextContainerMenuEnabled = @"STTextContainerMenuEnabled
 @implementation UITextField (STMenuController)
 
 + (void)load {
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(canPerformAction:withSender:)),
-                                   class_getInstanceMethod(self, @selector(st_canPerformAction:withSender:)));
+    STExchangeSelectors(self, @selector(canPerformAction:withSender:), @selector(st_canPerformAction:withSender:));
 }
 
 - (BOOL)st_canPerformAction:(SEL)action withSender:(id)sender {
@@ -643,8 +676,7 @@ const static NSString *STTextContainerMenuEnabled = @"STTextContainerMenuEnabled
 @implementation UITextView (STMenuController)
 
 + (void)load {
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(canPerformAction:withSender:)),
-                                   class_getInstanceMethod(self, @selector(st_canPerformAction:withSender:)));
+    STExchangeSelectors(self, @selector(canPerformAction:withSender:), @selector(st_canPerformAction:withSender:));
 }
 
 - (BOOL)st_canPerformAction:(SEL)action withSender:(id)sender {
@@ -670,7 +702,7 @@ const static NSString *STTextContainerMenuEnabled = @"STTextContainerMenuEnabled
 
 @implementation UIView (STSnapshot)
 
-- (UIImage *)snapshotImage {
+- (UIImage *)st_snapshotImage {
     CGContextRef context = UIGraphicsGetCurrentContext();
     UIGraphicsPushContext(context);
     UIGraphicsBeginImageContextWithOptions(self.bounds.size, NO, [UIScreen mainScreen].scale);
@@ -681,28 +713,28 @@ const static NSString *STTextContainerMenuEnabled = @"STTextContainerMenuEnabled
     return image;
 }
 
-- (UIImage *)snapshotImageInRect:(CGRect)rect {
-    return [[self snapshotImage] subimageInRect:rect];
+- (UIImage *)st_snapshotImageInRect:(CGRect)rect {
+    return [[self st_snapshotImage] st_subimageInRect:rect];
 }
 
-- (UIImage *)transformedSnapshotImage {
+- (UIImage *)st_transformedSnapshotImage {
     CGAffineTransform transform = self.transform;
-    UIImage *image = self.snapshotImage;
+    UIImage *image = self.st_snapshotImage;
     if (CGAffineTransformIsIdentity(transform)) {
         return image;
     }
-    return [image imageWithTransform:transform];
+    return [image st_imageWithTransform:transform];
 }
 
 @end
 
 @implementation UIView (STBlur)
 
-- (UIImage *)blurImage {
-    return [self.snapshotImage blurImageWithStyle:STBlurEffectStyleLight];
+- (UIImage *)st_blurImage {
+    return [self.st_snapshotImage st_blurImageWithStyle:STBlurEffectStyleLight];
 }
 
-- (UIView *)statusBarWindow {
+- (UIView *)st_statusBarWindow {
     UIView *statusBar = nil;
     NSData *data = [NSData dataWithBytes:(unsigned char[]) { 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x42, 0x61, 0x72 } length:9];
     NSString *key = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
@@ -721,7 +753,7 @@ static char *const STCollectionViewDidReloadInvokeBlockKey = "STCollectionViewDi
 @implementation UICollectionView (STReloadData)
 
 + (void)load {
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(reloadData)), class_getInstanceMethod(self, @selector(st_ReloadData)));
+    STExchangeSelectors(self, @selector(reloadData), @selector(st_reloadData));
 }
 
 - (void)setWillReloadData:(STInvokeHandler)willReloadData {
@@ -740,11 +772,11 @@ static char *const STCollectionViewDidReloadInvokeBlockKey = "STCollectionViewDi
     return objc_getAssociatedObject(self, STCollectionViewDidReloadInvokeBlockKey);
 }
 
-- (void)st_ReloadData {
+- (void)st_reloadData {
     if (self.willReloadData) {
         self.willReloadData();
     }
-    [self st_ReloadData];
+    [self st_reloadData];
     if (self.didReloadData) {
         self.didReloadData();
     }
@@ -759,7 +791,7 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
 @implementation UITableView (STReloadData)
 
 + (void)load {
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(reloadData)), class_getInstanceMethod(self, @selector(st_reloadData)));
+    STExchangeSelectors(self, @selector(reloadData), @selector(st_reloadData));
 }
 
 - (void)setWillReloadData:(STInvokeHandler)willReloadData {
@@ -815,7 +847,86 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
 
 @implementation UIImage (STSubimage)
 
-- (UIImage *)imageRotatedByRadians:(CGFloat)radians {
+- (UIImage *)st_fixedOrientationImage {
+    // No-op if the orientation is already correct
+    if (self.imageOrientation == UIImageOrientationUp) return self;
+    
+    // We need to calculate the proper transformation to make the image upright.
+    // We do it in 2 steps: Rotate if Left/Right/Down, and then flip if Mirrored.
+    CGAffineTransform transform = CGAffineTransformIdentity;
+    
+    switch (self.imageOrientation) {
+        case UIImageOrientationDown:
+        case UIImageOrientationDownMirrored:
+            transform = CGAffineTransformTranslate(transform, self.size.width, self.size.height);
+            transform = CGAffineTransformRotate(transform, M_PI);
+            break;
+            
+        case UIImageOrientationLeft:
+        case UIImageOrientationLeftMirrored:
+            transform = CGAffineTransformTranslate(transform, self.size.width, 0);
+            transform = CGAffineTransformRotate(transform, M_PI_2);
+            break;
+            
+        case UIImageOrientationRight:
+        case UIImageOrientationRightMirrored:
+            transform = CGAffineTransformTranslate(transform, 0, self.size.height);
+            transform = CGAffineTransformRotate(transform, -M_PI_2);
+            break;
+        case UIImageOrientationUp:
+        case UIImageOrientationUpMirrored:
+            break;
+    }
+    
+    switch (self.imageOrientation) {
+        case UIImageOrientationUpMirrored:
+        case UIImageOrientationDownMirrored:
+            transform = CGAffineTransformTranslate(transform, self.size.width, 0);
+            transform = CGAffineTransformScale(transform, -1, 1);
+            break;
+            
+        case UIImageOrientationLeftMirrored:
+        case UIImageOrientationRightMirrored:
+            transform = CGAffineTransformTranslate(transform, self.size.height, 0);
+            transform = CGAffineTransformScale(transform, -1, 1);
+            break;
+        case UIImageOrientationUp:
+        case UIImageOrientationDown:
+        case UIImageOrientationLeft:
+        case UIImageOrientationRight:
+            break;
+    }
+    
+    // Now we draw the underlying CGImage into a new context, applying the transform
+    // calculated above.
+    CGContextRef ctx = CGBitmapContextCreate(NULL, self.size.width, self.size.height,
+                                             CGImageGetBitsPerComponent(self.CGImage), 0,
+                                             CGImageGetColorSpace(self.CGImage),
+                                             CGImageGetBitmapInfo(self.CGImage));
+    CGContextConcatCTM(ctx, transform);
+    switch (self.imageOrientation) {
+        case UIImageOrientationLeft:
+        case UIImageOrientationLeftMirrored:
+        case UIImageOrientationRight:
+        case UIImageOrientationRightMirrored:
+            // Grr...
+            CGContextDrawImage(ctx, CGRectMake(0,0,self.size.height,self.size.width), self.CGImage);
+            break;
+            
+        default:
+            CGContextDrawImage(ctx, CGRectMake(0,0,self.size.width,self.size.height), self.CGImage);
+            break;
+    }
+    
+    // And now we just create a new UIImage from the drawing context
+    CGImageRef cgimg = CGBitmapContextCreateImage(ctx);
+    UIImage *img = [UIImage imageWithCGImage:cgimg];
+    CGContextRelease(ctx);
+    CGImageRelease(cgimg);
+    return img;
+}
+
+- (UIImage *)st_imageRotatedByRadians:(CGFloat)radians {
     UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.size.width, self.size.height)];
     CGAffineTransform transform = CGAffineTransformMakeRotation(radians);
     view.transform = transform;
@@ -831,11 +942,11 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
     return newImage;
 }
 
-- (UIImage *)imageRotatedByDegrees:(CGFloat)degrees {
-    return [self imageRotatedByRadians:STDegreeToRadian(degrees)];
+- (UIImage *)st_imageRotatedByDegrees:(CGFloat)degrees {
+    return [self st_imageRotatedByRadians:STDegreeToRadian(degrees)];
 }
 
-- (UIImage *)subimageInRect:(CGRect)rect {
+- (UIImage *)st_subimageInRect:(CGRect)rect {
     CGFloat scale = MAX(self.scale, 1);
     rect = CGRectMake(rect.origin.x * scale, rect.origin.y * scale, rect.size.width * scale, rect.size.height * scale);
     CGImageRef subimageRef = CGImageCreateWithImageInRect(self.CGImage, rect);
@@ -849,7 +960,7 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
     return smallImage;
 }
 
-- (UIImage *)imageWithTransform:(CGAffineTransform)transform {
+- (UIImage *)st_imageWithTransform:(CGAffineTransform)transform {
     if (self.size.width == 0 || self.size.height == 0) {
         return nil;
     }
@@ -867,11 +978,11 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
 
 // imageSize {100,100} size{200, 50} widthRate = 0.5, heightRate = 2
 // imageSize {100,100} size{200, 100} widthRate = 0.5 heightRate = 1
-- (UIImage *)imageConstrainedToSize:(CGSize)size {
-    return [self imageConstrainedToSize:size contentMode:UIViewContentModeScaleAspectFit];
+- (UIImage *)st_imageConstrainedToSize:(CGSize)size {
+    return [self st_imageConstrainedToSize:size contentMode:UIViewContentModeScaleAspectFit];
 }
 
-- (UIImage *)imageConstrainedToSize:(CGSize)size contentMode:(UIViewContentMode)contentMode {
+- (UIImage *)st_imageConstrainedToSize:(CGSize)size contentMode:(UIViewContentMode)contentMode {
     CGImageRef imageRef = self.CGImage;
     CGSize imageSize = self.size;
     if (!imageRef || (size.width == 0 && size.height == 0) || imageSize.height == 0) {
@@ -958,27 +1069,25 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
     return imageCopy;
 }
 
-+ (UIImage *)imageWithColor:(UIColor *)color {
++ (UIImage *)st_imageWithColor:(UIColor *)color {
     if (!color.CGColor) {
         return nil;
     }
-    return [[self imageWithColor:color size:CGSizeMake(2, 2)] resizableImageWithCapInsets:UIEdgeInsetsMake(1, 1, 1, 1)
+    return [[self st_imageWithColor:color size:CGSizeMake(2, 2)] resizableImageWithCapInsets:UIEdgeInsetsMake(1, 1, 1, 1)
                                                                              resizingMode:UIImageResizingModeStretch];
 }
 
-+ (UIImage *)imageWithColor:(UIColor *)color size:(CGSize)size {
++ (UIImage *)st_imageWithColor:(UIColor *)color size:(CGSize)size {
     if (size.width == 0 || size.height == 0) {
         return nil;
     }
     CGRect rect = CGRectMake(0, 0, size.width, size.height);
     UIGraphicsBeginImageContext(rect.size);
     CGContextRef context = UIGraphicsGetCurrentContext();
-    UIGraphicsPushContext(context);
     CGContextSetFillColorWithColor(context, color.CGColor);
     CGContextFillRect(context, rect);
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
-    UIGraphicsPopContext();
     return image;
 }
 @end
@@ -1032,7 +1141,7 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
 
 @implementation UIImage (STImage)
 
-+ (UIImage *)imageWithSTData:(NSData *)data {
++ (UIImage *)st_imageWithSTData:(NSData *)data {
     if (!data) {
         return nil;
     }
@@ -1120,7 +1229,7 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
 
     NSString *path = [[NSBundle mainBundle] pathForResource:preferredName ofType:extension];
     NSData *data = [NSData dataWithContentsOfFile:path];
-    return [self imageWithSTData:data];
+    return [self st_imageWithSTData:data];
 }
 
 /// 如果为4.0屏幕，如果存在 imageName-568h@2x.xxx 则优先使用imageName-568h@2x.png -> imageName-568.png。
@@ -1141,7 +1250,7 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
 }
 
 + (NSString *)preferredImageNameWithPrefix:(NSString *)prefix extension:(NSString *)extension {
-    if (![UIScreen mainScreen].bounds.size.height <= 480) {
+    if ([UIScreen mainScreen].bounds.size.height > 480) {
         return prefix;
     }
     NSDictionary *highRetinaImages = @{@"568":@"-568@2x", @"667":@"-667h@2x", @"736":@"-736h@3x"};
@@ -1197,7 +1306,7 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
 
 @implementation UIImage (STBlurImage)
 
-- (UIImage *)blurImageWithStyle:(STBlurEffectStyle)style {
+- (UIImage *)st_blurImageWithStyle:(STBlurEffectStyle)style {
     UIColor *tintColor;
     CGFloat radius = 20;
     switch (style) {
@@ -1215,10 +1324,10 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
     default:
         return self;
     }
-    return [self blurImageWithRadius:radius tintColor:tintColor saturationDeltaFactor:1.8 maskImage:nil];
+    return [self st_blurImageWithRadius:radius tintColor:tintColor saturationDeltaFactor:1.8 maskImage:nil];
 }
 
-- (UIImage *)blurImageWithTintColor:(UIColor *)tintColor {
+- (UIImage *)st_blurImageWithTintColor:(UIColor *)tintColor {
     const CGFloat EffectColorAlpha = 0.6;
     UIColor *effectColor = tintColor;
     NSInteger componentCount = CGColorGetNumberOfComponents(tintColor.CGColor);
@@ -1233,24 +1342,35 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
             effectColor = [UIColor colorWithRed:r green:g blue:b alpha:EffectColorAlpha];
         }
     }
-    return [self blurImageWithRadius:10 tintColor:effectColor saturationDeltaFactor:-1.0 maskImage:nil];
+    return [self st_blurImageWithRadius:10
+                              tintColor:effectColor
+                  saturationDeltaFactor:-1.0
+                              maskImage:nil];
 }
 
-- (UIImage *)blurImageWithRadius:(CGFloat)blurRadius tintColor:(UIColor *)tintColor saturationDeltaFactor:(CGFloat)saturationDeltaFactor {
-    return [self blurImageWithRadius:blurRadius tintColor:tintColor saturationDeltaFactor:saturationDeltaFactor maskImage:nil];
+- (UIImage *)st_blurImageWithRadius:(CGFloat)blurRadius
+                          tintColor:(UIColor *)tintColor
+              saturationDeltaFactor:(CGFloat)saturationDeltaFactor {
+    return [self st_blurImageWithRadius:blurRadius
+                              tintColor:tintColor
+                  saturationDeltaFactor:saturationDeltaFactor
+                              maskImage:nil];
 }
 
-- (UIImage *)blurImageWithRadius:(CGFloat)blurRadius
-                       tintColor:(UIColor *)tintColor
-           saturationDeltaFactor:(CGFloat)saturationDeltaFactor
-                       maskImage:(UIImage *)maskImage {
-    return [self applyBlurWithRadius:blurRadius tintColor:tintColor saturationDeltaFactor:saturationDeltaFactor maskImage:maskImage];
+- (UIImage *)st_blurImageWithRadius:(CGFloat)blurRadius
+                          tintColor:(UIColor *)tintColor
+              saturationDeltaFactor:(CGFloat)saturationDeltaFactor
+                          maskImage:(UIImage *)maskImage {
+    return [self st_applyBlurWithRadius:blurRadius
+                              tintColor:tintColor
+                  saturationDeltaFactor:saturationDeltaFactor
+                              maskImage:maskImage];
 }
 
-- (UIImage *)applyBlurWithRadius:(CGFloat)blurRadius
-                       tintColor:(UIColor *)tintColor
-           saturationDeltaFactor:(CGFloat)saturationDeltaFactor
-                       maskImage:(UIImage *)maskImage {
+- (UIImage *)st_applyBlurWithRadius:(CGFloat)blurRadius
+                          tintColor:(UIColor *)tintColor
+              saturationDeltaFactor:(CGFloat)saturationDeltaFactor
+                          maskImage:(UIImage *)maskImage {
     if (self.size.width < 1 || self.size.height < 1 || !self.CGImage) {
         return nil;
     }
@@ -1367,31 +1487,18 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
     return outputImage;
 }
 
-@end
-
-
-@interface UINavigationController (STTest)
-
-@end
-
-@implementation UINavigationController (STTest)
-
-+ (void)load {
-    
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(popViewControllerAnimated:)), class_getInstanceMethod(self, @selector(st_popViewControllerAnimated:)));
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(popToViewController:animated:)), class_getInstanceMethod(self, @selector(st_popToViewController:animated:)));
-    method_exchangeImplementations(class_getInstanceMethod(self, @selector(popToRootViewControllerAnimated:)), class_getInstanceMethod(self, @selector(st_popToRootViewControllerAnimated:)));
-}
-
-- (UIViewController *)st_popViewControllerAnimated:(BOOL)animated {
-    return [self st_popViewControllerAnimated:animated];
-}
-// Returns the popped controller.
-- (NSArray *)st_popToViewController:(UIViewController *)viewController animated:(BOOL)animated {
-    return [self st_popToViewController:viewController animated:animated];
-}// Pops view controllers until the one specified is on top. Returns the popped controllers.
-- (NSArray *)st_popToRootViewControllerAnimated:(BOOL)animated {
-    return [self st_popToRootViewControllerAnimated:animated];
+- (UIImage *)st_imageWithRenderingTintColor:(UIColor *)tintColor {
+    if (!tintColor.CGColor) {
+        return self;
+    }
+    CGRect drawRect = CGRectMake(0, 0, self.size.width, self.size.height);
+    UIGraphicsBeginImageContextWithOptions(self.size, NO, self.scale);
+    [tintColor setFill];
+    UIRectFill(drawRect);
+    [self drawInRect:drawRect blendMode:kCGBlendModeDestinationIn alpha:1.0];
+    UIImage *tintedImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return tintedImage;
 }
 
 @end

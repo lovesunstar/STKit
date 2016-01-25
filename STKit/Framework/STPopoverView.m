@@ -9,12 +9,12 @@
 #import "STPopoverView.h"
 #import "UIKit+STKit.h"
 
-typedef enum _STPopoverState {
+typedef NS_ENUM(NSInteger, _STPopoverState) {
     _STPopoverStateWillAppear,
     _STPopoverStateDidAppear,
     _STPopoverStateWillDisappear,
     _STPopoverStateDidDisappear,
-} _STPopoverState;
+};
 
 @interface STPopoverView () <UIGestureRecognizerDelegate>
 
@@ -40,7 +40,7 @@ typedef enum _STPopoverState {
         // Initialization code
         self.backgroundView = [[UIView alloc] initWithFrame:self.bounds];
         self.backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-        self.backgroundView.backgroundColor = [UIColor colorWithRGB:0 alpha:1];
+        self.backgroundView.backgroundColor = [UIColor st_colorWithRGB:0 alpha:1];
         [self addSubview:self.backgroundView];
 
         self.contentView = [[UIView alloc] initWithFrame:CGRectZero];
@@ -55,7 +55,7 @@ typedef enum _STPopoverState {
 
         __weak STPopoverView *weakSelf = self;
         self.hitTestBlock = ^(CGPoint point, UIEvent *event, BOOL *returnSuper) {
-            if (point.y < weakSelf.contentOffset.y) {
+            if (!CGPointInRect(point, [weakSelf _gainContentRect])) {
                 return weakSelf.backgroundView;
             }
             *returnSuper = YES;
@@ -73,6 +73,21 @@ typedef enum _STPopoverState {
                                                    object:nil];
     }
     return self;
+}
+
+- (CGRect)_gainContentRect {
+    if (self.contentView.subviews.count == 0) {
+        return CGRectZero;
+    }
+    CGRect frame = [self.contentView.subviews.firstObject frame];
+    __block CGFloat top = CGRectGetMinY(frame), left = CGRectGetMinX(frame), right = CGRectGetMaxX(frame), bottom = CGRectGetMaxY(frame);
+    [self.contentView.subviews enumerateObjectsUsingBlock:^(UIView *obj, NSUInteger idx, BOOL *stop) {
+        top = MIN(top, obj.top);
+        left = MIN(left, obj.left);
+        right = MAX(right, obj.right);
+        bottom = MAX(bottom, obj.bottom);
+    }];
+    return CGRectMake(left, top, right - left, bottom - top);
 }
 
 - (void)showInView:(UIView *)view animated:(BOOL)animated {
@@ -219,71 +234,6 @@ typedef enum _STPopoverState {
     return UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin |
            UIViewAutoresizingFlexibleBottomMargin;
 }
-
-/*
-
- switch (interfaceOrientation) {
- case UIInterfaceOrientationPortraitUpsideDown:
- switch (direction) {
- case STPopoverViewDirectionUp:
- direction = STPopoverViewDirectionDown;
- break;
- case STPopoverViewDirectionLeft:
- direction = STPopoverViewDirectionRight;
- break;
- case STPopoverViewDirectionRight:
- direction = STPopoverViewDirectionLeft;
- break;
- case STPopoverViewDirectionDown:
- direction = STPopoverViewDirectionUp;
- break;
- default:
- break;
- }
- break;
- case UIInterfaceOrientationLandscapeLeft:
- switch (direction) {
- case STPopoverViewDirectionUp:
- direction = STPopoverViewDirectionLeft;
- break;
- case STPopoverViewDirectionDown:
- direction = STPopoverViewDirectionRight;
- break;
- case STPopoverViewDirectionLeft:
- direction = STPopoverViewDirectionUp;
- break;
- case STPopoverViewDirectionRight:
- direction = STPopoverViewDirectionDown;
- break;
- default:
- break;
- }
- break;
- case UIInterfaceOrientationLandscapeRight:
- switch (direction) {
- case STPopoverViewDirectionUp:
- direction = STPopoverViewDirectionRight;
- break;
- case STPopoverViewDirectionDown:
- direction = STPopoverViewDirectionLeft;
- break;
- case STPopoverViewDirectionLeft:
- direction = STPopoverViewDirectionDown;
- break;
- case STPopoverViewDirectionRight:
- direction = STPopoverViewDirectionUp;
- break;
- default:
- break;
- }
- break;
- case UIInterfaceOrientationPortrait:
- default:
- break;
- }
-
- */
-
 - (CGRect)rectWithSuperView:(UIView *)superView direction:(STPopoverViewDirection)direction contentOffset:(CGPoint)offset {
 
     CGRect rect = superView.frame;

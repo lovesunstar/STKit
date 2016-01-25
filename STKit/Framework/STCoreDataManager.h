@@ -10,19 +10,22 @@
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
 
+typedef void(^ STCoreDataCompletionHandler)(void);
+ST_ASSUME_NONNULL_BEGIN
 /**
  * @abstract CoreData管理。
  *
  */
 @interface STCoreDataManager : NSObject
 
-+ (STCoreDataManager *)defaultDataManager;
+/**
+ * @param path xxx.sqlite3
+ */
+- (instancetype)initWithModelName:(NSString *)modelName dbFilePath:(NSString *)path NS_DESIGNATED_INITIALIZER;
+- (STNULLABLE instancetype)init NS_DEPRECATED_IOS(2_0, 2_0, "Please use initWithModelName");
 
-@property(nonatomic, readonly, strong) NSString *modelName;
-@property(nonatomic, readonly, strong) NSString *dbFilePath;
-/// 设置 momd 文件名称。 不需要后缀。会生成一个同名的sqlite文件
-- (void)setModelName:(NSString *)modelName;
-
+@property(STPROPERTYNULLABLE nonatomic, readonly, copy) NSString *modelName;
+@property(STPROPERTYNULLABLE nonatomic, readonly, copy) NSString *dbFilePath;
 /// 该Context始终在主线程中。 UIViewController的fetchResultsController
 @property(nonatomic, readonly) NSManagedObjectContext *managedObjectContext;
 /// 该Context始终在子线程，并且parentContext为楼上的Context。为了提升主线程的绘制效率，建议所有的保存操作都在此Context进行。
@@ -44,17 +47,14 @@
  * @param    block 需要执行的代码段
  * @param    waitUntilDone 是否需要等待执行, 如果是NO,则立刻返回，將block添加到queue中等待执行
  */
-- (void)performBlock:(void (^)(NSManagedObjectContext *))block waitUntilDone:(BOOL)waitUntilDone;
-- (void)performBlockOnMainThread:(void (^)(NSManagedObjectContext *))block waitUntilDone:(BOOL)waitUntilDone;
-- (void)performBlockInBackground:(void (^)(NSManagedObjectContext *))block waitUntilDone:(BOOL)waitUntilDone;
-@end
+- (void)performBlock:(void (^)(NSManagedObjectContext *dispatchedContext))block
+   completionHandler:(void (^ ST_NULLABLE)(void))completionHandler;
 
-@interface NSFetchedResultsController (STCoreDataManager)
+- (void)performBlockOnMainThread:(void (^)(NSManagedObjectContext *mainContext))block
+               completionHandler:(void (^ ST_NULLABLE)(void))completionHandler;
 
-- (NSFetchedResultsController *)initWithFetchRequest:(NSFetchRequest *)fetchRequest
-                                  sectionNameKeyPath:(NSString *)sectionName
-                                           cacheName:(NSString *)cacheName;
-
+- (void)performBlockInBackground:(void (^)(NSManagedObjectContext *backgroundContext))block
+               completionHandler:(void (^ ST_NULLABLE)(void))completionHandler;
 @end
 
 @interface NSManagedObjectContext (STCoreDataManager)
@@ -62,3 +62,4 @@
 - (NSManagedObject *)entityClassFromString:(NSString *)className name:(NSString *)entityName;
 
 @end
+ST_ASSUME_NONNULL_END

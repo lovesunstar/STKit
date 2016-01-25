@@ -7,9 +7,10 @@
 //
 
 #import "STPaginationControl.h"
-#import "UIKit+STKit.h"
 
-@interface STPaginationControl ()
+@interface STPaginationControl () {
+    BOOL _isObservingContentOffset;
+}
 
 @property(nonatomic, weak) UIScrollView *scrollView;
 
@@ -18,7 +19,12 @@
 @implementation STPaginationControl
 
 - (void)dealloc {
-    self.scrollView = nil;
+    [self stopObservingContentOffset];
+}
+
+- (void)removeFromSuperview {
+    [super removeFromSuperview];
+    [self stopObservingContentOffset];
 }
 
 - (void)setEnabled:(BOOL)enabled {
@@ -27,9 +33,6 @@
 }
 
 - (void)setPaginationState:(STPaginationControlState)paginationState {
-    if (_paginationState == paginationState) {
-        return;
-    }
     _paginationState = paginationState;
     [self paginationControlDidChangedToState:paginationState];
 }
@@ -49,13 +52,27 @@
 
 - (void)setScrollView:(UIScrollView *)scrollView {
     if (_scrollView) {
-        [_scrollView removeObserver:self forKeyPath:@"contentOffset" context:NULL];
+        [self stopObservingContentOffset];
     }
-    [scrollView addObserver:self
-                 forKeyPath:@"contentOffset"
-                    options:NSKeyValueObservingOptionNew
-                    context:NULL];
     _scrollView = scrollView;
+    [self startObservingContentOffset];
+}
+
+
+- (void)startObservingContentOffset {
+    if (!_isObservingContentOffset) {
+        if (_scrollView) {
+            [_scrollView addObserver:self forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionNew context:NULL];
+            _isObservingContentOffset = YES;
+        }
+    }
+}
+
+- (void)stopObservingContentOffset {
+    if (_isObservingContentOffset) {
+        [_scrollView removeObserver:self forKeyPath:@"contentOffset" context:NULL];
+        _isObservingContentOffset = NO;
+    }
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
@@ -69,9 +86,16 @@
     }
 }
 
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+- (void)paginationTest {
+    [self _paginationTestInScrollView:self.scrollView force:YES];
+}
+
+- (void)_paginationTestInScrollView:(UIScrollView *)scrollView force:(BOOL)force {
     CGFloat contentOffsetY = scrollView.contentOffset.y;
-    if (contentOffsetY > 0) {
+    if (!force && contentOffsetY <= 0) {
+        return;
+    }
+    if (contentOffsetY + scrollView.contentInset.top >= 0) {
         //// 等待触发加载更多
         if (self.paginationState != STPaginationControlStateNormal || self.hidden ||
             !self.superview || CGRectGetHeight(self.frame) <= 20) {
@@ -89,6 +113,10 @@
             self.paginationState = STPaginationControlStateLoading;
         }
     }
+}
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    [self _paginationTestInScrollView:scrollView force:NO];
 }
 
 - (CGFloat)threshold {
@@ -117,17 +145,16 @@
         [self addSubview:self.titleLabel];
         
         self.reloadButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        self.reloadButton.frame = CGRectMake(10, 10, CGRectGetWidth(frame) - 20,
-                                             CGRectGetHeight(frame) - 20);
+        self.reloadButton.frame = CGRectMake(10, 5, CGRectGetWidth(frame) - 20,
+                                             CGRectGetHeight(frame) - 10);
         self.reloadButton.autoresizingMask =
         UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-        [self.reloadButton setTitleColor:UIColor.blackColor
-                                forState:UIControlStateNormal];
-        UIImage *bkgImage = [[UIImage imageNamed:@"button_border_bkg"]
-                             resizableImageWithCapInsets:UIEdgeInsetsMake(15, 30, 15, 30)
-                             resizingMode:UIImageResizingModeStretch];
-        [self.reloadButton setBackgroundImage:bkgImage
-                                     forState:UIControlStateNormal];
+        self.reloadButton.layer.borderColor = [UIColor st_colorWithRGB:0xCCCCCC].CGColor;
+        self.reloadButton.titleLabel.font = [UIFont systemFontOfSize:17];
+        self.reloadButton.layer.cornerRadius = 5;
+        self.reloadButton.layer.borderWidth = 1;
+        [self.reloadButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+        [self.reloadButton addTarget:self action:@selector(_reloadActionFired:) forControlEvents:UIControlEventTouchUpInside];
         [self addSubview:self.reloadButton];
         
         self.indicatorView = [[UIActivityIndicatorView alloc]
@@ -180,6 +207,7 @@
             self.titleLabel.text = [self titleForState:STPaginationControlStateReachedEnd];
             break;
     }
+    [self setNeedsLayout];
 }
 
 - (void)setTitle:(NSString *)title forState:(STPaginationControlState)state {
@@ -190,6 +218,11 @@
 - (NSString *)titleForState:(STPaginationControlState)state {
     NSString *key = [NSString stringWithFormat:@"%ld", (long)state];
     return _titles[key];
+}
+
+- (void)_reloadActionFired:(id)sender {
+    [self sendActionsForControlEvents:UIControlEventValueChanged];
+    self.paginationState = STPaginationControlStateLoading;
 }
 
 @end

@@ -11,6 +11,8 @@
 
 #pragma mark - STRefhresControl
 @interface STRefreshControl () {
+    BOOL _isObservingContentInset;
+    BOOL _isObservingContentOffset;
 }
 
 @property(nonatomic, assign) CGFloat contentInsetTop;
@@ -23,6 +25,17 @@
 @end
 
 @implementation STRefreshControl
+
+- (void)dealloc {
+    [self stopObservingContentInset];
+    [self stopObservingContentOffset];
+}
+
+- (void)removeFromSuperview {
+    [super removeFromSuperview];
+    [self stopObservingContentInset];
+    [self stopObservingContentOffset];
+}
 
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
@@ -75,11 +88,28 @@
         UIEdgeInsets inset = scrollView.contentInset;
         if (refreshControlState == STRefreshControlStateLoading) {
             inset.top = self.contentInsetTop + height;
-            scrollView.contentOffset = CGPointMake(0, -inset.top);
+            if (_isObservingContentOffset) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self stopObservingContentOffset];
+                    scrollView.contentOffset = CGPointMake(0, -inset.top);
+                    [self startObservingContentOffset];
+                    
+                });
+            } else {
+                scrollView.contentOffset = CGPointMake(0, -inset.top);
+            }
+
         } else {
             inset.top = self.contentInsetTop;
         }
-        scrollView.contentInset = inset;
+        if (_isObservingContentInset) {
+            [self stopObservingContentInset];
+            scrollView.contentInset = inset;
+            [self startObservingContentInset];
+        } else {
+            scrollView.contentInset = inset;
+        }
+        
         [self refreshControlWillChangedToState:refreshControlState];
     };
     _refreshControlState = refreshControlState;
@@ -153,31 +183,64 @@
     [super willMoveToSuperview:newSuperview];
 }
 
-- (void)layoutSubviews {
-    [super layoutSubviews];
-    static BOOL hasSet = NO;
-    if (!hasSet) {
-        self.contentInsetTop = self.scrollView.contentInset.top;
-        hasSet = YES;
+- (void)setScrollView:(UIScrollView *)scrollView {
+    if (_scrollView) {
+        [self stopObservingContentInset];
+        [self stopObservingContentOffset];
+    }
+    _scrollView = scrollView;
+    self.contentInsetTop = scrollView.contentInset.top;
+    [self startObservingContentOffset];
+    [self startObservingContentInset];
+}
+
+- (void)startObservingContentInset {
+    if (!_isObservingContentInset) {
+        if (_scrollView) {
+            [_scrollView addObserver:self forKeyPath:@"contentInset" options:NSKeyValueObservingOptionNew context:NULL];
+            _isObservingContentInset = YES;
+        }
     }
 }
 
-- (void)setScrollView:(UIScrollView *)scrollView {
-    if (_scrollView) {
-        [_scrollView removeObserver:self forKeyPath:@"contentOffset" context:NULL];
+- (void)stopObservingContentInset {
+    if (_isObservingContentInset) {
+        [_scrollView removeObserver:self forKeyPath:@"contentInset" context:NULL];
+        _isObservingContentInset = NO;
     }
-    [scrollView addObserver:self forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionNew context:NULL];
-    _scrollView = scrollView;
+}
+
+
+- (void)startObservingContentOffset {
+    if (!_isObservingContentOffset) {
+        if (_scrollView) {
+            [_scrollView addObserver:self forKeyPath:@"contentOffset" options:NSKeyValueObservingOptionNew context:NULL];
+            _isObservingContentOffset = YES;
+        }
+    }
+}
+
+- (void)stopObservingContentOffset {
+    if (_isObservingContentOffset) {
+        [_scrollView removeObserver:self forKeyPath:@"contentOffset" context:NULL];
+        _isObservingContentOffset = NO;
+    }
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
                       ofObject:(id)object
                         change:(NSDictionary *)change
                        context:(void *)context {
-    if (object == self.scrollView && [keyPath isEqualToString:@"contentOffset"]) {
-        if (self.enabled && CGRectGetHeight(self.frame) > 20 &&
-            self.threshold > 20 && !self.hidden) {
-            [self scrollViewDidScroll:self.scrollView];
+    if (object == self.scrollView) {
+        if ([keyPath isEqualToString:@"contentOffset"]) {
+            if (self.enabled && CGRectGetHeight(self.frame) > 20 &&
+                self.threshold > 20 && !self.hidden) {
+                [self scrollViewDidScroll:self.scrollView];
+            }
+        } else if ([keyPath isEqualToString:@"contentInset"]) {
+            if (self.state != STRefreshControlStateLoading) {
+                self.contentInsetTop = self.scrollView.contentInset.top;
+            }
         }
     }
 }
@@ -207,26 +270,14 @@
         self.backgroundColor = [UIColor clearColor];
         {
             UILabel *refreshStatusLabel =
-            [[UILabel alloc] initWithFrame:CGRectMake(0, 0, width, 20)];
+            [[UILabel alloc] initWithFrame:CGRectMake(0, (height - 20) / 2, width, 20)];
             refreshStatusLabel.autoresizingMask =
-            UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
+            UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
             refreshStatusLabel.backgroundColor = [UIColor clearColor];
             refreshStatusLabel.font = [UIFont systemFontOfSize:13.];
             refreshStatusLabel.textAlignment = NSTextAlignmentCenter;
             [self addSubview:refreshStatusLabel];
             self.refreshStatusLabel = refreshStatusLabel;
-            
-            UILabel *refreshTimeLabel =
-            [[UILabel alloc] initWithFrame:CGRectMake(0, 30, width, 20)];
-            refreshTimeLabel.autoresizingMask =
-            UIViewAutoresizingFlexibleWidth |
-            UIViewAutoresizingFlexibleBottomMargin;
-            refreshTimeLabel.backgroundColor = [UIColor clearColor];
-            refreshTimeLabel.font = [UIFont systemFontOfSize:12.];
-            refreshTimeLabel.textAlignment = NSTextAlignmentCenter;
-            [self addSubview:refreshTimeLabel];
-            self.refreshTimeLabel = refreshTimeLabel;
-            
             /// 30 * 80 px
             UIImageView *arrawImageView = [[UIImageView alloc]
                                            initWithImage:
@@ -246,50 +297,10 @@
             activityIndicatorView.autoresizingMask = arrawImageView.autoresizingMask;
             [self addSubview:activityIndicatorView];
             self.indicatorView = activityIndicatorView;
-            
-            self.refreshTime = nil;
         }
         self.enabled = YES;
     }
     return self;
-}
-
-- (void)setRefreshTime:(NSDate *)refreshTime {
-    _refreshTime = refreshTime;
-    if (refreshTime) {
-        [[NSUserDefaults standardUserDefaults] setValue:refreshTime
-                                                 forKey:@"STRefreshTimeKey"];
-        [[NSUserDefaults standardUserDefaults] synchronize];
-    }
-    if (!refreshTime) {
-        refreshTime =
-        [[NSUserDefaults standardUserDefaults] valueForKey:@"STRefreshTimeKey"];
-        if (![refreshTime isKindOfClass:[NSDate class]]) {
-            refreshTime = nil;
-        }
-    }
-    if (!refreshTime) {
-        return;
-    }
-    NSCalendar *calendar = [NSCalendar currentCalendar];
-    NSUInteger unitFlags = NSYearCalendarUnit | NSMonthCalendarUnit |
-    NSDayCalendarUnit | NSHourCalendarUnit |
-    NSMinuteCalendarUnit;
-    NSDateComponents *cmp1 = [calendar components:unitFlags fromDate:refreshTime];
-    NSDateComponents *cmp2 =
-    [calendar components:unitFlags fromDate:[NSDate date]];
-    
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    if ([cmp1 day] == [cmp2 day]) { // 今天
-        formatter.dateFormat = @"今天 HH:mm";
-    } else if ([cmp1 year] == [cmp2 year]) { // 今年
-        formatter.dateFormat = @"MM-dd HH:mm";
-    } else {
-        formatter.dateFormat = @"yyyy-MM-dd HH:mm";
-    }
-    NSString *time = [formatter stringFromDate:refreshTime];
-    self.refreshTimeLabel.text =
-    [NSString stringWithFormat:@"最后更新：%@", time];
 }
 
 #pragma mark - PrivateMethod
@@ -310,7 +321,6 @@
             shouldAnimating = NO;
             self.arrowImageView.hidden = NO;
             self.arrowImageView.transform = CGAffineTransformIdentity;
-            [self setRefreshTime:[NSDate date]];
             break;
     }
     self.refreshStatusLabel.text = [self titleForState:refreshControlState];

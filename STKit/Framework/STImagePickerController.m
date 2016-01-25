@@ -18,6 +18,7 @@
 @optional
 - (void)groupViewControllerDidCancel:(_STPhotoGroupViewController *)groupViewController;
 @optional
+- (void)assetViewControllerDidCancel:(_STAssetViewController *)assetViewController;
 - (void)assetViewController:(_STAssetViewController *)assetViewController didFinishWithPhotoArray:(NSArray *)photoArray;
 
 @end
@@ -32,7 +33,8 @@
 
 @end
 
-const NSInteger _STAssetViewControllerPageSize = 100000000;
+const NSInteger _STAssetViewControllerPageSize = 9999999;
+
 @interface _STAssetViewController : STViewController <UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout> {
   @private
     NSInteger _page;
@@ -52,6 +54,7 @@ const NSInteger _STAssetViewControllerPageSize = 100000000;
 - (NSInteger)numberOfAssets;
 - (void)updatePhotoCellPhotoCell:(_STAssetCollectionCell *)photoCell asset:(NSObject *)asset;
 - (NSArray *)compressedImageWithAssets:(NSArray *)assets;
+@property(nonatomic, strong) UILabel    *tipLabel;
 @end
 
 #pragma mark - STPhotoViewController
@@ -128,6 +131,8 @@ const NSInteger _STAssetViewControllerPageSize = 100000000;
 
 @implementation STImagePickerController
 
+@dynamic delegate;
+
 - (instancetype)init {
     _STPhotoGroupViewController *photoGroupViewController = [[_STPhotoGroupViewController alloc] initWithStyle:UITableViewStylePlain];
     self = [super initWithRootViewController:photoGroupViewController];
@@ -150,7 +155,7 @@ const NSInteger _STAssetViewControllerPageSize = 100000000;
 }
 
 - (void)setMaximumInteractivePopEdgeDistance:(CGFloat)maximumInteractivePopEdgeDistance {
-    self.photoGroupViewController.maximumInteractivePopEdgeDistance = maximumInteractivePopEdgeDistance;
+    self.photoGroupViewController.st_maximumInteractivePopEdgeDistance = maximumInteractivePopEdgeDistance;
     _maximumInteractivePopEdgeDistance = maximumInteractivePopEdgeDistance;
 }
 
@@ -188,6 +193,14 @@ const NSInteger _STAssetViewControllerPageSize = 100000000;
 }
 
 - (void)groupViewControllerDidCancel:(_STPhotoGroupViewController *)groupViewController {
+    if ([self.delegate respondsToSelector:@selector(imagePickerControllerDidCancel:)]) {
+        [self.delegate imagePickerControllerDidCancel:self];
+    } else {
+        [self dismissViewControllerAnimated:YES completion:nil];
+    }
+}
+
+- (void)assetViewControllerDidCancel:(_STAssetViewController *)assetViewController {
     if ([self.delegate respondsToSelector:@selector(imagePickerControllerDidCancel:)]) {
         [self.delegate imagePickerControllerDidCancel:self];
     } else {
@@ -247,11 +260,11 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
         self.countLabel = countLabel;
 
         self.separatorView = [[UIView alloc] init];
-        self.separatorView.backgroundColor = [UIColor colorWithRGB:0xcccccc];
+        self.separatorView.backgroundColor = [UIColor st_colorWithRGB:0xcccccc];
         [self addSubview:self.separatorView];
 
         self.topSeparatorView = [[UIView alloc] init];
-        self.topSeparatorView.backgroundColor = [UIColor colorWithRGB:0xcccccc];
+        self.topSeparatorView.backgroundColor = [UIColor st_colorWithRGB:0xcccccc];
         self.topSeparatorView.hidden = YES;
         [self addSubview:self.topSeparatorView];
     }
@@ -349,7 +362,7 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.navigationItem.title = @"照片";
-    UIColor *tintColor = self.customNavigationController.navigationBar.titleTextAttributes[NSForegroundColorAttributeName];
+    UIColor *tintColor = self.st_navigationController.navigationBar.titleTextAttributes[NSForegroundColorAttributeName];
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"取消" tintColor:tintColor target:self action:@selector(dismissActionFired:)];
 
     [self.tableView registerClass:[_STGroupAssetCell class] forCellReuseIdentifier:@"GroupAssetIdentifier"];
@@ -417,11 +430,11 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
     }
     
     assetViewController.pickerDelegate = self.pickerDelegate;
-    assetViewController.maximumInteractivePopEdgeDistance = self.maximumInteractivePopEdgeDistance;
+    assetViewController.st_maximumInteractivePopEdgeDistance = self.st_maximumInteractivePopEdgeDistance;
     assetViewController.maximumNumberOfSelection = self.maximumNumberOfSelection;
     assetViewController.backBarButton = self.backBarButton;
     if (assetViewController) {
-        [self.customNavigationController pushViewController:assetViewController animated:animated];
+        [self.st_navigationController pushViewController:assetViewController animated:animated];
     }
 }
 
@@ -634,7 +647,7 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
 
         self.highlightedView = [[UIView alloc] initWithFrame:self.thumbView.frame];
         self.highlightedView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-        self.highlightedView.backgroundColor = [UIColor colorWithRGB:0x0 alpha:0.5];
+        self.highlightedView.backgroundColor = [UIColor st_colorWithRGB:0x0 alpha:0.5];
         self.highlightedView.userInteractionEnabled = NO;
         [self addSubview:self.highlightedView];
         self.highlightedView.hidden = YES;
@@ -694,18 +707,20 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
     [self loadNextPage];
     if (self.backBarButton) {
         [self.backBarButton removeTarget:nil action:NULL forControlEvents:UIControlEventAllEvents];
         [self.backBarButton addTarget:self action:@selector(backViewControllerActionFired:) forControlEvents:UIControlEventTouchUpInside];
         self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.backBarButton];
     }
-    UIColor *tintColor = self.customNavigationController.navigationBar.titleTextAttributes[NSForegroundColorAttributeName];
+    UIColor *tintColor = self.st_navigationController.navigationBar.titleTextAttributes[NSForegroundColorAttributeName];
     if (self.maximumNumberOfSelection > 1) {
         self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"完成" tintColor:tintColor target:self action:@selector(finishActionFired:)];
+        self.navigationItem.rightBarButtonItem.enabled = NO;
+    } else {
+        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"取消" tintColor:tintColor target:self action:@selector(dismissActionFired:)];
     }
-    
-    self.navigationItem.rightBarButtonItem.enabled = NO;
     UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
     NSInteger count = CGRectGetWidth(self.view.frame) / 78;
     CGFloat margin = (CGRectGetWidth(self.view.frame) - count * 78) / (count - 1);
@@ -729,11 +744,31 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
     self.collectionView.alwaysBounceHorizontal = NO;
     self.collectionView.alwaysBounceVertical = YES;
     [self.view addSubview:self.collectionView];
-
     UIEdgeInsets edgeInsets = self.collectionView.contentInset;
-    edgeInsets.top += 5;
+    
+    STImagePickerController *pickerController = [self.st_navigationController isKindOfClass:[STImagePickerController class]] ? (STImagePickerController *)self.st_navigationController:nil;
+    NSString *tips = pickerController.tips;
+    if (tips) {
+        self.st_navigationBar.separatorView.backgroundColor = [UIColor st_colorWithRGB:0xCCCCCC];
+        UIToolbar *headerView = [[UIToolbar alloc] initWithFrame:CGRectMake(0, STGetSystemVersion() >= 7 ? 64 : 0, self.collectionView.width, 35)];
+        headerView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+        headerView.translucent = YES;
+        self.tipLabel = [[UILabel alloc] initWithFrame:headerView.bounds];
+        self.tipLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+        self.tipLabel.text = tips;
+        self.tipLabel.textAlignment = NSTextAlignmentCenter;
+        self.tipLabel.font = [UIFont systemFontOfSize:16.];
+        self.tipLabel.backgroundColor = [UIColor clearColor];
+        self.tipLabel.textColor = [UIColor st_colorWithRGB:0xFF4C00];
+        [headerView addSubview:self.tipLabel];
+        [self.view addSubview:headerView];
+        edgeInsets.top += headerView.height;
+    } else {
+        edgeInsets.top += 5;
+    }
     edgeInsets.bottom += 5;
     self.collectionView.contentInset = edgeInsets;
+    
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -746,13 +781,13 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
         return;
     }
     _hasAppeared = YES;
-    if (![self hasNextPage] && self.collectionView.numberOfSections > 0 && [self.collectionView numberOfItemsInSection:self.collectionView.numberOfSections - 1] > 0) {
-        [self.collectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:[self.collectionView numberOfItemsInSection:self.collectionView.numberOfSections - 1] - 1 inSection:self.collectionView.numberOfSections - 1] atScrollPosition:UICollectionViewScrollPositionBottom animated:NO];
-    }
+//    if (![self hasNextPage] && self.collectionView.numberOfSections > 0 && [self.collectionView numberOfItemsInSection:self.collectionView.numberOfSections - 1] > 0) {
+//        [self.collectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:[self.collectionView numberOfItemsInSection:self.collectionView.numberOfSections - 1] - 1 inSection:self.collectionView.numberOfSections - 1] atScrollPosition:UICollectionViewScrollPositionBottom animated:NO];
+//    }
 }
 
 - (void)backViewControllerActionFired:(id)sender {
-    [self.customNavigationController popViewControllerAnimated:YES];
+    [self.st_navigationController popViewControllerAnimated:YES];
 }
 
 #pragma mark - UICollectionViewDataSource
@@ -840,7 +875,7 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
     if (self.maximumNumberOfSelection == 1) {
         [collectionView deselectItemAtIndexPath:indexPath animated:YES];
         NSArray *imageArray = [self compressedImageWithAssets:@[self.dataSource[indexPath.row]]];
-        [STIndicatorView hideInView:self.customNavigationController.view animated:YES];
+        [STIndicatorView hideInView:self.st_navigationController.view animated:YES];
         if ([self.pickerDelegate respondsToSelector:@selector(assetViewController:didFinishWithPhotoArray:)]) {
             [self.pickerDelegate assetViewController:self didFinishWithPhotoArray:imageArray];
         }
@@ -877,21 +912,27 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
     }
 }
 
+- (void)dismissActionFired:(id)sender {
+    if ([self.pickerDelegate respondsToSelector:@selector(assetViewControllerDidCancel:)]) {
+        [self.pickerDelegate assetViewControllerDidCancel:self];
+    }
+}
+
 - (void)finishActionFired:(id)sender {
     NSArray *selectedItems = self.selectedAssets;
     if (selectedItems.count == 0) {
         return;
     }
-    [STIndicatorView showInView:self.customNavigationController.view animated:NO];
+    [STIndicatorView showInView:self.st_navigationController.view animated:NO];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        NSArray *sortedSelectedItems = [selectedItems sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-            NSInteger index0 = [self.dataSource indexOfObject:obj1];
-            NSInteger index1 = [self.dataSource indexOfObject:obj2];
-            return index0 > index1;
-        }];
-        NSArray *imageArray = [self compressedImageWithAssets:sortedSelectedItems];
+//        NSArray *sortedSelectedItems = [selectedItems sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+//            NSInteger index0 = [self.dataSource indexOfObject:obj1];
+//            NSInteger index1 = [self.dataSource indexOfObject:obj2];
+//            return index0 > index1;
+//        }];
+        NSArray *imageArray = [self compressedImageWithAssets:selectedItems];
         dispatch_async(dispatch_get_main_queue(), ^{
-            [STIndicatorView hideInView:self.customNavigationController.view animated:YES];
+            [STIndicatorView hideInView:self.st_navigationController.view animated:YES];
             if ([self.pickerDelegate respondsToSelector:@selector(assetViewController:didFinishWithPhotoArray:)]) {
                 [self.pickerDelegate assetViewController:self didFinishWithPhotoArray:imageArray];
             }
@@ -907,11 +948,12 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
         if (start + _STAssetViewControllerPageSize > [self numberOfAssets]) {
             range.length = [self numberOfAssets] - start;
         }
-        [self fetchAssetWithRange:range options:0];
+        [self fetchAssetWithRange:range options:NSEnumerationReverse];
     }
 }
 
 - (void)fetchAssetWithRange:(NSRange)range options:(NSEnumerationOptions)options {
+    
 }
 
 - (BOOL)hasNextPage {
@@ -927,7 +969,7 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
 }
 
 - (NSData *)compressedDataWithOriginalImage:(UIImage *)image {
-    STImagePickerController *pickerController = (STImagePickerController *)self.customNavigationController;
+    STImagePickerController *pickerController = (STImagePickerController *)self.st_navigationController;
     NSObject<STImageProcessDelegate> *processDelegate = [pickerController isKindOfClass:[STImagePickerController class]] ? pickerController.processDelegate : nil;
     if ([processDelegate respondsToSelector:@selector(compressedOriginalImage:)]) {
         return [processDelegate compressedOriginalImage:image];
@@ -936,7 +978,7 @@ NSString *const STImagePickerControllerImageSizeKey = @"STImagePickerControllerI
 }
 
 - (void)saveImageData:(NSData *)imageData withIdentifier:(NSString *)identifier {
-    STImagePickerController *pickerController = (STImagePickerController *)self.customNavigationController;
+    STImagePickerController *pickerController = (STImagePickerController *)self.st_navigationController;
     NSObject<STImageProcessDelegate> *processDelegate = [pickerController isKindOfClass:[STImagePickerController class]] ? pickerController.processDelegate : nil;
     if ([processDelegate respondsToSelector:@selector(saveImageData:withIdentifier:)]) {
         [processDelegate saveImageData:imageData withIdentifier:identifier];

@@ -24,7 +24,9 @@ void STImageWriteToPhotosAlbum(UIImage *image, NSString *album, STAlbumSaveHandl
 static STAlbumManager *_sharedManager;
 + (instancetype)sharedManager {
     static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{ _sharedManager = [[self alloc] init]; });
+    dispatch_once(&onceToken, ^{
+        _sharedManager = [[self alloc] init];
+    });
     return _sharedManager;
 }
 

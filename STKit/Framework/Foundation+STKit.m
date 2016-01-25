@@ -13,6 +13,21 @@
 #import <objc/message.h>
 #import <CommonCrypto/CommonDigest.h>
 
+ST_EXTERN void STExchangeSelectors(Class aClass, SEL oldSelector, SEL newSelector) {
+    Method oldMethod = class_getInstanceMethod(aClass, oldSelector);
+    Method newMethod = class_getInstanceMethod(aClass, newSelector);
+    
+    if (class_addMethod(aClass, oldSelector, method_getImplementation(newMethod), method_getTypeEncoding(newMethod))) {
+        class_replaceMethod(aClass, newSelector, method_getImplementation(oldMethod), method_getTypeEncoding(oldMethod));
+    } else {
+        method_exchangeImplementations(oldMethod, newMethod);
+    }
+}
+
+ST_EXTERN void STClassAddMethod(Class aClass, SEL selector, Method method) {
+    class_addMethod(aClass, selector,  method_getImplementation(method),  method_getTypeEncoding(method));
+}
+
 ST_EXTERN BOOL STClassIsKindOfClass(Class _class, Class parentClass) {
     if (!parentClass || !_class) {
         return NO;
@@ -138,7 +153,7 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
 
 @implementation NSObject (STKit)
 /// 设置全局变量的值,包括private类型的
-- (void)setValue:(id)value forVar:(NSString *)varName {
+- (void)st_setValue:(id)value forVar:(NSString *)varName {
     const char *varNameChar = [varName cStringUsingEncoding:NSUTF8StringEncoding];
     Ivar var = class_getInstanceVariable(self.class, varNameChar);
     if (var) {
@@ -173,7 +188,7 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     }
 }
 
-- (id)valueForVar:(NSString *)varName {
+- (id)st_valueForVar:(NSString *)varName {
     const char *varNameChar = [varName cStringUsingEncoding:NSUTF8StringEncoding];
     Ivar var = class_getInstanceVariable(self.class, varNameChar);
     if (var) {
@@ -189,7 +204,7 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return nil;
 }
 
-+ (BOOL)classRespondsToSelector:(SEL)aSelector {
++ (BOOL)st_classRespondsToSelector:(SEL)aSelector {
     return STClassRespondsToSelector(self, aSelector);
 }
 
@@ -198,7 +213,9 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
 @implementation NSObject (STPerformSelector)
 
 /// 注明： 如果返回值为基本类型，struct除外，其余都转换为NSNumber。 如果返回值是struct。则转为NSValue
-- (id)performSelector:(SEL)aSelector withObjects:(id)object, ... {
+- (id)st_performSelector:(SEL)aSelector withObjects:(id)object, ... {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
     NSMutableArray *parameters = [NSMutableArray arrayWithCapacity:2];
     if (object) {
         [parameters addObject:object];
@@ -226,7 +243,40 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
         for (int i = 2; i < numberOfArguments; i++) {
             NSInteger idx = i - 2;
             id parameter = (parameters.count > idx) ? parameters[idx] : nil;
-            [invocation setArgument:&parameter atIndex:i];
+            const char *argumentType = [methodSignature getArgumentTypeAtIndex:i];
+            if (strcmp(argumentType, @encode(id)) == 0 || strcmp(argumentType, @encode(Class)) == 0) {
+                [invocation setArgument:&parameter atIndex:i];
+            } else if (![parameter isKindOfClass:[NSNumber class]]) {
+                [invocation setArgument:&parameter atIndex:i];
+            } else {
+                NSNumber *value = parameter;
+                BOOL hasProcessed = NO;
+#define CASE(type, selectorPart) \
+    if (!hasProcessed && strcmp(argumentType, @encode(type)) == 0) { \
+        type primitiveValue = [value selectorPart ## Value]; \
+        [invocation setArgument:&primitiveValue atIndex:i]; \
+        hasProcessed = YES; \
+    }
+                CASE(char, char);
+                CASE(unsigned char, unsignedChar);
+                CASE(short, short);
+                CASE(unsigned short, unsignedShort);
+                CASE(int, int);
+                CASE(unsigned int, unsignedInt);
+                CASE(long, long);
+                CASE(unsigned long, unsignedLong);
+                CASE(long long, longLong);
+                CASE(unsigned long long, unsignedLongLong);
+                CASE(float, float);
+                CASE(double, double);
+                CASE(BOOL, bool);
+                CASE(NSInteger, integer);
+                CASE(NSUInteger, unsignedInteger);
+#undef CASE
+                if (!hasProcessed) {
+                    [invocation setArgument:&parameter atIndex:i];
+                }
+            }
         }
     }
     [invocation invokeWithTarget:self];
@@ -245,30 +295,25 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     returnValue = STCreateValueFromPrimitivePointer(buffer, type);
     free(buffer);
     return returnValue;
-}
-
-- (id)st_performSelector:(SEL)aSelector withObjects:(id)object, ... {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-    return [self performSelector:aSelector withObjects:object, nil];
 #pragma clang diagnostic pop
 }
+
 @end
 
 @implementation NSString (STKit)
 
-- (BOOL)contains:(NSString *)substring {
+- (BOOL)st_contains:(NSString *)substring {
     return [self rangeOfString:substring].location != NSNotFound;
 }
 
-- (NSString *)stringByTrimingWhitespace {
+- (NSString *)st_stringByTrimingWhitespace {
     if (self.length > 0) {
         return [self stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
     }
     return self;
 }
 
-- (NSArray *)rangesOfString:(NSString *)string {
+- (NSArray *)st_rangesOfString:(NSString *)string {
     NSMutableArray *ranges = [NSMutableArray arrayWithCapacity:2];
     NSUInteger location = 0;
     while (location < self.length) {
@@ -281,19 +326,23 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return ranges;
 }
 
-- (NSArray *)componentsSeparatedByRegex:(NSString *)regex {
-    return [self componentsSeparatedByRegex:regex regexRanges:nil];
+- (NSArray *)st_componentsSeparatedByRegex:(NSString *)regex {
+    return [self st_componentsSeparatedByRegex:regex regexRanges:nil];
 }
 
-- (NSArray *)componentsSeparatedByRegex:(NSString *)regex ranges:(NSArray **)ranges {
-    return [self componentsSeparatedByRegex:regex ranges:ranges checkingResults:nil];
+- (NSArray *)st_componentsSeparatedByRegex:(NSString *)regex ranges:(NSArray **)ranges {
+    return [self st_componentsSeparatedByRegex:regex
+                                        ranges:ranges
+                               checkingResults:nil];
 }
 
-- (NSArray *)componentsSeparatedByRegex:(NSString *)regex regexRanges:(NSArray **)ranges {
-    return [self componentsSeparatedByRegex:regex ranges:nil checkingResults:ranges];
+- (NSArray *)st_componentsSeparatedByRegex:(NSString *)regex regexRanges:(NSArray **)ranges {
+    return [self st_componentsSeparatedByRegex:regex
+                                        ranges:nil
+                               checkingResults:ranges];
 }
 
-- (NSArray *)componentsSeparatedByRegex:(NSString *)regex ranges:(NSArray **)_ranges checkingResults:(NSArray **)__ranges {
+- (NSArray *)st_componentsSeparatedByRegex:(NSString *)regex ranges:(NSArray **)_ranges checkingResults:(NSArray **)__ranges {
     NSError *error;
     NSRegularExpression *regularExpression =
         [NSRegularExpression regularExpressionWithPattern:regex
@@ -345,7 +394,7 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return substrings;
 }
 
-- (NSString *)stringByAddingHTMLEscapes {
+- (NSString *)st_stringByAddingHTMLEscapes {
     if (self.length == 0) {
         return self;
     }
@@ -376,7 +425,7 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return [mutableString copy];
 }
 
-- (NSString *)stringByReplacingHTMLEscapes {
+- (NSString *)st_stringByReplacingHTMLEscapes {
     if (self.length == 0) {
         return self;
     }
@@ -407,11 +456,11 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return [mutableString copy];
 }
 
-- (NSData *)UTF8EncodedData {
+- (NSData *)st_UTF8EncodedData {
     return [self dataUsingEncoding:NSUTF8StringEncoding];
 }
 
-- (NSString *)md5String {
+- (NSString *)st_md5String {
     const char *cStr = [self UTF8String];
     unsigned char result[CC_MD5_DIGEST_LENGTH];
     CC_MD5(cStr, (CC_LONG)strlen(cStr), result);
@@ -422,7 +471,7 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return [output copy];
 }
 
-- (NSString *)sha1String {
+- (NSString *)st_sha1String {
     const char *cStr = [self UTF8String];
     unsigned char result[CC_SHA1_DIGEST_LENGTH];
     CC_SHA1(cStr, (CC_LONG)strlen(cStr), result);
@@ -437,25 +486,25 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
 
 @implementation NSData (STKit)
 
-+ (NSData *)dataWithBase64EncodedString:(NSString *)base64String {
++ (NSData *)st_dataWithBase64EncodedString:(NSString *)base64String {
     if ([self instancesRespondToSelector:@selector(initWithBase64EncodedString:options:)]) {
         return [[self alloc] initWithBase64EncodedString:base64String options:NSDataBase64DecodingIgnoreUnknownCharacters];
     }
     return [[self alloc] initWithBase64Encoding:base64String];
 }
 
-- (NSString *)base64String {
+- (NSString *)st_base64String {
     if ([self respondsToSelector:@selector(base64EncodedStringWithOptions:)]) {
         return [self base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
     }
     return [self base64Encoding];
 }
 
-- (NSString *)UTF8String {
+- (NSString *)st_UTF8String {
     return [[NSString alloc] initWithData:self encoding:NSUTF8StringEncoding];
 }
 
-- (NSString *)md5String {
+- (NSString *)st_md5String {
     unsigned char result[16];
     if (self.length == 0) {
         return nil;
@@ -468,11 +517,24 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return [output copy];
 }
 
+- (NSString *)st_hexString {
+    const unsigned char *dataBuffer = (const unsigned char *)[self bytes];
+    if (!dataBuffer) {
+        return nil;
+    }
+    NSUInteger dataLength = [self length];
+    NSMutableString *hexString = [NSMutableString stringWithCapacity:(dataLength * 2)];
+    for (int i = 0; i < dataLength; i ++) {
+        [hexString appendString:[NSString stringWithFormat:@"%02lx", (unsigned long)dataBuffer[i]]];
+    }
+    return [NSString stringWithString:hexString];
+}
+
 @end
 
 @implementation NSString (STPagination)
 
-- (NSString *)reverseString {
+- (NSString *)st_reverseString {
     NSInteger length = self.length;
     unichar *reverseChars = (unichar *)malloc(sizeof(unichar) * length);
     for (NSInteger i = 0, j = length - 1; i < length; i++, j--) {
@@ -483,10 +545,10 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return resultStr;
 }
 
-- (NSString *)substringWithSeekOffset:(NSUInteger)_offset
-                    constrainedToSize:(CGSize)size
-                            direction:(STBookSeekDirection)direction
-                           attributes:(NSDictionary *)attributes {
+- (NSString *)st_substringWithSeekOffset:(NSUInteger)_offset
+                       constrainedToSize:(CGSize)size
+                               direction:(STBookSeekDirection)direction
+                              attributes:(NSDictionary *)attributes {
 
     NSUInteger offset = _offset;
     if (offset > self.length) {
@@ -503,7 +565,7 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     } else {
         NSInteger length = MIN(500, offset);
         NSRange range = NSMakeRange(offset - length, length);
-        childString = [[self substringWithRange:range] reverseString];
+        childString = [[self substringWithRange:range] st_reverseString];
     }
 
     UIBezierPath *path = [UIBezierPath bezierPathWithRect:rect];
@@ -518,7 +580,7 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     CFRelease(frame);
     CFRelease(framesetter);
 
-    return direction == STBookSeekDirectionForward ? pagedString : [pagedString reverseString];
+    return direction == STBookSeekDirectionForward ? pagedString : [pagedString st_reverseString];
 }
 
 /**
@@ -528,7 +590,8 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
  *分页所需的字符串样式,需要指定字体大小,行间距等。iOS6.0以上请参见UIKit中NSAttributedString的扩展,iOS6.0以下请参考CoreText中的CTStringAttributes.h
  * @param    size        需要参考的size。即在size区域内
  */
-- (NSArray *)paginationWithAttributes:(NSDictionary *)attributes constrainedToSize:(CGSize)size {
+- (NSArray *)st_paginationWithAttributes:(NSDictionary *)attributes
+                       constrainedToSize:(CGSize)size {
     NSMutableArray *resultRange = [NSMutableArray arrayWithCapacity:5];
     CGRect rect = CGRectMake(0, 0, size.width, size.height);
     // 构造NSAttributedString
@@ -560,7 +623,7 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
 
 @implementation NSString (STDrawSize)
 
-- (CGFloat)heightWithFont:(UIFont *)font constrainedToWidth:(CGFloat)width {
+- (CGFloat)st_heightWithFont:(UIFont *)font constrainedToWidth:(CGFloat)width {
     if (self.length == 0 || !font) {
         return 0;
     }
@@ -582,14 +645,14 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
 #pragma mark - NSNotificationOnMainThread
 @implementation NSNotificationCenter (STPostOnMainThread)
 
-- (void)postNotificationOnMainThread:(NSNotification *)notification {
+- (void)st_postNotificationOnMainThread:(NSNotification *)notification {
     if ([NSThread isMainThread]) {
         [self postNotification:notification];
     } else {
         dispatch_async(dispatch_get_main_queue(), ^{ [self postNotification:notification]; });
     }
 }
-- (void)postNotificationOnMainThreadWithName:(NSString *)aName object:(id)anObject {
+- (void)st_postNotificationOnMainThreadWithName:(NSString *)aName object:(id)anObject {
     if ([NSThread isMainThread]) {
         [self postNotificationName:aName object:anObject];
     } else {
@@ -597,7 +660,7 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     }
 }
 
-- (void)postNotificationOnMainThreadWithName:(NSString *)aName object:(id)anObject userInfo:(NSDictionary *)aUserInfo {
+- (void)st_postNotificationOnMainThreadWithName:(NSString *)aName object:(id)anObject userInfo:(NSDictionary *)aUserInfo {
     if ([NSThread isMainThread]) {
         [self postNotificationName:aName object:anObject userInfo:aUserInfo];
     } else {
@@ -641,7 +704,7 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
 @implementation NSTimer (STBlock)
 
 
-+ (NSTimer *)timerWithTimeInterval:(NSTimeInterval)timeInterval firedHandler:(STTimerFiredHandler)handler {
++ (NSTimer *)st_timerWithTimeInterval:(NSTimeInterval)timeInterval firedHandler:(STTimerFiredHandler)handler {
     if (!handler) {
         return nil;
     }
@@ -649,7 +712,7 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return [NSTimer timerWithTimeInterval:timeInterval target:timerWrapper selector:@selector(timerActionFired:) userInfo:nil repeats:YES];
 }
 
-+ (NSTimer *)scheduledTimerWithTimeInterval:(NSTimeInterval)timeInterval firedHandler:(STTimerFiredHandler)handler {
++ (NSTimer *)st_scheduledTimerWithTimeInterval:(NSTimeInterval)timeInterval firedHandler:(STTimerFiredHandler)handler {
     if (!handler) {
         return nil;
     }
@@ -657,7 +720,7 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return [NSTimer scheduledTimerWithTimeInterval:timeInterval target:timerWrapper selector:@selector(timerActionFired:) userInfo:nil repeats:YES];
 }
 
-- (instancetype)initWithFireDate:(NSDate *)date interval:(NSTimeInterval)interval  firedHandler:(STTimerFiredHandler)handler {
+- (instancetype)st_initWithFireDate:(NSDate *)date interval:(NSTimeInterval)interval  firedHandler:(STTimerFiredHandler)handler {
     if (!handler) {
         return nil;
     }
@@ -704,15 +767,60 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return self.components.second;
 }
 
-+ (NSDate *)dateWithMSTimeIntervalSince1970:(NSTimeInterval)millisecond {
++ (NSDate *)st_dateWithMSTimeIntervalSince1970:(NSTimeInterval)millisecond {
     return [NSDate dateWithTimeIntervalSince1970:millisecond * 0.001];
 }
 
-+ (NSString *)dateWithMSTimeIntervalSince1970:(NSTimeInterval)millisecond format:(NSString *)format {
-    NSDate *date = [self dateWithMSTimeIntervalSince1970:millisecond];
++ (NSString *)st_dateWithTimeIntervalSince1970:(NSTimeInterval)millisecond format:(NSString *)format {
+    NSDate *date = [self dateWithTimeIntervalSince1970:millisecond];
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     formatter.dateFormat = format;
     return [formatter stringFromDate:date];
+}
+
++ (NSString *)st_dateWithMSTimeIntervalSince1970:(NSTimeInterval)millisecond format:(NSString *)format {
+    NSDate *date = [self st_dateWithMSTimeIntervalSince1970:millisecond];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    formatter.dateFormat = format;
+    return [formatter stringFromDate:date];
+}
+
++ (NSString *)st_timestampFormattedStringWithTimeIntervalSince1970:(NSTimeInterval)millisecond {
+    NSDate *date = [NSDate dateWithTimeIntervalSince1970:millisecond];
+    return date.st_timestampFormattedString;
+}
+
+- (NSString *)st_timestampFormattedString {
+    NSString *result = nil;
+    NSTimeInterval timeInterval = [self timeIntervalSince1970];
+    NSTimeInterval nowInterval = [[NSDate date] timeIntervalSince1970];
+    
+    if(nowInterval >= timeInterval) {
+        NSInteger timeElapsed = nowInterval - timeInterval;
+        if(timeElapsed < 60) {
+            result = @"1分钟内";
+        } else if (timeElapsed < 3600) {
+            NSInteger minutes = timeElapsed / 60;
+            result = [NSString stringWithFormat:@"%lld分钟前", (long long)minutes];
+        } else if(timeElapsed < 24 * 3600) {
+            NSInteger hours = timeElapsed / 3600;
+            result = [NSString stringWithFormat:@"%lld小时前", (long long)hours];
+        }
+    }
+    static NSDateFormatter *formatter = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        formatter = [[NSDateFormatter alloc] init];
+    });
+    if ([NSDate date].year == self.year) {
+        formatter.dateFormat = @"MM-dd";
+    } else {
+        formatter.dateFormat = @"yyyy-MM-dd";
+    }
+    if (!result) {
+        result = [formatter stringFromDate:self];
+    }
+    return result;
 }
 
 @end
@@ -875,6 +983,17 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return nil;
 }
 
+- (NSString *)st_stringAtValueForKey:(NSString *)key {
+    if (!key) {
+        return nil;
+    }
+    id value = [self valueForKey:key];
+    if (!value) {
+        return nil;
+    }
+    return [NSString stringWithFormat:@"%@", value];
+}
+
 - (NSInteger)st_integerValueForKey:(NSString *)key {
     if (!key) {
         return 0;
@@ -890,7 +1009,7 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
 
 @implementation NSArray (STClass)
 
-- (BOOL)containsClass:(Class)class {
+- (BOOL)st_containsClass:(Class)class {
     __block BOOL contains = NO;
     [self enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         if ([obj isKindOfClass:class]) {
@@ -901,7 +1020,7 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return contains;
 }
 
-- (NSUInteger)indexOfClass:(Class)class {
+- (NSUInteger)st_indexOfClass:(Class)class {
     __block NSUInteger index = NSNotFound;
     [self enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
         if ([obj isKindOfClass:class]) {
@@ -912,11 +1031,11 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return index;
 }
 
-- (NSUInteger)firstIndexOfClass:(Class)class {
-    return [self indexOfClass:class];
+- (NSUInteger)st_firstIndexOfClass:(Class)class {
+    return [self st_indexOfClass:class];
 }
 
-- (NSUInteger)lastIndexOfClass:(Class)class {
+- (NSUInteger)st_lastIndexOfClass:(Class)class {
     __block NSUInteger index = NSNotFound;
     [self enumerateObjectsWithOptions:NSEnumerationReverse
                            usingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
@@ -928,16 +1047,16 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return index;
 }
 
-- (id)firstObjectOfClass:(Class)class {
-    NSUInteger idx = [self firstIndexOfClass:class];
+- (id)st_firstObjectOfClass:(Class)class {
+    NSUInteger idx = [self st_firstIndexOfClass:class];
     if (idx == NSNotFound) {
         return nil;
     }
     return self[idx];
 }
 
-- (id)lastObjectOfClass:(Class)class {
-    NSUInteger idx = [self lastIndexOfClass:class];
+- (id)st_lastObjectOfClass:(Class)class {
+    NSUInteger idx = [self st_lastIndexOfClass:class];
     if (idx == NSNotFound) {
         return nil;
     }
@@ -979,17 +1098,14 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     return [mutableString copy];
 }
 
-+ (instancetype)dictionaryWithURLQuery:(NSString *)URLQuery {
++ (instancetype)st_dictionaryWithURLQuery:(NSString *)URLQuery {
     NSMutableDictionary *result = [NSMutableDictionary dictionaryWithCapacity:2];
     NSArray *patterns = [URLQuery componentsSeparatedByString:@"&"];
     [patterns enumerateObjectsUsingBlock:^(NSString *pattern, NSUInteger idx, BOOL *stop) {
         NSArray *parts = [pattern componentsSeparatedByString:@"="];
         if (parts.count == 2) {
             NSString *key = parts[0];
-            NSString *value = parts[1];
-            if ([value contains:@"%"]) {
-                value = [value st_stringByURLDecoded];
-            }
+            NSString *value = [parts[1] st_stringByURLDecoded];
             [result setValue:value forKey:key];
         }
     }];
@@ -1011,14 +1127,34 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
 }
 
 - (NSString *)st_stringByURLDecoded {
+    NSString *originalString = self;
+    if ([self st_contains:@"+"]) {
+        originalString = [self stringByReplacingOccurrencesOfString:@"+" withString:@"%20"];
+    }
     CFStringRef decodedCFString =
-    CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault, (__bridge CFStringRef)self, CFSTR(""), kCFStringEncodingUTF8);
+    CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault, (__bridge CFStringRef)originalString, CFSTR(""), kCFStringEncodingUTF8);
     NSString *resultString = [NSString stringWithString:(__bridge NSString *)(decodedCFString)];
     CFRelease(decodedCFString);
     return resultString;
 }
 
 @end
+
+#include <sys/sysctl.h>
+
+NSString *STGetSystemInfoByName(char *typeSpecifier) {
+    size_t size;
+    sysctlbyname(typeSpecifier, NULL, &size, NULL, 0);
+    char *answer = malloc(size);
+    sysctlbyname(typeSpecifier, answer, &size, NULL, 0);
+    NSString *results = [NSString stringWithCString:answer encoding: NSUTF8StringEncoding];
+    free(answer);
+    return results;
+}
+
+NSString *STGetMachineID(void) {
+    return STGetSystemInfoByName("hw.machine");
+}
 
 NSString *STKitGetVersion(void) {
     return @"2.0";

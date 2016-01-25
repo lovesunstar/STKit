@@ -10,12 +10,12 @@
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
 
-typedef enum STAudioPlayerStatus {
+typedef NS_ENUM(NSInteger, STAudioPlayerStatus) {
     STAudioPlayerStatusUnknown,
     STAudioPlayerStatusBuffering,   // 可能会涉及到网络文件的播放，当缓冲中，就会处于该状态
     STAudioPlayerStatusReadyToPlay, // 音频数据即将被播放
     STAudioPlayerStatusFailed       // 音频播放失败
-} STAudioPlayerStatus;
+};
 
 @interface STAudioPlayer : NSObject
 

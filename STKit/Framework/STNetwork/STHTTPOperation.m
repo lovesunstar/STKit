@@ -96,7 +96,7 @@ static NSThread *_standardNetworkThread;
         if ([NSOperation instancesRespondToSelector:@selector(setName:)]) {
             self.name = @"STNetworkOperation";
         }
-        _originalURLRequest = [self.request valueForVar:@"_mutableURLRequest"];
+        _originalURLRequest = [self.request st_valueForVar:@"_mutableURLRequest"];
     }
     return self;
 }
@@ -342,7 +342,17 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
     /// 请求失败
-    [self _notifyFinishWithOperation:self responseData:nil error:error];
+    NSInteger errCode = error.code;
+    NSArray *badNetworkCodes = @[@(NSURLErrorCannotConnectToHost), @(NSURLErrorCannotFindHost), @(NSURLErrorNetworkConnectionLost), @(NSURLErrorDNSLookupFailed), @(NSURLErrorNotConnectedToInternet), @(NSURLErrorCannotLoadFromNetwork)];
+    NSError *newError = nil;
+    if ([badNetworkCodes containsObject:@(errCode)]) {
+        newError = [NSError errorWithDomain:STHTTPNetworkErrorDomain code:STHTTPNetworkErrorCodeBadNetwork userInfo:error.userInfo];
+    } else if (errCode == NSURLErrorTimedOut) {
+        newError = [NSError errorWithDomain:STHTTPNetworkErrorDomain code:STHTTPNetworkErrorCodeTimeout userInfo:error.userInfo];
+    } else {
+        newError = error;
+    }
+    [self _notifyFinishWithOperation:self responseData:nil error:newError];
     self.operationState = STHTTPOperationStateFinished;
 }
 
@@ -441,6 +451,8 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
                 [self _preprocessRequest:(NSMutableURLRequest *)_originalURLRequest withHTTPConfiguration:configuration completionHandler:^(NSHTTPURLResponse *response, NSData *data, NSError *error, BOOL shouldContinue) {
                     if (shouldContinue) {
                         [self _notifyWillStartWithOperation:self];
+//                        NSURLSessionDataTask *task = [self.URLSession dataTaskWithRequest:_originalURLRequest];
+//                        [task resume];
                         NSURLConnection *URLConnection = [[NSURLConnection alloc] initWithRequest:_originalURLRequest delegate:self startImmediately:NO];
                         [URLConnection scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
                         [URLConnection start];
@@ -583,7 +595,7 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
             [self didChangeValueForKey:@"isCancelled"];
         }
         NSError *error = [NSError errorWithDomain:STHTTPNetworkErrorDomain
-                                             code:STNetworkErrorCodeUserCancelled
+                                             code:STHTTPNetworkErrorCodeUserCancelled
                                          userInfo:@{
                                                     STHTTPNetworkErrorDescriptionUserInfoKey : @"Request has been cancelled."
                                                     }];

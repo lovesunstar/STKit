@@ -64,8 +64,8 @@ static STPayManager *_payManger;
 - (BOOL)payForItem:(STPayItem *)payItem finishHandler:(STPayHandler)handler {
     UIViewController *topmostViewController = [STApplicationContext sharedContext].topmostViewController;
     STPayViewController *payViewController = [[STPayViewController alloc] initWithPayItem:payItem handler:handler];
-    if (topmostViewController.customNavigationController) {
-        [topmostViewController.customNavigationController pushViewController:payViewController animated:YES];
+    if (topmostViewController.st_navigationController) {
+        [topmostViewController.st_navigationController pushViewController:payViewController animated:YES];
     } else if (topmostViewController.navigationController) {
         [topmostViewController.navigationController pushViewController:payViewController animated:YES];
     } else {
@@ -96,7 +96,7 @@ static STPayManager *_payManger;
     }
     //    stkit://pay?name=123&title=1234&description=1234&price=4000&count=1&amount=4000&allowsEditing=1&platforms=3#1
     NSString *query = [URL query];
-    NSDictionary *parameters = [self _dictionaryWithURLQuery:query];
+    NSDictionary *parameters = [NSDictionary st_dictionaryWithURLQuery:query];
     STPayItem *payItem = [[STPayItem alloc] initWithDictionary:parameters];
     [self payForItem:payItem finishHandler:^(STPayItem *payItem, STPayResult result, NSError *error) {
         NSLog(@"%@", payItem);
@@ -114,33 +114,12 @@ static STPayManager *_payManger;
     return YES;
 }
 
-- (NSDictionary *)_dictionaryWithURLQuery:(NSString *)query {
-    if (![query isKindOfClass:[NSString class]]) {
-        return nil;
-    }
-
-    NSString * (^trimString)(NSString *) = ^(NSString *string) {
-        return [string stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-    };
-    NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithCapacity:2];
-    NSArray *compontents = [query componentsSeparatedByString:@"&"];
-    [compontents enumerateObjectsUsingBlock:^(NSString *obj, NSUInteger idx, BOOL *stop) {
-        NSArray *temp = [obj componentsSeparatedByString:@"="];
-        if (temp.count > 1) {
-            NSString *key = trimString(temp[0]);
-            NSString *value = trimString(temp[1]);
-            if (key.length > 0 && value.length > 0) {
-                if ([value rangeOfString:@"%"].length > 0) {
-                    value = [value stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-                }
-                [parameters setValue:value forKey:key];
-            }
-        }
-    }];
-    return parameters;
-}
-
 @end
 
-BOOL STPayManagerOpenURL(NSURL *URL) { return [[STPayManager sharedPayManager] _handleOpenURL:URL]; }
-BOOL STPayManagerCanOpenURL(NSURL *URL) { return [[STPayManager sharedPayManager] canOpenURL:URL]; }
+BOOL STPayManagerOpenURL(NSURL *URL) {
+    return [[STPayManager sharedPayManager] _handleOpenURL:URL];
+}
+
+BOOL STPayManagerCanOpenURL(NSURL *URL) {
+    return [[STPayManager sharedPayManager] canOpenURL:URL];
+}

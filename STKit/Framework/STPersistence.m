@@ -58,18 +58,10 @@ NSString *STPersistTemporyDirectory() {
 
 @interface STPersistence ()
 
-@property(nonatomic, copy) NSString *cacheDirectory;
+@property(nonatomic, copy) NSString *cacheFileDirectory;
 @property(nonatomic, strong) NSFileManager  *fileManager;
 
 @end
-
-@interface _STUserDefaults : STPersistence
-
-@property(nonatomic, copy) NSString *filePath;
-- (instancetype)initWithName:(NSString *)name;
-- (void)resetPersistence;
-@end
-
 
 @implementation STPersistence
 
@@ -82,8 +74,8 @@ NSString *STPersistTemporyDirectory() {
         return [fileManager removeItemAtPath:path error:nil];
     }
     NSMutableDictionary *dictionary = [NSMutableDictionary dictionaryWithCapacity:2];
-    [dictionary setValue:value forKey:@"data"];
-    [dictionary setValue:key forKey:@"key"];
+    
+    [dictionary setValue:value forKey:key];
     return [dictionary writeToFile:path atomically:YES];
 }
 
@@ -92,10 +84,7 @@ NSString *STPersistTemporyDirectory() {
         return nil;
     }
     NSDictionary *dictionary = [NSDictionary dictionaryWithContentsOfFile:path];
-    if ([dictionary[@"key"] isEqualToString:key]) {
-        return dictionary[@"data"];
-    }
-    return nil;
+    return dictionary[key];
 }
 
 - (instancetype)init {
@@ -105,8 +94,8 @@ NSString *STPersistTemporyDirectory() {
 - (instancetype)initWithDirectory:(STPersistenceDirectory)directory subpath:(NSString *)subpath {
     self = [super init];
     if (self) {
-        self.cacheDirectory =[self _persistPath:subpath inDirectory:directory];
-        if (!self.cacheDirectory) {
+        self.cacheFileDirectory =[self _persistPath:subpath inDirectory:directory];
+        if (!self.cacheFileDirectory) {
             self = nil;
         }
         self.fileManager = [[NSFileManager alloc] init];
@@ -114,8 +103,19 @@ NSString *STPersistTemporyDirectory() {
     return self;
 }
 
+- (NSString *)cacheDirectory {
+    return _cacheFileDirectory;
+}
+
 - (NSString *)cachedPathForKey:(NSString *)key {
-    return [self.cacheDirectory stringByAppendingPathComponent:key.md5String];
+    return [self.cacheDirectory stringByAppendingPathComponent:key.st_md5String];
+}
+
+- (BOOL)containsValueForKey:(NSString *)key {
+    if (key.length == 0) {
+        return NO;
+    }
+    return [self.fileManager fileExistsAtPath:[self cachedPathForKey:key]];
 }
 
 - (void)setValue:(id)value forKey:(NSString *)key {
@@ -164,6 +164,19 @@ NSString *STPersistTemporyDirectory() {
     return path;
 }
 
+@end
+
+@interface _STUserDefaults : STPersistence
+
+@property(nonatomic, copy) NSString *filePath;
+- (instancetype)initWithName:(NSString *)name;
+- (void)resetPersistence;
+
+@end
+
+
+@implementation STPersistence (STFileBased)
+
 static _STUserDefaults *_userDefaults;
 + (instancetype)standardPersistence {
     static dispatch_once_t onceToken;
@@ -172,11 +185,6 @@ static _STUserDefaults *_userDefaults;
     });
     return _userDefaults;
 }
-
-+ (void)resetStandardPersistence {
-    [_userDefaults performSelector:@selector(resetPersistence) withObjects:nil, nil];
-}
-
 
 static NSMutableDictionary *_persistences;
 + (instancetype)persistenceNamed:(NSString *)name {
@@ -198,14 +206,11 @@ static NSMutableDictionary *_persistences;
     return [_persistences valueForKey:name];
 }
 
-+ (void)resetPersistenceNamed:(NSString *)name {
-    _STUserDefaults *userDefaults = [self persistenceNamed:name];
-    [userDefaults resetPersistence];
-}
-
 @end
 
-@implementation _STUserDefaults
+@implementation _STUserDefaults {
+    NSMutableDictionary *_memoryDictionary;
+}
 
 - (instancetype)initWithName:(NSString *)name {
     self = [super initWithDirectory:STPersistenceDirectoryLibiary subpath:nil];
@@ -218,6 +223,13 @@ static NSMutableDictionary *_persistences;
     }
     if (self) {
         self.filePath = [self.cacheDirectory stringByAppendingPathComponent:name];
+        
+        _memoryDictionary = [NSMutableDictionary dictionaryWithCapacity:20];
+        NSDictionary *defaults = [NSDictionary dictionaryWithContentsOfFile:_filePath];
+        if ([defaults isKindOfClass:[NSDictionary class]]) {
+            [_memoryDictionary addEntriesFromDictionary:defaults];
+        }
+        
     }
     return self;
 }
@@ -238,25 +250,31 @@ static NSMutableDictionary *_persistences;
     if (key.length == 0) {
         return;
     }
-    NSMutableDictionary *dictionary;
-    NSDictionary *defaults = [NSDictionary dictionaryWithContentsOfFile:_filePath];
-    if ([defaults isKindOfClass:[NSDictionary class]]) {
-        dictionary = [defaults mutableCopy];
-    }
-    if (!dictionary) {
-        dictionary = [NSMutableDictionary dictionaryWithCapacity:2];
-    }
-    [dictionary setValue:value forKey:key];
-    [dictionary writeToFile:_filePath atomically:YES];
+    [_memoryDictionary setValue:value forKey:key];
+    [_memoryDictionary writeToFile:_filePath atomically:YES];
 }
 
 - (id)valueForKey:(NSString *)key {
-    NSDictionary *dictionary = [NSDictionary dictionaryWithContentsOfFile:_filePath];
-    return [dictionary valueForKey:key];
+    if (key.length == 0) {
+        return nil;
+    }
+    return [_memoryDictionary valueForKey:key];
+}
+
+- (BOOL)containsValueForKey:(NSString *)key {
+    if (key.length == 0) {
+        return NO;
+    }
+    return ([_memoryDictionary objectForKey:key] != nil);
+}
+
+- (NSString *)cachedPathForKey:(NSString *)key {
+    return self.filePath;
 }
 
 - (void)resetPersistence {
     NSDictionary *dictionary = @{};
+    [_memoryDictionary removeAllObjects];
     [dictionary writeToFile:_filePath atomically:YES];
 }
 
@@ -309,7 +327,54 @@ static NSMutableDictionary *_persistences;
 
 @implementation STPersistence (STPersistenceClean)
 
+- (unsigned long long)cachedSize {
+    NSString *cacheDirectory = self.cacheDirectory;
+    unsigned long long result = 0;
+    NSDirectoryEnumerator *fileEnumerator = [self.fileManager enumeratorAtPath:cacheDirectory];
+    for (NSString *fileName in fileEnumerator) {
+        @autoreleasepool {
+            NSString *filePath = [cacheDirectory stringByAppendingPathComponent:fileName];
+            NSDictionary *attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:nil];
+            result += [attrs fileSize];
+        }
+    }
+    return result;
+}
+
+- (void)calculateCacheSizeWithCompletionHandler:(void(^)(unsigned long long))completionHandler {
+    [self calculateCacheSizeInQueue:nil completionHandler:completionHandler];
+}
+
+- (void)calculateCacheSizeInQueue:(dispatch_queue_t)backgroundQueue completionHandler:(void(^)(unsigned long long))completionHandler {
+    if (!backgroundQueue) {
+        backgroundQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0);
+    }
+    dispatch_async(backgroundQueue, ^{
+        NSString *cacheDirectory = self.cacheDirectory;
+        unsigned long long result = 0L;
+        NSUInteger fileCount = 0;
+        NSDirectoryEnumerator *fileEnumerator = [self.fileManager enumeratorAtPath:cacheDirectory];
+        for (NSString *fileName in fileEnumerator) {
+            @autoreleasepool {
+                NSString *filePath = [cacheDirectory stringByAppendingPathComponent:fileName];
+                NSDictionary *attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:nil];
+                result += [attrs fileSize];
+                fileCount += 1;
+            }
+        }
+        if (completionHandler) {
+            completionHandler(result);
+        }
+    });
+}
+
+
 - (void)removeAllCachedValues {
+    if ([self respondsToSelector:@selector(resetPersistence)]) {
+        [self st_performSelector:@selector(resetPersistence) withObjects:nil, nil];
+        return;
+    }
+    
     NSString *directory = self.cacheDirectory;
     NSDirectoryEnumerator *enumerator = [self.fileManager enumeratorAtPath:directory];
     // 先清空子目录，最后删除文件夹
@@ -330,6 +395,35 @@ static NSMutableDictionary *_persistences;
             NSString *subpath = [directory stringByAppendingPathComponent:subname];
             [self.fileManager removeItemAtPath:subpath error:nil];
         }
+    }
+}
+
+
+- (void)removeCachedValuesBeforeDate:(NSDate *)date {
+    if (!date) {
+        date = [NSDate date];
+    }
+    NSURL *diskCacheURL = [NSURL fileURLWithPath:[self cacheDirectory] isDirectory:YES];
+    NSArray *resourceKeys = @[NSURLIsDirectoryKey, NSURLContentModificationDateKey, NSURLTotalFileAllocatedSizeKey];
+    NSDirectoryEnumerator *fileEnumerator = [self.fileManager enumeratorAtURL:diskCacheURL
+                                              includingPropertiesForKeys:resourceKeys
+                                                                 options:NSDirectoryEnumerationSkipsHiddenFiles
+                                                            errorHandler:NULL];
+    NSMutableArray *urlsToDelete = [[NSMutableArray alloc] init];
+    for (NSURL *fileURL in fileEnumerator) {
+        NSDictionary *resourceValues = [fileURL resourceValuesForKeys:resourceKeys error:NULL];
+        if ([resourceValues[NSURLIsDirectoryKey] boolValue]) {
+            continue;
+        }
+        // Remove files that are older than the expiration date;
+        NSDate *modificationDate = resourceValues[NSURLContentModificationDateKey];
+        BOOL shouldDelete = !modificationDate || ([modificationDate timeIntervalSinceDate:date] < 0);
+        if (shouldDelete) {
+            [urlsToDelete addObject:fileURL];
+        }
+    }
+    for (NSURL *fileURL in urlsToDelete) {
+        [self.fileManager removeItemAtURL:fileURL error:nil];
     }
 }
 

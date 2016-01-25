@@ -15,7 +15,6 @@
 @interface STImageScrollView () <UIScrollViewDelegate, UIGestureRecognizerDelegate>
 
 @property(nonatomic, strong) UIImageView *imageView;
-@property(nonatomic, assign) NSTimeInterval previousTapTimeInterval;
 @property(nonatomic, strong) STRoundProgressView *roundProgressView;
 @property(nonatomic, assign) BOOL                 respondsToGesture;
 
@@ -92,7 +91,7 @@
     self.roundProgressView.completion = 0;
     self.roundProgressView.hidden = NO;
     self.roundProgressView.center = CGPointMake(self.imageView.bounds.size.width / 2, self.imageView.bounds.size.height / 2);
-    self.imageView.placeholderImage = self.imageView.image;
+    self.imageView.st_placeholderImage = self.imageView.image;
     static NSString *previousURLString;
     [[self class] cancelPreviousPerformRequestsWithTarget:self selector:@selector(displayImageWithURL:) object:previousURLString];
     previousURLString = imageURL;
@@ -101,15 +100,17 @@
 
 - (void)displayImageWithURL:(NSString *)URLString {
     __weak STImageScrollView *weakSelf = self;
-    [self.imageView setImageWithURLString:URLString
-        progressHandler:^(CGFloat completion) { [weakSelf.roundProgressView setCompletion:completion animated:YES]; }
-        finishedHandler:^(UIImage *image, NSString *URLString, BOOL usingCache, NSError *error) {
-            if (image) {
-                weakSelf.roundProgressView.hidden = YES;
-                weakSelf.pinchGestureRecognizer.enabled = YES;
-                weakSelf.respondsToGesture = YES;
-                [weakSelf setImage:image animated:YES];
-            }
+    [self.imageView st_setImageWithURLString:URLString
+                             progressHandler:^(CGFloat completion) {
+                                 [weakSelf.roundProgressView setCompletion:completion animated:YES];
+                             }
+                             finishedHandler:^(UIImage *image, NSString *URLString, BOOL usingCache, NSError *error) {
+                                if (image) {
+                                    weakSelf.roundProgressView.hidden = YES;
+                                    weakSelf.pinchGestureRecognizer.enabled = YES;
+                                    weakSelf.respondsToGesture = YES;
+                                    [weakSelf setImage:image animated:YES];
+                                }
         }];
 }
 

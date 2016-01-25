@@ -64,7 +64,7 @@ extern SecKeyRef STSecPublicKeyFromDERData(NSData *data) {
 }
 
 extern SecKeyRef STSecPublicKeyFromDERBase64String(NSString *base64String) {
-    NSData *data = [NSData dataWithBase64EncodedString:base64String];
+    NSData *data = [NSData st_dataWithBase64EncodedString:base64String];
     return STSecPublicKeyFromDERData(data);
 }
 
@@ -231,7 +231,7 @@ SecKeyRef _STExtractSecKeyFromPEMData(NSData *data, BOOL privateKey) {
     if (!privateKey) {
         data = _STStripPublicKeyHeaderWithData(data);
     }
-    NSData *tagData = [STSecAttrApplicationTag UTF8EncodedData];
+    NSData *tagData = [STSecAttrApplicationTag st_UTF8EncodedData];
     // Delete any old lingering key with the same tag
     NSMutableDictionary *query = [@{
                                     (__bridge id)kSecClass : (__bridge id)kSecClassKey, (__bridge id)
@@ -338,7 +338,7 @@ NSData *_STExtractKeyContentFromPEMString(NSString *string) {
     NSString *base64String =
     [content stringByTrimmingCharactersInSet:
      [NSCharacterSet whitespaceAndNewlineCharacterSet]];
-    return [NSData dataWithBase64EncodedString:base64String];
+    return [NSData st_dataWithBase64EncodedString:base64String];
 }
 
 NSData *_STStripPublicKeyHeaderWithData(NSData *data) {

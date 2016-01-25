@@ -151,15 +151,13 @@ typedef void (^STXMLReaderHandler)(NSXMLParser *XMLparser, id object, NSError *e
 @end
 
 static NSString *const STHTTPNetworkDomain = @"com.suen.network.http";
-@interface STHTTPNetwork ()
+
+@interface STHTTPNetwork () <NSURLSessionDelegate>
 
 @property(nonatomic, strong) STNetworkConfiguration *configuraiton;
 /// 回调Queue
 @property(nonatomic, strong) NSOperationQueue   *networkQueue;
-
-@end
-
-@interface STHTTPNetwork (STXMLParser)
+@property(nonatomic, strong) NSURLSession       *URLSession;
 
 @end
 
@@ -208,6 +206,8 @@ static NSURLCache *_HTTPCache;
     if (self) {
         self.configuraiton = configuration;
         _maxConcurrentRequestCount = 6;
+        
+        self.URLSession = [NSURLSession sessionWithConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration] delegate:self delegateQueue:self.networkQueue];
     }
     return self;
 }
@@ -233,11 +233,11 @@ static NSURLCache *_HTTPCache;
         [operation.request prepareToRequest];
         NSData *data = [NSURLConnection sendSynchronousRequest:operation.request.URLRequest returningResponse:&URLResponse error:&error];
         if (operation.finishedHandler) {
-            [operation setValue:URLResponse forVar:@"_HTTPResponse"];
+            [operation st_setValue:URLResponse forVar:@"_HTTPResponse"];
             operation.finishedHandler(operation, data, error);
         }
     } else {
-        [operation setValue:self forVar:@"_networkDelegate"];
+        [operation st_setValue:self forVar:@"_networkDelegate"];
         if (!operation.configuration) {
             operation.configuration = self.configuraiton;
         }

@@ -33,6 +33,7 @@
     [HTTPBody appendData:[@"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
     return HTTPBody;
 }
+
 @end
 
 @interface STHTTPBodyItem : NSObject
@@ -67,6 +68,10 @@
 
 @end
 
+static NSArray *STQueryComponentsWithParameters(NSDictionary *parameters);
+static NSArray *STQueryComponents(NSString *key, id value);
+
+
 @interface NSArray (STNetwork)
 
 - (NSString *)st_componentsJoinedUsingURLEncode;
@@ -80,6 +85,7 @@
     NSString    *_URLString;
     NSString    *_HTTPMethod;
     NSMutableURLRequest *_mutableURLRequest;
+    NSTimeInterval _timeoutInterval;
 }
 @property (nonatomic, strong)NSMutableDictionary    *parameters;
 + (BOOL)supportGZipCompress;
@@ -88,7 +94,7 @@
 @implementation STHTTPRequest
 
 - (instancetype)init {
-    return [self initWithURLString:nil HTTPMethod:nil parameters:nil];
+    return [self initWithURLString:@"" HTTPMethod:@"POST" parameters:nil];
 }
 
 - (instancetype)initWithURLString:(NSString *)URLString HTTPMethod:(NSString *)HTTPMethod parameters:(NSDictionary *)parameters {
@@ -123,8 +129,12 @@
         _mutableURLRequest.HTTPMethod = HTTPConfiguration.HTTPMethod;
         _HTTPMethod = HTTPConfiguration.HTTPMethod;
     }
-    if (_mutableURLRequest.timeoutInterval == 0) {
+    if (_timeoutInterval == 0) {
+        _timeoutInterval = HTTPConfiguration.timeoutInterval;
         _mutableURLRequest.timeoutInterval = HTTPConfiguration.timeoutInterval;
+    }
+    if (_mutableURLRequest.timeoutInterval == 0) {
+        _mutableURLRequest.timeoutInterval = 60;
     }
     _mutableURLRequest.cachePolicy = HTTPConfiguration.cachePolicy;
     _HTTPConfiguration = HTTPConfiguration;
@@ -146,18 +156,7 @@
         _mutableURLRequest.HTTPMethod = HTTPMethod;
     }
     NSArray *bodyHTTPMethods = @[@"PUT", @"POST", @"PATCH"];
-    NSMutableArray *unwrapParameters = [NSMutableArray arrayWithCapacity:self.parameters.count];
-    [self.parameters enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
-        if ([obj isKindOfClass:[NSArray class]]) {
-            [obj enumerateObjectsUsingBlock:^(id element, NSUInteger idx, BOOL *stop) {
-                STHTTPBodyItem *item = [[STHTTPBodyItem alloc] initWithFieldName:key value:element];
-                [unwrapParameters addObject:item];
-            }];
-        } else {
-            STHTTPBodyItem *item = [[STHTTPBodyItem alloc] initWithFieldName:key value:obj];
-            [unwrapParameters addObject:item];
-        }
-    }];
+    NSArray *unwrapParameters = STQueryComponentsWithParameters(self.parameters);
     if ([bodyHTTPMethods containsObject:HTTPMethod]) {
         [self reloadHTTPBodyWithParameters:unwrapParameters compressed:compressedRequest];
     } else {
@@ -414,8 +413,38 @@
     if (result.length == 0) {
         return self;
     }
-    NSString *connector = ([self contains:@"?"])? @"&" : @"?";
+    NSString *connector = ([self st_contains:@"?"])? @"&" : @"?";
     return [self stringByAppendingFormat:@"%@%@", connector, result];
 }
 
 @end
+
+
+static NSArray *STQueryComponentsWithParameters(NSDictionary *parameters) {
+    NSMutableArray *components = [NSMutableArray arrayWithCapacity:10];
+    [parameters enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
+        [components addObjectsFromArray:STQueryComponents(key, obj)];
+    }];
+    return components;
+}
+
+static NSArray *STQueryComponents(NSString *key, id value) {
+    NSMutableArray *components = [NSMutableArray arrayWithCapacity:10];
+    if ([value isKindOfClass:[NSDictionary class]]) {
+        [value enumerateKeysAndObjectsUsingBlock:^(id nestedKey, id  obj, BOOL *stop) {
+            [components addObjectsFromArray:STQueryComponents([NSString stringWithFormat:@"%@[%@]", key, nestedKey], obj)];
+        }];
+    } else if ([value isKindOfClass:[NSArray class]]) {
+        [value enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+            [components addObjectsFromArray:STQueryComponents([NSString stringWithFormat:@"%@[]", key], obj)];
+        }];
+    } else {
+        STHTTPBodyItem *item = [[STHTTPBodyItem alloc] initWithFieldName:key value:value];
+        [components addObject:item];
+    }
+    return components;
+}
+
+NSString *STJoinQueryComponentsWithParameters(NSDictionary *parameters) {
+    return [STQueryComponentsWithParameters(parameters) st_componentsJoinedUsingURLEncode];
+}

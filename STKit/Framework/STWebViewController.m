@@ -81,8 +81,7 @@
 @property(nonatomic, strong) STWebViewToolbar *toolbar;
 @property(nonatomic, strong) NSURL    *URL;
 
-@property(nonatomic, strong) UILabel  *titleLabel;
-@property(nonatomic, copy)   NSString *contentsOfFile;
+@property(nonatomic, strong) void (^loadContentHandler)(UIWebView *webView);
 @end
 
 @implementation STWebViewController
@@ -111,14 +110,6 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-
-    UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectZero];
-    titleLabel.backgroundColor = [UIColor clearColor];
-    titleLabel.font = [UIFont systemFontOfSize:14.];
-    titleLabel.textColor = [UIColor colorWithRGB:0xFF7300];
-    titleLabel.textAlignment = NSTextAlignmentCenter;
-    self.navigationItem.titleView = titleLabel;
-    self.titleLabel = titleLabel;
 
     self.edgesForExtendedLayout = (UIRectEdgeLeft | UIRectEdgeRight);
     // Do any additional setup after loading the view.
@@ -158,7 +149,9 @@
     self.toolbar.hidden = self.webViewBarHidden;
     
     [self _loadRequest];
-    [self _loadWebViewContent];
+    if (self.loadContentHandler) {
+        self.loadContentHandler(self.webView);
+    }
 }
 
 - (void)_loadRequest {
@@ -169,10 +162,6 @@
         NSURLRequest *URLRequest = [NSURLRequest requestWithURL:self.URL];
         [self.webView loadRequest:URLRequest];
     }
-}
-
-- (void)_loadWebViewContent {
-    
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -265,7 +254,7 @@
     if (!title) {
         title = [webView stringByEvaluatingJavaScriptFromString:@"document.title"];
     }
-    self.titleLabel.text = title;
+    self.navigationItem.title = title;
 }
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
     if (self.showIndicatorWhenLoading) {
@@ -284,19 +273,17 @@
 - (instancetype)initWithContentsOfFile:(NSString *)path {
     self = [self initWithURLString:nil];
     if (self) {
-        self.contentsOfFile = path;
+        self.loadContentHandler = ^(UIWebView *webView){
+            if (path) {
+                NSError *error = nil;
+                NSString *contents = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&error];
+                if (contents) {
+                    [webView loadHTMLString:contents baseURL:nil];
+                }
+            }
+        };
     }
     return self;
-}
-
-- (void)_loadWebViewContent {
-    if (self.contentsOfFile) {
-        NSError *error = nil;
-        NSString *contents = [NSString stringWithContentsOfFile:self.contentsOfFile encoding:NSUTF8StringEncoding error:&error];
-        if (contents) {
-            [self.webView loadHTMLString:contents baseURL:nil];
-        }
-    }
 }
 
 @end

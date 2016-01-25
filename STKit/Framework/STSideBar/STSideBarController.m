@@ -15,17 +15,27 @@
 #import "STNavigationBar.h"
 #import "STNavigationController.h"
 
-typedef enum { STDirectionLeft = 1, STDirectionRight = 2 } STDirection;
+@interface UIViewController (STTopNavigationBar)
 
-typedef enum {
+- (UINavigationBar *)st_topNavigationBar;
+
+@end
+
+typedef NS_ENUM(NSInteger, STDirection) {
+    STDirectionLeft = 1,
+    STDirectionRight = 2
+};
+
+typedef NS_ENUM(NSInteger, _STSideViewState) {
     STSideViewWillAppear,
     STSideViewDidAppear,
     STSideViewTranslation,
     STSideViewWillDisappear,
     STSideViewDidDisappear,
-} _STSideViewState;
+};
 
 const CGFloat STMinSideBarInteractionOffset = 10.;
+const CGFloat STSideBarChangeDuration = 0.45;
 
 @interface STSideBarController () <UIGestureRecognizerDelegate>
 
@@ -35,46 +45,63 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
 @property(nonatomic, strong) UIView *containerView;
 @property(nonatomic, strong) UIView *hitTestView;
 
-@property(nonatomic, assign) CGRect standardViewFrame;
-
 @property(nonatomic, strong) UIPanGestureRecognizer *panGestureRecognizer;
 @property(nonatomic, strong) UITapGestureRecognizer *tapGestureRecognizer;
 @property(nonatomic, assign) CGPoint panGestureStartPoint;
+
+@property(nonatomic, strong) STShadow *shadow;
 @end
 
 @implementation STSideBarController
 
 - (void)dealloc {
     self.panGestureRecognizer.delegate = nil;
+    [self.shadow removeObserver:self forKeyPath:@"shadowOpacity"];
+    [self.shadow removeObserver:self forKeyPath:@"shadowOffset"];
+    [self.shadow removeObserver:self forKeyPath:@"shadowRadius"];
+    [self.shadow removeObserver:self forKeyPath:@"shadowColor"];
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+    return [self initWithRootViewController:UIViewController.new];
 }
 
 - (instancetype)initWithRootViewController:(UIViewController *)rootViewController {
     self = [super initWithNibName:nil bundle:nil];
     if (self) {
         _rootViewController = rootViewController;
+        SEL selector = NSSelectorFromString(@"st_setSideBarController:");
+        if ([_rootViewController respondsToSelector:selector]) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+            [_rootViewController performSelector:selector withObject:self];
+#pragma clang diagnostic pop
+        }
         _selectedIndex = 0;
         _maxSideWidth = 260.;
+        _supportsEdgeInteractive = YES;
+        self.shadow = [[STShadow alloc] init];
+        self.shadow.shadowColor = [UIColor blackColor];
+        self.shadow.shadowRadius = 3.0f;
+        self.shadow.shadowOffset = CGSizeMake(- 3.0f, 0.0f);
+        self.shadow.shadowOpacity = 0.2;
+
+        [self.shadow addObserver:self forKeyPath:@"shadowOpacity" options:NSKeyValueObservingOptionNew context:NULL];
+        [self.shadow addObserver:self forKeyPath:@"shadowOffset" options:NSKeyValueObservingOptionNew context:NULL];
+        [self.shadow addObserver:self forKeyPath:@"shadowRadius" options:NSKeyValueObservingOptionNew context:NULL];
+        [self.shadow addObserver:self forKeyPath:@"shadowColor" options:NSKeyValueObservingOptionNew context:NULL];
     }
     return self;
 }
 
 - (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
-    return [self initWithRootViewController:nil];
+    return [self initWithRootViewController:UIViewController.new];
 }
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-
-    BOOL portrait = UIInterfaceOrientationIsPortrait(self.interfaceOrientation);
-    CGFloat bWidth = CGRectGetWidth(self.view.frame);
-    CGFloat bHeight = CGRectGetHeight(self.view.frame);
-    if (portrait) {
-        self.standardViewFrame = CGRectMake(0, 0, bWidth, bHeight);
-    } else {
-        self.standardViewFrame = CGRectMake(0, 0, bHeight, bWidth);
-    }
 
     self.panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(gestureRecognizerDidChanged:)];
     self.panGestureRecognizer.delegate = self;
@@ -88,7 +115,7 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
         [self.view addSubview:self.rootViewController.view];
         [self.rootViewController didMoveToParentViewController:self];
         self.rootViewController.view.frame = self.view.bounds;
-        SEL selector = NSSelectorFromString(@"setSideBarController:");
+        SEL selector = NSSelectorFromString(@"st_setSideBarController:");
         if ([self.rootViewController respondsToSelector:selector]) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
@@ -101,18 +128,6 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
     UIView *containerView = [[UIView alloc] initWithFrame:self.view.bounds];
     containerView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     containerView.backgroundColor = [UIColor clearColor];
-    containerView.clipsToBounds = YES;
-    containerView.layer.masksToBounds = NO;
-    containerView.layer.shadowColor = [UIColor blackColor].CGColor;
-    containerView.layer.shadowOffset = CGSizeMake(0.0f, 0.0f);
-    containerView.layer.shadowOpacity = 1.0f;
-    containerView.layer.shadowRadius = 2.f;
-
-    CGRect shadowRect = CGRectOffset(self.standardViewFrame, -2.5, -2.5);
-    shadowRect.size.width += 5;
-    shadowRect.size.height += 5;
-    UIBezierPath *shadowPath = [UIBezierPath bezierPathWithRect:shadowRect];
-    containerView.layer.shadowPath = shadowPath.CGPath;
     [self.view addSubview:containerView];
     self.containerView = containerView;
 
@@ -126,14 +141,14 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
         }
         CGFloat sideInteractionDistance = CGRectGetWidth(weakSelf.containerView.bounds) - weakSelf.maxSideWidth;
         if (weakSelf.sideViewState == STSideViewDidDisappear) {
-            sideInteractionDistance = STMinSideBarInteractionOffset;
+            sideInteractionDistance = weakSelf.supportsEdgeInteractive? STMinSideBarInteractionOffset : 0;
         }
         CGPoint touchPoint = [weakSelf.hitTestView convertPoint:point toView:weakSelf.containerView];
         if (!CGRectContainsPoint(weakSelf.containerView.bounds, touchPoint)) {
             return (UIView *)nil;
         }
 
-        UINavigationBar *navigationBar = [weakSelf.selectedViewController topNavigationBar];
+        UINavigationBar *navigationBar = [weakSelf.selectedViewController st_topNavigationBar];
         CGPoint navigationPoint = [weakSelf.hitTestView convertPoint:point toView:navigationBar];
         if ([navigationBar pointInside:navigationPoint withEvent:event]) {
             return [weakSelf.selectedViewController.view hitTest:touchPoint withEvent:event];
@@ -154,6 +169,7 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
 
     [self.view addSubview:self.hitTestView];
 
+    [self _updateShadow];
     [self layoutViewControllersAnimated:NO];
 }
 
@@ -172,18 +188,6 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
     }
 }
 
-- (void)viewDidLayoutSubviews {
-    [super viewDidLayoutSubviews];
-    BOOL portrait = UIInterfaceOrientationIsPortrait(self.interfaceOrientation);
-    CGFloat bWidth = CGRectGetWidth(self.view.frame);
-    CGFloat bHeight = CGRectGetHeight(self.view.frame);
-    if (portrait) {
-        self.standardViewFrame = CGRectMake(0, 0, bWidth, bHeight);
-    } else {
-        self.standardViewFrame = CGRectMake(0, 0, bHeight, bWidth);
-    }
-}
-
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
@@ -197,6 +201,7 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
     }
     UIViewController *childViewController = [self.viewControllers objectAtIndex:selectedIndex];
     childViewController.view.frame = self.containerView.bounds;
+    childViewController.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     if (childViewController != self.selectedViewController) {
         [self willChangeValueForKey:@"selectedIndex"];
         if (!self.selectedViewController) {
@@ -233,7 +238,7 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
         if ([obj isKindOfClass:[UIViewController class]]) {
             UIViewController *childViewController = (UIViewController *)obj;
             [childViewController willMoveToParentViewController:nil];
-            SEL selector = NSSelectorFromString(@"setSideBarController:");
+            SEL selector = NSSelectorFromString(@"st_setSideBarController:");
             if ([childViewController respondsToSelector:selector]) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
@@ -250,7 +255,7 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
         if ([obj isKindOfClass:[UIViewController class]]) {
             UIViewController *childViewController = (UIViewController *)obj;
             [self addChildViewController:childViewController];
-            SEL selector = NSSelectorFromString(@"setSideBarController:");
+            SEL selector = NSSelectorFromString(@"st_setSideBarController:");
             if ([childViewController respondsToSelector:selector]) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
@@ -271,10 +276,12 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
 
 - (void)revealSideViewControllerAnimated:(BOOL)animated {
     [self.containerView addGestureRecognizer:self.tapGestureRecognizer];
-    CGRect frame = self.standardViewFrame;
+    CGRect frame = self.view.bounds;
     frame.origin.x = self.maxSideWidth;
-    [UIView animateWithDuration:0.35
-        animations:^{ self.containerView.frame = frame; }
+    [UIView animateWithDuration:STSideBarChangeDuration
+        animations:^{
+            self.containerView.frame = frame;
+        }
         completion:^(BOOL finished) {
             self.containerView.frame = frame;
             self.sideViewState = STSideViewDidAppear;
@@ -284,14 +291,14 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
 
 - (void)concealSideViewControllerAnimated:(BOOL)animated {
     [self.containerView removeGestureRecognizer:self.tapGestureRecognizer];
-    [UIView animateWithDuration:0.35
+    [UIView animateWithDuration:STSideBarChangeDuration
         animations:^{
             // 主界面 view 回归原位
-            self.containerView.frame = self.standardViewFrame;
+            self.containerView.frame = self.view.bounds;
         }
         completion:^(BOOL finished) {
             // 主界面 view 回归原位
-            self.containerView.frame = self.standardViewFrame;
+            self.containerView.frame = self.view.bounds;
             self.sideViewState = STSideViewDidDisappear;
             self.sideAppeared = NO;
         }];
@@ -308,26 +315,51 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
 
 #pragma mark - Complete GestureRecognizer
 /// 完成一半时,将剩下的动画自动完成
-- (void)completeSideViewController:(UIViewController *)sideViewController animated:(BOOL)animated targetDistance:(CGFloat)targetOffset {
+- (void)completeSideViewController:(UIViewController *)sideViewController
+                    targetDistance:(CGFloat)targetOffset
+                        swipeRight:(BOOL)swipeRight {
     [self.containerView removeGestureRecognizer:self.tapGestureRecognizer];
-    targetOffset *= 0.1;
     CGFloat percent = 0.0;
     CGRect frame = self.containerView.frame;
-    CGFloat targetX = CGRectGetMinX(frame) + targetOffset;
-    if (targetX <= (self.maxSideWidth / 2)) {
-        percent = targetX / self.maxSideWidth;
-        if (targetX < 0) {
-            percent = 0.9;
+    /// 如果向右滑动
+    if (swipeRight) {
+        /// 如果本来是出现的
+        if (self.sideAppeared || targetOffset >= (self.maxSideWidth / 3.0)) {
+            percent = targetOffset / self.maxSideWidth;
+            if (targetOffset > self.maxSideWidth) {
+                percent = 0.9;
+            }
+            frame.origin.x = self.maxSideWidth;
+            percent = 1.0 - percent;
+            
+        } else {
+            /// 如果本来没有出现
+            percent = targetOffset / self.maxSideWidth;
+            if (targetOffset < 0) {
+                percent = 0.9;
+            }
+            frame = self.view.bounds;
         }
-        frame = self.standardViewFrame;
     } else {
-        percent = 1.0 - targetX / self.maxSideWidth;
-        if (targetX > self.maxSideWidth) {
-            percent = 0.9;
+        if (!self.sideAppeared || targetOffset <= (self.maxSideWidth * 2.0 / 3.0)) {
+            /// 如果本来没有出现
+            percent = targetOffset / self.maxSideWidth;
+            if (targetOffset < 0) {
+                percent = 0.9;
+            }
+            frame = self.view.frame;
+        } else {
+            percent = targetOffset / self.maxSideWidth;
+            if (targetOffset > self.maxSideWidth) {
+                percent = 0.9;
+            }
+            percent = 1.0 - percent;
+            frame.origin.x = self.maxSideWidth;
         }
-        frame.origin.x = self.maxSideWidth;
     }
-    void (^animations)(void) = ^() { self.containerView.frame = frame; };
+    void (^animations)(void) = ^() {
+        self.containerView.frame = frame;
+    };
 
     void (^completion)(BOOL) = ^(BOOL finished) {
         self.containerView.frame = frame;
@@ -340,12 +372,7 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
             [self.containerView addGestureRecognizer:self.tapGestureRecognizer];
         }
     };
-    if (animated) {
-        [UIView animateWithDuration:0.25 * percent animations:animations completion:completion];
-    } else {
-        animations();
-        completion(NO);
-    }
+    [UIView animateWithDuration:MAX(STSideBarChangeDuration * percent, 0.1) animations:animations completion:completion];
 }
 
 - (void)tapGestureRecognizerActionFired:(UITapGestureRecognizer *)tapGestureRecognizer {
@@ -369,7 +396,7 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
         self.sideViewState = STSideViewTranslation;
 
         CGPoint translation = [panGestureRecognizer translationInView:self.containerView];
-        CGRect rect = self.standardViewFrame;
+        CGRect rect = self.view.bounds;
         CGFloat originX = self.panGestureStartPoint.x + translation.x;
         originX = MAX(0, MIN(originX, self.maxSideWidth));
         rect.origin.x = originX;
@@ -378,8 +405,9 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
                panGestureRecognizer.state == UIGestureRecognizerStateFailed) {
         /// 结束
         // 判断如果 到了一定位置，结束之后要归位等等
-        CGFloat targetOffset = [panGestureRecognizer velocityInView:self.containerView].x * 1;
-        [self completeSideViewController:self.rootViewController animated:YES targetDistance:targetOffset];
+        CGFloat velocityX = [panGestureRecognizer velocityInView:self.view].x;
+        CGFloat targetOffset = MIN(MAX(self.containerView.left + (velocityX * 0.1), 0), self.maxSideWidth);
+        [self completeSideViewController:self.rootViewController  targetDistance:targetOffset swipeRight:(velocityX >= 0)];
     }
 }
 
@@ -407,7 +435,7 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
     }
     CGFloat sideInteractionDistance = CGRectGetWidth(self.containerView.bounds) - self.maxSideWidth;
     if (self.sideViewState == STSideViewDidDisappear) {
-        sideInteractionDistance = STMinSideBarInteractionOffset;
+        sideInteractionDistance = self.supportsEdgeInteractive? STMinSideBarInteractionOffset : 0;
         if (self.selectedViewController.presentedViewController) {
             return NO;
         }
@@ -449,19 +477,22 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
         }
     }
     UIView *view = touch.view;
-    UINavigationBar *navigationBar = [self.selectedViewController topNavigationBar];
+    UINavigationBar *navigationBar = [self.selectedViewController st_topNavigationBar];
     CGPoint touchPoint = [touch locationInView:self.selectedViewController.view];
     BOOL sideEffected = (touchPoint.x <= sideInteractionDistance);
     if (sideEffected) {
         return YES;
     }
     if (navigationBar && [view isDescendantOfView:navigationBar]) {
-        return STGetBitOffset(self.selectedViewController.sideInteractionArea, 0);
+        return STGetBitOffset(self.selectedViewController.st_sideInteractionArea, 0);
     }
-    return STGetBitOffset(self.selectedViewController.sideInteractionArea, 1);
+    return STGetBitOffset(self.selectedViewController.st_sideInteractionArea, 1);
 }
 
 - (BOOL)hintSideInteractiveGestureRecognizerWithViewController:(UIViewController *)viewController {
+    if (!viewController.isViewLoaded) {
+        return NO;
+    }
     if ([viewController isKindOfClass:[UINavigationController class]]) {
         UINavigationController *nvc = (UINavigationController *)viewController;
         if (nvc.viewControllers.count == 1 && !nvc.presentingViewController && (nvc.topViewController == nvc.visibleViewController)) {
@@ -498,14 +529,26 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
     [super willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
 }
 
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
-    self.standardViewFrame = self.view.bounds;
-    CGRect shadowRect = CGRectOffset(self.standardViewFrame, -2.5, -2.5);
-    shadowRect.size.width += 5;
-    shadowRect.size.height += 5;
-    UIBezierPath *shadowPath = [UIBezierPath bezierPathWithRect:shadowRect];
-    self.containerView.layer.shadowPath = shadowPath.CGPath;
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+    if (object == self.shadow) {
+        [self _updateShadow];
+    } else {
+        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+    }
+}
+
+- (void)_updateShadow {
+    if (self.isViewLoaded) {
+        
+        CGFloat offset = ABS(_shadow.shadowOffset.width);
+        CGRect pathRect = CGRectOffset(self.containerView.bounds, - offset, 0);
+        pathRect.size.width += offset;
+        
+        self.containerView.layer.shadowPath = [UIBezierPath bezierPathWithRect:pathRect].CGPath;
+        self.containerView.layer.shadowColor = self.shadow.shadowColor.CGColor;
+        self.containerView.layer.shadowOpacity = self.shadow.shadowOpacity;
+        self.containerView.layer.shadowRadius = self.shadow.shadowRadius;
+    }
 }
 
 @end
@@ -513,54 +556,74 @@ const CGFloat STMinSideBarInteractionOffset = 10.;
 @implementation UIViewController (SideBarController)
 
 static char sideBarControllerKey;
-- (void)setSideBarController:(STSideBarController *)sideBarController {
-    [super willChangeValueForKey:@"sideBarController"];
+- (void)st_setSideBarController:(STSideBarController *)sideBarController {
+    [super willChangeValueForKey:@"st_sideBarController"];
     objc_setAssociatedObject(self, &sideBarControllerKey, sideBarController, OBJC_ASSOCIATION_ASSIGN);
-    [super didChangeValueForKey:@"sideBarController"];
+    [super didChangeValueForKey:@"st_sideBarController"];
 }
 
-- (STSideBarController *)sideBarController {
+- (STSideBarController *)st_sideBarController {
     id revealController = objc_getAssociatedObject(self, &sideBarControllerKey);
     if (!revealController && self.navigationController) {
-        revealController = self.navigationController.sideBarController;
-    } else if (!revealController && self.customNavigationController) {
-        revealController = self.customNavigationController.sideBarController;
+        revealController = self.navigationController.st_sideBarController;
+    } else if (!revealController && self.st_navigationController) {
+        revealController = self.st_navigationController.st_sideBarController;
     }
     return revealController;
 }
 
 static char sideInteractionAreaKey;
-- (void)setSideInteractionArea:(NSInteger)sideInteractionArea {
-    [super willChangeValueForKey:@"sideInteractionArea"];
+- (void)st_setSideInteractionArea:(STSideInteractiveArea)sideInteractionArea {
+    [super willChangeValueForKey:@"st_sideInteractionArea"];
     objc_setAssociatedObject(self, &sideInteractionAreaKey, @(sideInteractionArea), OBJC_ASSOCIATION_COPY_NONATOMIC);
-    [super didChangeValueForKey:@"sideInteractionArea"];
+    [super didChangeValueForKey:@"st_sideInteractionArea"];
 }
 
-- (NSInteger)sideInteractionArea {
+- (STSideInteractiveArea)st_sideInteractionArea {
     id sideInteractionArea = objc_getAssociatedObject(self, &sideInteractionAreaKey);
     if (!sideInteractionArea) {
         return (STSideInteractiveAreaAll);
     }
-    return [sideInteractionArea intValue];
+    return (STSideInteractiveArea)[sideInteractionArea intValue];
 }
 
-- (UINavigationBar *)topNavigationBar {
+
+static char sideInteractionEdgeAreaKey;
+- (CGFloat)st_maximumInteractiveSideEdgeDistance {
+    id value = objc_getAssociatedObject(self, &sideInteractionEdgeAreaKey);
+    if (![value isKindOfClass:NSNumber.class]) {
+        return STMinSideBarInteractionOffset;
+    }
+    return [value floatValue];
+}
+
+- (void)st_setMaximumInteractiveSideEdgeDistance:(CGFloat)maximumInteractivePopEdgeDistance {
+    objc_setAssociatedObject(self, &sideInteractionEdgeAreaKey, @(maximumInteractivePopEdgeDistance),
+                             OBJC_ASSOCIATION_COPY);
+}
+
+@end
+
+@implementation UIViewController (STTopNavigationBar)
+
+- (UINavigationBar *)st_topNavigationBar {
     if ([self isKindOfClass:[UINavigationController class]]) {
         UINavigationController *navigationController = (UINavigationController *)self;
         return navigationController.navigationBar;
     }
     if ([self isKindOfClass:[STNavigationController class]]) {
         STNavigationController *navigationController = (STNavigationController *)self;
-        return (UINavigationBar *)navigationController.topViewController.customNavigationBar;
+        return (UINavigationBar *)navigationController.topViewController.st_navigationBar;
     }
     if ([self isKindOfClass:[UITabBarController class]]) {
         UITabBarController *tabbarController = (UITabBarController *)self;
-        return [tabbarController.selectedViewController topNavigationBar];
+        return [tabbarController.selectedViewController st_topNavigationBar];
     }
     if ([self isKindOfClass:[STTabBarController class]]) {
         STTabBarController *tabbarController = (STTabBarController *)self;
-        return [tabbarController.selectedViewController topNavigationBar];
+        return [tabbarController.selectedViewController st_topNavigationBar];
     }
-    return [self.navigationController topNavigationBar];
+    return [self.navigationController st_topNavigationBar];
 }
+
 @end

@@ -12,8 +12,8 @@
 
 @interface STCoreDataManager ()
 
-@property(nonatomic, strong) NSString *modelName;
-@property(nonatomic, strong) NSString *dbFilePath;
+@property(STPROPERTYNULLABLE nonatomic, copy) NSString *modelName;
+@property(STPROPERTYNULLABLE nonatomic, copy) NSString *dbFilePath;
 
 @property(nonatomic, strong) NSManagedObjectContext *writeManagedObjectContext;
 @property(nonatomic, strong) NSManagedObjectContext *managedObjectContext;
@@ -24,40 +24,27 @@
 
 - (void)managedObjectContext:(NSManagedObjectContext *)managedObjectContext
                 performBlock:(void (^)(NSManagedObjectContext *))block
-               waitUntilDone:(BOOL)waitUntilDone;
+           completionHandler:(void (^)(void))completionHandler;
 @end
 
-static STCoreDataManager *_defaultDataManager;
 @implementation STCoreDataManager
 
-+ (STCoreDataManager *)defaultDataManager {
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{ _defaultDataManager = [[STCoreDataManager alloc] init]; });
-    return _defaultDataManager;
-}
-
 - (void)dealloc {
+    
 }
 
-- (void)setModelName:(NSString *)modelName {
-    if (![_modelName isEqualToString:modelName]) {
-        self.managedObjectModel = nil;
-        self.managedObjectContext = nil;
-        self.writeManagedObjectContext = nil;
-        self.backgroundManagedObjectContext = nil;
-        self.persistentStoreCoordinator = nil;
+- (instancetype)initWithModelName:(NSString *)modelName dbFilePath:(NSString *)path {
+    self = [super init];
+    if (self) {
+        self.modelName = modelName;
+        self.dbFilePath = path;
+        [self connectData];
     }
-    _modelName = modelName;
-    self.dbFilePath = [NSString stringWithFormat:@"%@.sqlite", modelName];
-    [self connectData];
+    return self;
 }
 
 - (id)init {
-    self = [super init];
-    if (self) {
-        //        [self connectData];
-    }
-    return self;
+    return [self initWithModelName:@"" dbFilePath:@""];
 }
 
 - (BOOL)connectData {
@@ -101,17 +88,16 @@ static STCoreDataManager *_defaultDataManager;
 }
 
 #pragma mark - Save Blocks
-
-- (void)performBlock:(void (^)(NSManagedObjectContext *))block waitUntilDone:(BOOL)waitUntilDone {
-    [self managedObjectContext:[self dispatchManagedObjectContext] performBlock:block waitUntilDone:waitUntilDone];
+- (void)performBlock:(void (^)(NSManagedObjectContext *))block completionHandler:(void (^)(void))completionHandler {
+    [self managedObjectContext:[self dispatchManagedObjectContext] performBlock:block completionHandler:completionHandler];
 }
 
-- (void)performBlockOnMainThread:(void (^)(NSManagedObjectContext *))block waitUntilDone:(BOOL)waitUntilDone {
-    [self managedObjectContext:self.managedObjectContext performBlock:block waitUntilDone:waitUntilDone];
+- (void)performBlockOnMainThread:(void (^ __nonnull)(NSManagedObjectContext * __nonnull))block completionHandler:(void (^)(void))completionHandler {
+    [self managedObjectContext:self.managedObjectContext performBlock:block completionHandler:completionHandler];
 }
 
-- (void)performBlockInBackground:(void (^)(NSManagedObjectContext *))block waitUntilDone:(BOOL)waitUntilDone {
-    [self managedObjectContext:self.backgroundManagedObjectContext performBlock:block waitUntilDone:waitUntilDone];
+- (void)performBlockInBackground:(void (^ __nonnull)(NSManagedObjectContext * __nonnull))block completionHandler:(void (^)(void))completionHandler {
+    [self managedObjectContext:self.backgroundManagedObjectContext performBlock:block completionHandler:completionHandler];
 }
 
 #pragma mark - Core Data stack
@@ -169,27 +155,24 @@ static STCoreDataManager *_defaultDataManager;
 
 - (void)managedObjectContext:(NSManagedObjectContext *)managedObjectContext
                 performBlock:(void (^)(NSManagedObjectContext *))block
-               waitUntilDone:(BOOL)waitUntilDone {
+           completionHandler:(void (^)(void))completionHandler {
     if (!block) {
+        if (completionHandler) {
+            completionHandler();
+        }
         return;
     }
     if (!managedObjectContext) {
         managedObjectContext = [self dispatchManagedObjectContext];
     }
-    if (waitUntilDone) {
-        [managedObjectContext performBlockAndWait:^{
-            block(managedObjectContext);
-        }];
-    } else {
-        [managedObjectContext performBlock:^{
-            block(managedObjectContext);
-        }];
-    }
-}
-
-// Returns the URL to the application's Documents directory.
-- (NSURL *)applicationDocumentsDirectory {
-    return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
+    [managedObjectContext performBlock:^{
+        block(managedObjectContext);
+        if (completionHandler) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completionHandler();
+            });
+        }
+    }];
 }
 
 // Returns the managed object model for the application.
@@ -213,7 +196,7 @@ static STCoreDataManager *_defaultDataManager;
     if (_persistentStoreCoordinator) {
         return _persistentStoreCoordinator;
     }
-    NSURL *storeURL = [[self applicationDocumentsDirectory] URLByAppendingPathComponent:self.dbFilePath];
+    NSURL *storeURL = [NSURL fileURLWithPath:self.dbFilePath];
     _persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:self.managedObjectModel];
     NSDictionary *options = @{NSMigratePersistentStoresAutomaticallyOption:@YES, NSInferMappingModelAutomaticallyOption:@(YES)};
     NSError *error = nil;
@@ -222,17 +205,6 @@ static STCoreDataManager *_defaultDataManager;
         abort();
     }
     return _persistentStoreCoordinator;
-}
-
-@end
-
-@implementation NSFetchedResultsController (SCoreDataManager)
-
-- (id)initWithFetchRequest:(NSFetchRequest *)fetchRequest sectionNameKeyPath:(NSString *)sectionNameKeyPath cacheName:(NSString *)name {
-    return [self initWithFetchRequest:fetchRequest
-                 managedObjectContext:[STCoreDataManager defaultDataManager].managedObjectContext
-                   sectionNameKeyPath:sectionNameKeyPath
-                            cacheName:name];
 }
 
 @end

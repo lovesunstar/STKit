@@ -9,17 +9,18 @@
 #import <Foundation/Foundation.h>
 #import <SystemConfiguration/SCNetworkReachability.h>
 
-typedef enum {
+typedef NS_ENUM(NSInteger, STNetworkStatus) {
     STNetworkStatusReachNone, // 网络不通
     STNetworkStatusReachWIFI, // WIFI
     STNetworkStatusReachWWAN, // GPRS,E等
-} STNetworkStatus;
+};
 
 /**
  * @abstract 此类可以获取网络的一些状况
  */
 @interface STReachability : NSObject
 
++ (instancetype)defaultReachability;
 /// 是否能够ping通host
 + (instancetype)reachabilityWithHost:(NSString *)host;
 
@@ -51,4 +52,8 @@ typedef enum {
 - (BOOL)reachWIFI;
 
 @end
+
+extern BOOL STIsNetworkConnected();
+extern BOOL STIsWIFIConnected();
+
 extern NSString *const STReachabilityDidChangedNotification;

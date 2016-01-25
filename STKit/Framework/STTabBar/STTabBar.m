@@ -40,10 +40,10 @@
 
         [self setTitle:title forState:UIControlStateNormal];
 
-        [self setTitleColor:[UIColor colorWithRGB:0xACACAC] forState:UIControlStateNormal];
-        [self setTitleColor:[UIColor colorWithRGB:0xACACAC] forState:UIControlStateHighlighted];
-        [self setTitleColor:[UIColor colorWithRGB:0xFF7300] forState:UIControlStateSelected];
-        [self setTitleColor:[UIColor colorWithRGB:0xFF7300] forState:UIControlStateSelected | UIControlStateHighlighted];
+        [self setTitleColor:[UIColor st_colorWithRGB:0xACACAC] forState:UIControlStateNormal];
+        [self setTitleColor:[UIColor st_colorWithRGB:0xACACAC] forState:UIControlStateHighlighted];
+        [self setTitleColor:[UIColor st_colorWithRGB:0xFF7300] forState:UIControlStateSelected];
+        [self setTitleColor:[UIColor st_colorWithRGB:0xFF7300] forState:UIControlStateSelected | UIControlStateHighlighted];
 
         [self setImage:image forState:UIControlStateNormal];
         [self setImage:image forState:UIControlStateHighlighted];
@@ -74,9 +74,9 @@ const CGFloat STTitleOffset = 5;
     [super layoutSubviews];
 
     CGFloat viewHeight = CGRectGetHeight(self.bounds);
-    STTabBar *tabBar = (STTabBar *)[self superviewWithClass:[STTabBar class]];
-    if ([[tabBar valueForVar:@"_actualHeight"] floatValue] > 1) {
-        viewHeight = [[tabBar valueForVar:@"_actualHeight"] floatValue];
+    STTabBar *tabBar = (STTabBar *)[self st_superviewWithClass:[STTabBar class]];
+    if ([[tabBar st_valueForVar:@"_actualHeight"] floatValue] > 1) {
+        viewHeight = [[tabBar st_valueForVar:@"_actualHeight"] floatValue];
     }
     CGFloat contentOffset = CGRectGetHeight(self.bounds) - viewHeight;
     CGFloat height = (CGRectIsEmpty(self.imageFrame) ? CGRectGetHeight(self.imageView.frame) : CGRectGetHeight(self.imageFrame)) +
@@ -100,7 +100,7 @@ const CGFloat STTitleOffset = 5;
         }
 
         CGRect frame = self.imageView.frame;
-        frame.origin = CGPointMake(leftMargin, topMargin + contentOffset);
+        frame.origin = CGPointMake((NSInteger)leftMargin, (NSInteger)(topMargin + contentOffset));
         self.imageView.frame = frame;
     } else {
         self.imageView.frame = self.imageFrame;
@@ -113,7 +113,7 @@ const CGFloat STTitleOffset = 5;
              topMargin = CGRectGetMaxY(self.imageView.frame) + offset;
         }
         CGRect frame = self.titleLabel.frame;
-        frame.origin = CGPointMake(leftMargin, topMargin);
+        frame.origin = CGPointMake((NSInteger)leftMargin, (NSInteger)topMargin);
         self.titleLabel.frame = frame;
     } else {
         self.titleLabel.frame = self.titleFrame;
@@ -172,7 +172,7 @@ const CGFloat STTitleOffset = 5;
         self.subtabButtons = [NSMutableArray arrayWithCapacity:2];
         if (STGetSystemVersion() >= 7) {
             self.separatorView = [[UIView alloc] init];
-            self.separatorView.backgroundColor = [UIColor colorWithRGB:0x999999];
+            self.separatorView.backgroundColor = [UIColor st_colorWithRGB:0x999999];
             [self addSubview:self.separatorView];
         }
     }
@@ -200,16 +200,13 @@ const CGFloat STTitleOffset = 5;
     return self.backgroundImageView.image;
 }
 
-- (void)setBarTintColor:(UIColor *)barTintColor {
+- (void)setBarTintColor:(UIColor * __nullable)barTintColor {
     _barTintColor = barTintColor;
-    if ([self.backgroundView respondsToSelector:@selector(setTintColor:)]) {
-        [self.backgroundView performSelector:@selector(setTintColor:) withObject:barTintColor];
-    } else {
-        self.backgroundView.backgroundColor = barTintColor;
+    if (self.backgroundView == self.backgroundImageView && self.backgroundImageView.image) {
+        return;
     }
-    for (UIButton *button in self.subtabButtons) {
-        [button setTitleColor:barTintColor forState:UIControlStateSelected];
-        [button setTitleColor:barTintColor forState:UIControlStateSelected | UIControlStateHighlighted];
+    if ([self.backgroundView isKindOfClass:[STVisualBlurView class]]) {
+        ((STVisualBlurView *)self.backgroundView).color = barTintColor;
     }
 }
 
@@ -270,7 +267,18 @@ const CGFloat STTitleOffset = 5;
 - (UIView *)viewWithTabBarItem:(STTabBarItem *)tabBarItem {
     STTabButton *button = [[STTabButton alloc] initWithTitle:tabBarItem.title image:tabBarItem.image highlightedImage:tabBarItem.selectedImage];
     [button addTarget:self action:@selector(buttonTouchupInsideActionFired:) forControlEvents:UIControlEventTouchUpInside];
-
+    if (tabBarItem.titleColor) {
+        [button setTitleColor:tabBarItem.titleColor forState:UIControlStateNormal];
+        [button setTitleColor:tabBarItem.titleColor forState:UIControlStateNormal];
+        [button setTitleColor:tabBarItem.titleColor forState:UIControlStateHighlighted];
+    }
+    if (tabBarItem.selectedTitleColor) {
+        [button setTitleColor:tabBarItem.selectedTitleColor forState:UIControlStateSelected];
+        [button setTitleColor:tabBarItem.selectedTitleColor forState:UIControlStateSelected | UIControlStateHighlighted];
+    }
+    if (tabBarItem.titleFont) {
+        button.titleLabel.font = tabBarItem.titleFont;
+    }
     [button addTarget:self action:@selector(buttonTouchDownActionFired:) forControlEvents:UIControlEventTouchDown];
     [button addTarget:self
                   action:@selector(buttonTouchCancelledActionFired:)
@@ -294,11 +302,18 @@ const CGFloat STTitleOffset = 5;
 }
 
 - (void)buttonTouchDownActionFired:(id)sender {
-    [self performSelector:@selector(tabBarButtonSelected:) withObject:sender afterDelay:0.2];
+    [self performSelector:@selector(tabBarButtonSelected:) withObject:sender afterDelay:0.3];
 }
 
 - (void)buttonTouchCancelledActionFired:(id)sender {
     [[self class] cancelPreviousPerformRequestsWithTarget:self selector:@selector(tabBarButtonSelected:) object:sender];
+}
+
+- (void)setTranslucent:(BOOL)translucent {
+    _translucent = translucent;
+    if ([self.backgroundView respondsToSelector:@selector(setHasBlurEffect:)]) {
+        ((STVisualBlurView *)self.backgroundView).hasBlurEffect = translucent;
+    }
 }
 
 @end

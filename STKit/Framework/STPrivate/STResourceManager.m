@@ -12,7 +12,6 @@
 extern NSString *const STImageResourceRefreshControlArrowBase64String;
 extern NSString *const STImageResourceAccessoryDataZeroBase64String;
 extern NSString *const STImageResourceNavigationItemBackBase64String;
-extern NSString *const STImageResourceViewControllerShadowBase64String;
 
 extern NSString *const STImageResourceImagePickerSelectedBase64String;
 extern NSString *const STImageResourceImagePickerLockedBase64String;
@@ -48,7 +47,7 @@ static NSCache *_imageCache;
     if ([[self imageCache] objectForKey:resourceID]) {
         return [[self imageCache] objectForKey:resourceID];
     }
-    NSData *imageData = [NSData dataWithBase64EncodedString:[self base64StringWithResourceID:resourceID]];
+    NSData *imageData = [NSData st_dataWithBase64EncodedString:[self base64StringWithResourceID:resourceID]];
     UIImage *image = [UIImage imageWithData:imageData scale:[UIScreen mainScreen].scale];
     if (image) {
         [[self imageCache] setObject:image forKey:resourceID];
@@ -71,7 +70,6 @@ static NSCache *_imageCache;
             STImageResourceRefreshControlArrowID : STImageResourceRefreshControlArrowBase64String,
             STImageResourceAccessoryDataZeroID : STImageResourceAccessoryDataZeroBase64String,
             STImageResourceNavigationItemBackID : STImageResourceNavigationItemBackBase64String,
-            STImageResourceViewControllerShadowID : STImageResourceViewControllerShadowBase64String,
 
             STImageResourceImagePickerSelectedID : STImageResourceImagePickerSelectedBase64String,
             STImageResourceImagePickerLockedID : STImageResourceImagePickerLockedBase64String,
@@ -102,7 +100,6 @@ static NSCache *_imageCache;
 NSString *const STImageResourceRefreshControlArrowID = @"STImageResourceRefreshControlArrowID";
 NSString *const STImageResourceAccessoryDataZeroID = @"STImageResourceAccessoryDataZeroID";
 NSString *const STImageResourceNavigationItemBackID = @"STImageResourceNavigationItemBackID";
-NSString *const STImageResourceViewControllerShadowID = @"STImageResourceViewControllerShadowID";
 
 NSString *const STImageResourceImagePickerSelectedID = @"STImageResourceImagePickerSelectedID";
 NSString *const STImageResourceImagePickerLockedID = @"STImageResourceImagePickerLockedID";
@@ -229,15 +226,6 @@ NSString *const STImageResourceNavigationItemBackBase64String =
     @"AAAA5ElEQVR42uzYQRKCMAwF0CRX9gDi3jP3u2KGEcWkJD8u6B7+o03TDgpAOodJ87gA7QDFLe1dazWriIg8QZ2BbRoG5M5cgt2nmsrCAqCzCI/"
     @"CtRqQEj4LSAufAaSGRwHp4RFASbgXUBbuAZSG/" @"wKUhx8BKOHfALTwTwBq+DuAHr4FtISvgLbwv7mUauWFwzsDbQhzrjdYNUBHWLDywdoFNIRN9gCw+"
     @"kA5wtOIShHeTliGiLTiEkT0LEhHzBxGqYjZ0zANceY4TkGcvQ8oaxuGEAO8PyQ7xIAspvJwP3j9qr0A3YDXAF7fNNH9M4kZAAAAAElFTkSuQmCC";
-
-NSString *const STImageResourceViewControllerShadowBase64String =
-    @"iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAWNJREFUeNp0VAuyAyEIIztuL9V3/2vliYIC2p3p1A/"
-    @"GBIIgKf79fb+PkE2ARv0X0d+Hwlcob4/"
-    @"89HkfU8evzHnjjGt69pHwDWjABnEDupHjwgddMGIJEGOd84hhzDiOUw6pdyJAdwVzjgLIGM3JFB7JRSJQxCZiSg6GkyX27QxqA0XCJhZwZTjIOys/"
-    @"gFvWukSnO8AtzX2tAMLVhRLMdRZsT62CYPzwI4crzRsKJopeUsYUwNTM9VZzuCu3xKURE3faBVjxRXKAthyBdwUw9mOklrKct6Mogpwn1JrQrTBiB+"
-    @"hyBS5FqUMGPy32y9kDLPbQKZlBHIqdwn5wTcffvrh0ClO+"
-    @"vZJIWYT8KuZzlgPb1NV7nAVgwSS3fc7HIXVobTm7UqvKWvtp8FYlQ8ILk96BbSWyPm2bzCGZIU2MiwFFPYdrNUuVsR6G4pRNZF2wOga5VZ9fNiSzXFCOJow+971/"
-    @"AQYAQJW4FRODSokAAAAASUVORK5CYII=";
 
 NSString *const STImageResourceImagePickerSelectedBase64String = @"iVBORw0KGgoAAAANSUhEUgAAAD4AAAA+"
     @"CAMAAABEH1h2AAABAlBMVEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC4uLjd3d3t7e309PT6+vr9/f3+/"

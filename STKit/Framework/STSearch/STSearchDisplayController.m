@@ -42,9 +42,9 @@
         self.searchContentsController = viewController;
         
         self.contentView = [[UIView alloc] initWithFrame:CGRectZero];
-        self.contentView.backgroundColor = [UIColor colorWithRGB:0x0 alpha:0.3];
-        [self.contentView addTouchTarget:self
-                                  action:@selector(backgroundActionFired:)];
+        self.contentView.backgroundColor = [UIColor st_colorWithRGB:0x0 alpha:0.3];
+        [self.contentView st_addTouchTarget:self
+                                     action:@selector(backgroundActionFired:)];
         
         self.searchResultsTableView =
         [[UITableView alloc] initWithFrame:self.contentView.bounds
@@ -141,9 +141,9 @@
     STViewController *viewController =
     (STViewController *)self.searchContentsController;
     STViewController *contentViewController =
-    [viewController valueForVar:@"_st_toolBarController"];
+    [viewController st_valueForVar:@"_st_toolBarController"];
     
-    if (!contentViewController || !viewController.customTabBarController ||
+    if (!contentViewController || !viewController.st_tabBarController ||
         viewController.hidesBottomBarWhenPushed) {
         contentViewController = viewController;
     } else {
@@ -161,7 +161,7 @@
         [contentViewController.view addSubview:self.contentView];
         
         UIView *navigationView =
-        [contentViewController valueForVar:@"_toolBarNavigationView"];
+        [contentViewController st_valueForVar:@"_toolBarNavigationView"];
         if (navigationView) {
             [contentViewController.view bringSubviewToFront:navigationView];
         }
@@ -202,9 +202,7 @@
         contentFrame.origin.y = CGRectGetMaxY(self.searchBar.frame);
         self.contentView.frame = contentFrame;
     };
-    if ([viewController isKindOfClass:[STViewController class]]) {
-        [viewController setNavigationBarHidden:active animations:animations];
-    }
+    [viewController st_setNavigationBarHidden:active animated:animated alongWithAnimations:animations];
     self.active = active;
     
     if (active) {
@@ -267,7 +265,7 @@
 
 - (void)searchBarSearchButtonClicked:(STSearchBar *)searchBar {
     NSString *keyword = searchBar.searchEditView.editTextField.text;
-    if ([keyword stringByTrimingWhitespace].length > 0) {
+    if ([keyword st_stringByTrimingWhitespace].length > 0) {
     }
 }
 
@@ -302,7 +300,7 @@
 
 - (void)searchBarTextDidEndEditing:(STSearchBar *)searchBar {
     NSString *keyword = searchBar.searchEditView.editTextField.text;
-    if ([keyword stringByTrimingWhitespace].length > 0) {
+    if ([keyword st_stringByTrimingWhitespace].length > 0) {
         //        [[STSearchManager defaultSearchManager]
         //        insertSearchKeyword:keyword
         //        effectToTableView:self.searchResultsTableView];

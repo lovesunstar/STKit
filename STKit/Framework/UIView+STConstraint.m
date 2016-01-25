@@ -10,8 +10,7 @@
 
 @implementation UIView (STConstraint)
 
-
-- (NSArray *)constraintsWithFirstItem:(UIView *)firstItem {
+- (NSArray *)st_constraintsWithFirstItem:(UIView *)firstItem {
     NSMutableArray *array = [NSMutableArray arrayWithCapacity:2];
     [self.constraints enumerateObjectsUsingBlock:^(NSLayoutConstraint *obj, NSUInteger idx, BOOL *stop) {
         if ([obj.firstItem isEqual:firstItem]) {
@@ -21,8 +20,8 @@
     return [array copy];
 }
 
-- (NSArray *)constraintsWithFirstItem:(UIView *)firstItem
-                       firstAttribute:(NSLayoutAttribute)attribute {
+- (NSArray *)st_constraintsWithFirstItem:(UIView *)firstItem
+                          firstAttribute:(NSLayoutAttribute)attribute {
     NSMutableArray *array = [NSMutableArray arrayWithCapacity:2];
     [self.constraints enumerateObjectsUsingBlock:^(NSLayoutConstraint *obj, NSUInteger idx, BOOL *stop) {
         if ([obj.firstItem isEqual:firstItem] && obj.firstAttribute == attribute) {

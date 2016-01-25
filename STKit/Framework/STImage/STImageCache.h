@@ -31,6 +31,10 @@ extern void STImageCachePopContext(STIdentifier contextId);
 + (void)removeMemoryCacheForKey:(NSString *)key;
 + (BOOL)hasMemoryCacheForKey:(NSString *)key;
 
+
++ (void)removeCachedImagesBeforeDate:(NSDate *)date
+                   completionHandler:(void(^)())completionHandler;
+
 /**
  * @abstract 得到该key的图片缓存目录
  */
@@ -38,8 +42,11 @@ extern void STImageCachePopContext(STIdentifier contextId);
 /// 是否有缓存该图片
 + (BOOL)hasCachedImageForKey:(NSString *)key;
 + (UIImage *)cachedImageForKey:(NSString *)key;
-+ (void)cacheData:(NSData *)data forKey:(NSString *)key;
 
++ (void)cacheData:(NSData *)data forKey:(NSString *)key;
++ (NSData *)cachedDataForKey:(NSString *)key;
+
++ (unsigned long long)cacheSize;
 /// default backgroundQueue / DISPATCH_QUEUE_PRIORITY_BACKGROUND
 + (void)calculateCacheSizeWithCompletionHandler:(void(^)(CGFloat))completionHandler;
 + (void)calculateCacheSizeInQueue:(dispatch_queue_t)backgroundQueue completionHandler:(void(^)(CGFloat))completionHandler;

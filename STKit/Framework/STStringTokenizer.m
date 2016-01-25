@@ -41,13 +41,13 @@
 
 #pragma mark - Private Method
 + (NSDictionary *)dictionaryWithMarkedString:(NSString *)markedString {
-    NSArray *attributeArray = [[markedString stringByReplacingOccurrencesOfString:@"\"" withString:@""] componentsSeparatedByRegex:@"\\s+"];
+    NSArray *attributeArray = [[markedString stringByReplacingOccurrencesOfString:@"\"" withString:@""] st_componentsSeparatedByRegex:@"\\s+"];
     NSMutableDictionary *attributeDict = [NSMutableDictionary dictionaryWithCapacity:2];
     [attributeArray enumerateObjectsUsingBlock:^(NSString *obj, NSUInteger idx, BOOL *stop) {
         NSRange range = [obj rangeOfString:@"="];
         if (range.location != NSNotFound) {
-            NSString *key = [[obj substringToIndex:range.location] stringByTrimingWhitespace];
-            NSString *value = [[obj substringFromIndex:range.location + 1] stringByTrimingWhitespace];
+            NSString *key = [[obj substringToIndex:range.location] st_stringByTrimingWhitespace];
+            NSString *value = [[obj substringFromIndex:range.location + 1] st_stringByTrimingWhitespace];
             if (key.length > 0 && value.length > 0) {
                 [attributeDict setValue:value forKey:key];
             }
@@ -74,7 +74,7 @@
     NSString *colorString = [styleDict valueForKey:@"color"];
     if (colorString) {
         colorString = [colorString stringByReplacingOccurrencesOfString:@"#" withString:@"0x"];
-        color = [UIColor colorWithHexString:colorString];
+        color = [UIColor st_colorWithHexString:colorString];
     }
     [attributes setValue:color forKey:NSForegroundColorAttributeName];
 

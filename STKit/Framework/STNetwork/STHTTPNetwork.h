@@ -12,6 +12,7 @@
 
 /// 100以下的是客户端错误， 100->600 之间的为标准的HTTP协议错误
 typedef NS_ENUM(NSInteger, STHTTPNetworkErrorCode) {
+    
     STHTTPNetworkErrorCodeUserCancelled     = 1,
     STHTTPNetworkErrorCodeCantLoadCache     = 10,
     /// 301跳转，永久重定向
@@ -32,6 +33,10 @@ typedef NS_ENUM(NSInteger, STHTTPNetworkErrorCode) {
     
     STHTTPNetworkErrorCodeUnsupportedResponseDataType  = 1001,   // 不是预期的返回结果
     
+    STHTTPNetworkErrorCodeBadNetwork = -1,
+    STHTTPNetworkErrorCodeTimeout = NSURLErrorTimedOut,  // -1001
+    STHTTPNetworkErrorCodeOther   = -97676901,
+    
 };
 
 @class STHTTPOperation;
@@ -43,6 +48,8 @@ typedef void (^STHTTPSynchronousNetworkHandler)(NSURLResponse *response, id data
 
 + (instancetype)defaultHTTPNetwork;
 + (NSURLCache *)defaultHTTPCache;
+
+@property(nonatomic, strong, readonly) NSURLSession *URLSession;
 
 - (instancetype)initWithConfiguration:(STNetworkConfiguration *)configuration;
 /// default mainQueue

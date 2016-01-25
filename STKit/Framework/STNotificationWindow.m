@@ -18,33 +18,28 @@
 
 @property(nonatomic, strong) STNotificationWindow *notificationWindow;
 
+@property(nonatomic, strong) UIView *contentView;
 @property(nonatomic, strong) STImageView *imageView;
 @property(nonatomic, strong) STLabel *textLabel;
 @property(nonatomic, strong) STLabel *detailLabel;
 
 @property(nonatomic, strong) UIButton *closeButton;
-@property(nonatomic, strong) UIView *contentView;
 
 @property(nonatomic, strong) UIButton *controlButton;
-
-@property(nonatomic, weak) NSObject *messagedObject;
 
 @end
 
 @implementation STNotificationView
 - (void)dealloc {
-    [self.textLabel removeObserver:self forKeyPath:@"text"];
-    [self.detailLabel removeObserver:self forKeyPath:@"text"];
     [self.imageView removeObserver:self forKeyPath:@"image"];
 }
 
 - (id)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
-
         self.contentView = [[UIView alloc] initWithFrame:self.bounds];
         self.contentView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-        self.contentView.backgroundColor = [UIColor colorWithRGB:0xB6D334];
+        self.contentView.backgroundColor = [UIColor st_colorWithRGB:0xB6D334];
         [self addSubview:self.contentView];
 
         CGFloat offsetY = (STGetSystemVersion() >= 7) ? 20 : 0;
@@ -53,18 +48,17 @@
             UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
         [self.contentView addSubview:self.imageView];
 
-        self.textLabel = [[STLabel alloc] initWithFrame:CGRectMake(44, 3 + offsetY, 230, 17)];
+        self.textLabel = [[STLabel alloc] initWithFrame:CGRectMake(20, 3 + offsetY, 230, 17)];
         self.textLabel.backgroundColor = [UIColor clearColor];
-        self.textLabel.text = @"友情提示";
-        self.textLabel.textColor = [UIColor colorWithRGB:0x232424];
+        self.textLabel.textColor = [UIColor st_colorWithRGB:0x232424];
         self.textLabel.font = [UIFont fontWithName:@"HelveticaNeue-Medium" size:15];
+        self.textLabel.verticalAlignment = STVerticalAlignmentMiddle;
         self.textLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         [self.contentView addSubview:self.textLabel];
 
-        self.detailLabel = [[STLabel alloc] initWithFrame:CGRectMake(44, 22 + offsetY, 230, 15)];
+        self.detailLabel = [[STLabel alloc] initWithFrame:CGRectMake(20, 22 + offsetY, 230, 15)];
         self.detailLabel.backgroundColor = [UIColor clearColor];
-        self.detailLabel.text = @"此应用未被授权,请谨慎使用.";
-        self.detailLabel.textColor = [UIColor colorWithRGB:0x232424];
+        self.detailLabel.textColor = [UIColor st_colorWithRGB:0x232424];
         self.detailLabel.numberOfLines = 0;
         self.detailLabel.verticalAlignment = STVerticalAlignmentTop;
         self.detailLabel.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:12];
@@ -77,38 +71,34 @@
         [self.controlButton addTarget:self action:@selector(controlButtonDidClick:) forControlEvents:UIControlEventTouchUpInside];
         self.controlButton.frame = CGRectMake(0, 0, CGRectGetWidth(self.bounds) - 44, CGRectGetHeight(self.bounds));
         self.controlButton.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-        [self.controlButton setBackgroundImage:[UIImage imageNamed:@"broadcast_mask.png"] forState:UIControlStateHighlighted];
         [self.contentView addSubview:self.controlButton];
-
+        
         self.closeButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        self.closeButton.frame = CGRectMake(276, 0, 44, 44);
+        self.closeButton.frame = CGRectMake(CGRectGetMaxX(self.contentView.frame) - 44, offsetY, 44, self.contentView.height - offsetY);
         [self.closeButton addTarget:self action:@selector(closeMessage:) forControlEvents:UIControlEventTouchUpInside];
         self.closeButton.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleHeight;
-        [self.closeButton setImage:[UIImage imageNamed:@"notification_ic_close_normal.png"] forState:UIControlStateNormal];
-        [self.closeButton setImage:[UIImage imageNamed:@"notification_ic_close_press.png"] forState:UIControlStateHighlighted];
         [self.contentView addSubview:self.closeButton];
-
-        [self.textLabel addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew context:NULL];
-        [self.detailLabel addObserver:self forKeyPath:@"text" options:NSKeyValueObservingOptionNew context:NULL];
+        
         [self.imageView addObserver:self forKeyPath:@"image" options:NSKeyValueObservingOptionNew context:NULL];
     }
     return self;
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-    if (((object == self.textLabel || object == self.detailLabel) && [keyPath isEqualToString:@"text"]) ||
-        (object == self.imageView && [keyPath isEqualToString:@"image"])) {
-        if (self.imageView.image) {
-            self.textLabel.left = 44;
-            self.detailLabel.left = 44;
-        } else {
-            self.textLabel.left = 20;
-            self.detailLabel.left = 20;
-        }
+    if (self.imageView.image) {
+        self.textLabel.left = 44;
+        self.detailLabel.left = 44;
+    } else {
+        self.textLabel.left = 20;
+        self.detailLabel.left = 20;
     }
 }
 
 - (void)controlButtonDidClick:(id)sender {
+}
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
 }
 
 - (void)closeMessage:(id)sender {
@@ -366,10 +356,13 @@
 @implementation STNotificationWindow (STNotificationView)
 
 + (STNotificationView *)notificationViewWithInfo:(NSDictionary *)info {
-    CGRect frame = [UIScreen mainScreen].applicationFrame;
-    frame.origin = CGPointMake(0, 0);
-    frame.size.height = 44;
-    STNotificationView *notificationView = [[STNotificationView alloc] initWithFrame:frame];
+    CGRect rect0 = [UIScreen mainScreen].applicationFrame;
+    rect0.size.height = 44;
+    if (STGetSystemVersion() >= 7) {
+        rect0.size.height = 64;
+        rect0.origin.y = 0;
+    }
+    STNotificationView *notificationView = [[STNotificationView alloc] initWithFrame:rect0];
     if ([info valueForKey:STNotificationViewImageNameKey]) {
         notificationView.imageView.image = [UIImage imageNamed:[info valueForKey:STNotificationViewImageNameKey]];
     }

@@ -28,29 +28,29 @@
 - (void)testAESCryptor {
     NSString *key = @"123123";
     NSString *string = @"I am SunJiangting";
-    NSString *encryptorString = [[[string UTF8EncodedData] AES256EncryptedDataWithKey:key] base64String];
-    NSString *decryptorString = [[[NSData dataWithBase64EncodedString:encryptorString] decryptAES256DataWithKey:key] UTF8String];
+    NSString *encryptorString = [[[string st_UTF8EncodedData] AES256EncryptedDataWithKey:key] st_base64String];
+    NSString *decryptorString = [[[NSData st_dataWithBase64EncodedString:encryptorString] decryptAES256DataWithKey:key] st_UTF8String];
     XCTAssertTrue([string isEqualToString:decryptorString]);
 }
 
-- (void) testRSASignCryptor {
+- (void)testRSASignCryptor {
     SecKeyRef publicKey = STSecPublicKeyFromDERBase64String(MYPublicDERKey);
     SecKeyRef privateKey = STSecPrivateKeyFromPEMBase64String(MYPrivatePEMKey);
     STRSACryptor * cryptor = [[STRSACryptor alloc] initWithPublicSecKey:publicKey privateSecKey:privateKey];
     NSString * string = @"I am SunJiangting";
-    NSData * signarate = [cryptor signData:string.UTF8EncodedData];
-    BOOL verify = [cryptor verifySignature:signarate signedData:string.UTF8EncodedData];
+    NSData * signarate = [cryptor signData:string.st_UTF8EncodedData];
+    BOOL verify = [cryptor verifySignature:signarate signedData:string.st_UTF8EncodedData];
     XCTAssertTrue(verify);
 }
 
-- (void) testRSACrypto {
+- (void)testRSACrypto {
     SecKeyRef publicKey = STSecPublicKeyFromDERBase64String(MYPublicDERKey);
     SecKeyRef privateKey = STSecPrivateKeyFromPEMBase64String(MYPrivatePEMKey);
     STRSACryptor * cryptor = [[STRSACryptor alloc] initWithPublicSecKey:publicKey privateSecKey:privateKey];
     NSString * string = @"I am SunJiangting";
-    NSData * encryptedData = [cryptor encryptData:string.UTF8EncodedData];
+    NSData * encryptedData = [cryptor encryptData:string.st_UTF8EncodedData];
     NSData * decryptedData = [cryptor decryptData:encryptedData];
-    NSString * decryptedString = decryptedData.UTF8String;
+    NSString * decryptedString = decryptedData.st_UTF8String;
     XCTAssertTrue([string isEqualToString:decryptedString]);
 }
 

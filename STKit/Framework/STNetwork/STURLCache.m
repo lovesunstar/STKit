@@ -59,13 +59,13 @@
     }
     absoluteString = [absoluteString substringToIndex:range.location];
     NSString *query = URL.query;
-    NSMutableDictionary *params = [NSMutableDictionary dictionaryWithURLQuery:query];
+    NSMutableDictionary *params = [NSMutableDictionary st_dictionaryWithURLQuery:query];
     [params removeObjectsForKeys:ingoredParameters];
     NSString *sortedQuery = [self _keySortedURLQueryStringWithParameters:params sortSelector:@selector(caseInsensitiveCompare:)];
     if (![absoluteString hasSuffix:@"/"]) {
         absoluteString = [absoluteString stringByAppendingString:@"/"];
     }
-    absoluteString = [absoluteString stringByAppendingFormat:@"%@/", sortedQuery.md5String];
+    absoluteString = [absoluteString stringByAppendingFormat:@"%@/", sortedQuery.st_md5String];
     URL = [NSURL URLWithString:absoluteString];
     NSMutableURLRequest *request = [self mutableCopy];
     request.URL = URL;

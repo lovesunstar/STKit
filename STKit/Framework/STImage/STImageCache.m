@@ -9,10 +9,12 @@
 #import "STImageCache.h"
 #import "Foundation+STKit.h"
 
+NSInteger const STMaximumCacheAge = 3600*24*7;
+
 NSString *STImageCacheDirectory() {
     NSArray *cachePaths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
     NSString *cachePath = cachePaths[0];
-    NSString *cacheDirectory = [cachePath stringByAppendingPathComponent:@"com.suen.stkit.cache.image"];
+    NSString *cacheDirectory = [cachePath stringByAppendingPathComponent:@"STImageCache"];
     if (![[NSFileManager defaultManager] fileExistsAtPath:cacheDirectory]) {
         [[NSFileManager defaultManager] createDirectoryAtPath:cacheDirectory withIntermediateDirectories:YES attributes:nil error:NULL];
     }
@@ -81,14 +83,33 @@ static NSCache *_imageCache;
 
 @end
 
+@interface STImageCache ()
+
+@property(nonatomic, strong) NSMutableArray *imageContexts;
+@property(nonatomic, strong) dispatch_queue_t ioQueue;
+@property(nonatomic, strong) NSCache        *memoryCache;
+
+@end
+
 @implementation STImageCache
 
-static NSMutableArray *_imageContexts;
-
-+ (NSMutableArray *)imageContexts {
+static STImageCache *_sharedCache;
++ (instancetype)sharedImageCache {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
+        _sharedCache = [[self alloc] init];
+    });
+    return _sharedCache;
+}
+
+- (instancetype)init {
+    self = [super init];
+    if (self) {
         _imageContexts = [NSMutableArray arrayWithCapacity:5];
+        _ioQueue = dispatch_queue_create("com.suen.image.cacheQueue", DISPATCH_QUEUE_SERIAL);
+        _memoryCache = [[NSCache alloc] init];
+        _memoryCache.name = @"STImageMemoryCache";
+        
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(didReceiveMemoryWarning)
                                                      name:UIApplicationDidReceiveMemoryWarningNotification
@@ -97,51 +118,60 @@ static NSMutableArray *_imageContexts;
                                                  selector:@selector(applicationDidEnterBackground:)
                                                      name:UIApplicationDidEnterBackgroundNotification
                                                    object:nil];
-
-    });
-    return _imageContexts;
+    }
+    return self;
 }
 
-+ (void)didReceiveMemoryWarning {
+- (void)didReceiveMemoryWarning {
     @synchronized(self) {
-        [[self memoryCache] removeAllObjects];
+        [self.memoryCache removeAllObjects];
     }
 }
 
-+ (void)applicationDidEnterBackground:(NSNotification *)notification {
+- (void)applicationDidEnterBackground:(NSNotification *)notification {
     @synchronized(self) {
-        [[self memoryCache] removeAllObjects];
+        [self.memoryCache removeAllObjects];
     }
-}
-
-+ (NSCache *)memoryCache {
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        _imageCache = [[NSCache alloc] init];
-        _imageCache.name = @"STImageMemoryCache";
-    });
-    return _imageCache;
+    
+    UIApplication *application = [UIApplication sharedApplication];
+    __block UIBackgroundTaskIdentifier bgTask = [application beginBackgroundTaskWithExpirationHandler:^{
+        [application endBackgroundTask:bgTask];
+        bgTask = UIBackgroundTaskInvalid;
+    }];
+    /// 删除7天以前的图片
+    [self removeCachedImagesBeforeDate:[[NSDate date] dateByAddingTimeInterval:-STMaximumCacheAge] completionHandler:^{
+        [application endBackgroundTask:bgTask];
+        bgTask = UIBackgroundTaskInvalid;
+    }];
 }
 
 + (void)pushImageContext:(STIdentifier)contextID {
+    [[self sharedImageCache] pushImageContext:contextID];
+}
+
+- (void)pushImageContext:(STIdentifier)contextID {
     __block STImageContext *imageContext;
-    [[self imageContexts] enumerateObjectsUsingBlock:^(STImageContext *obj, NSUInteger idx, BOOL *stop) {
+    [self.imageContexts enumerateObjectsUsingBlock:^(STImageContext *obj, NSUInteger idx, BOOL *stop) {
         if (contextID == obj.identifier) {
             imageContext = obj;
             *stop = YES;
         }
     }];
     if (imageContext) {
-        [[self imageContexts] removeObject:imageContext];
+        [self.imageContexts removeObject:imageContext];
     } else {
         imageContext = [[STImageContext alloc] initWithIdentifier:contextID];
     }
-    [[self imageContexts] addObject:imageContext];
+    [self.imageContexts addObject:imageContext];
 }
 
 + (void)popImageContext:(STIdentifier)contextID {
+    [[self sharedImageCache] popImageContext:contextID];
+}
+
+- (void)popImageContext:(STIdentifier)contextID {
     __block STImageContext *imageContext;
-    [[self imageContexts] enumerateObjectsUsingBlock:^(STImageContext *obj, NSUInteger idx, BOOL *stop) {
+    [self.imageContexts enumerateObjectsUsingBlock:^(STImageContext *obj, NSUInteger idx, BOOL *stop) {
         if (contextID == obj.identifier) {
             imageContext = obj;
             *stop = YES;
@@ -149,10 +179,14 @@ static NSMutableArray *_imageContexts;
     }];
     NSCache *memoryCache = [self memoryCache];
     [imageContext->_dictionary enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) { [memoryCache removeObjectForKey:key]; }];
-    [[self imageContexts] removeObject:imageContext];
+    [self.imageContexts removeObject:imageContext];
 }
 
 + (void)cacheImage:(UIImage *)image forKey:(NSString *)key {
+    [[self sharedImageCache] cacheImage:image forKey:key];
+}
+
+- (void)cacheImage:(UIImage *)image forKey:(NSString *)key {
     if (key.length == 0) {
         return;
     }
@@ -163,20 +197,24 @@ static NSMutableArray *_imageContexts;
     @synchronized(self) {
         STIdentifier identifier = [[[self imageContexts] lastObject] currentIdentifier];
         @synchronized(self) {
-            [[self memoryCache] setObject:image forKey:key];
+            [self.memoryCache setObject:image forKey:key];
         }
-        [[[self imageContexts] lastObject] saveKey:key forIdentifier:identifier];
+        [[self.imageContexts lastObject] saveKey:key forIdentifier:identifier];
         NSFileManager *fileManager = [NSFileManager defaultManager];
         [fileManager createFileAtPath:[self cachedPathForKey:key] contents:UIImageJPEGRepresentation(image, 1.0) attributes:nil];
     }
 }
 
 + (void)removeCacheImageForKey:(NSString *)key {
+    [[self sharedImageCache] removeCacheImageForKey:key];
+}
+
+- (void)removeCacheImageForKey:(NSString *)key {
     @synchronized(self) {
         @synchronized(self) {
-            [[self memoryCache] removeObjectForKey:key];
+            [self.memoryCache removeObjectForKey:key];
         }
-        [[[self imageContexts] lastObject] saveKey:key forIdentifier:0];
+        [[self.imageContexts lastObject] saveKey:key forIdentifier:0];
         if ([self hasCachedImageForKey:key]) {
             NSString *path = [self cachedPathForKey:key];
             NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -189,6 +227,10 @@ static NSMutableArray *_imageContexts;
 }
 
 + (BOOL)hasCachedImageForKey:(NSString *)key {
+    return [[self sharedImageCache] hasCachedImageForKey:key];
+}
+
+- (BOOL)hasCachedImageForKey:(NSString *)key {
     if (key.length == 0) {
         return NO;
     }
@@ -202,12 +244,16 @@ static NSMutableArray *_imageContexts;
 }
 
 + (UIImage *)cachedImageForKey:(NSString *)key {
+    return [[self sharedImageCache] cachedImageForKey:key];
+}
+
+- (UIImage *)cachedImageForKey:(NSString *)key {
     if (key.length == 0) {
         return nil;
     }
     @synchronized(self) {
         @synchronized(self) {
-            id cachedValue = [[self memoryCache] objectForKey:key];
+            id cachedValue = [self.memoryCache objectForKey:key];
             if (cachedValue) {
                 return cachedValue;
             }
@@ -231,32 +277,79 @@ static NSMutableArray *_imageContexts;
 
         STIdentifier identifier = [[[self imageContexts] lastObject] currentIdentifier];
         @synchronized(self) {
-            [[self memoryCache] setObject:image forKey:key];
+            [self.memoryCache setObject:image forKey:key];
         }
-        [[[self imageContexts] lastObject] saveKey:key forIdentifier:identifier];
+        [[self.imageContexts lastObject] saveKey:key forIdentifier:identifier];
         return image;
     }
 }
 
 + (void)removeMemoryCacheForKey:(NSString *)key {
+    [[self sharedImageCache] removeMemoryCacheForKey:key];
+}
+
+- (void)removeMemoryCacheForKey:(NSString *)key {
     @synchronized(self) {
-        [[self memoryCache] removeObjectForKey:key];
+        [self.memoryCache removeObjectForKey:key];
     }
 }
 
 + (BOOL)hasMemoryCacheForKey:(NSString *)key {
+    return [[self sharedImageCache] hasMemoryCacheForKey:key];
+}
+
+- (BOOL)hasMemoryCacheForKey:(NSString *)key {
     @synchronized(self) {
-        return !!([[self memoryCache] objectForKey:key]);
+        return !!([self.memoryCache objectForKey:key]);
     }
 }
 
 + (void)cacheData:(NSData *)data forKey:(NSString *)key {
+    if (key.length == 0) {
+        return;
+    }
+    if (!data) {
+        [self removeCacheImageForKey:key];
+        return;
+    }
+    @synchronized(self) {
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        [fileManager createFileAtPath:[self cachedPathForKey:key] contents:data attributes:nil];
+    }
+}
+
++ (NSData *)cachedDataForKey:(NSString *)key {
+    if (key.length == 0) {
+        return nil;
+    }
+    @synchronized(self) {
+        NSString *path = [self cachedPathForKey:key];
+        return [NSData dataWithContentsOfFile:path];
+    }
 }
 
 + (NSString *)cachedPathForKey:(NSString *)key {
-    return [STImageCacheDirectory() stringByAppendingPathComponent:[key md5String]];
+    return [[self sharedImageCache] cachedPathForKey:key];
 }
 
+- (NSString *)cachedPathForKey:(NSString *)key {
+    return [STImageCacheDirectory() stringByAppendingPathComponent:[key st_md5String]];
+}
+
++ (unsigned long long)cacheSize {
+    NSString *cacheDirectory = STImageCacheDirectory();
+    unsigned long long result = 0;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSDirectoryEnumerator *fileEnumerator = [fileManager enumeratorAtPath:cacheDirectory];
+    for (NSString *fileName in fileEnumerator) {
+        @autoreleasepool {
+            NSString *filePath = [cacheDirectory stringByAppendingPathComponent:fileName];
+            NSDictionary *attrs = [fileManager attributesOfItemAtPath:filePath error:nil];
+            result += [attrs fileSize];
+        }
+    }
+    return result;
+}
 
 + (void)calculateCacheSizeWithCompletionHandler:(void(^)(CGFloat))completionHandler {
     [self calculateCacheSizeInQueue:nil completionHandler:completionHandler];
@@ -282,6 +375,47 @@ static NSMutableArray *_imageContexts;
         }
         if (completionHandler) {
             completionHandler(result);
+        }
+    });
+}
+
+
++ (void)removeCachedImagesBeforeDate:(NSDate *)date
+                   completionHandler:(void(^)())completionHandler {
+    [[self sharedImageCache] removeCachedImagesBeforeDate:date completionHandler:completionHandler];
+}
+
+- (void)removeCachedImagesBeforeDate:(NSDate *)date
+                   completionHandler:(void(^)())completionHandler {
+    dispatch_async(self.ioQueue, ^{
+        NSURL *diskCacheURL = [NSURL fileURLWithPath:STImageCacheDirectory() isDirectory:YES];
+        NSArray *resourceKeys = @[NSURLIsDirectoryKey, NSURLContentModificationDateKey, NSURLTotalFileAllocatedSizeKey];
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        NSDirectoryEnumerator *fileEnumerator = [fileManager enumeratorAtURL:diskCacheURL
+                                                   includingPropertiesForKeys:resourceKeys
+                                                                      options:NSDirectoryEnumerationSkipsHiddenFiles
+                                                                 errorHandler:NULL];
+        NSMutableArray *urlsToDelete = [[NSMutableArray alloc] init];
+        for (NSURL *fileURL in fileEnumerator) {
+            NSDictionary *resourceValues = [fileURL resourceValuesForKeys:resourceKeys error:NULL];
+            if ([resourceValues[NSURLIsDirectoryKey] boolValue]) {
+                continue;
+            }
+            // Remove files that are older than the expiration date;
+            NSDate *modificationDate = resourceValues[NSURLContentModificationDateKey];
+            if ([[modificationDate laterDate:date] isEqualToDate:date]) {
+                [urlsToDelete addObject:fileURL];
+                continue;
+            }
+        }
+        
+        for (NSURL *fileURL in urlsToDelete) {
+            [fileManager removeItemAtURL:fileURL error:nil];
+        }
+        if (completionHandler) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completionHandler();
+            });
         }
     });
 }
