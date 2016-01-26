@@ -109,7 +109,6 @@
         UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
         flowLayout.minimumInteritemSpacing = 0;
         flowLayout.minimumLineSpacing = 0;
-        flowLayout.itemSize = CGSizeZero;
         flowLayout.headerReferenceSize = CGSizeZero;
         flowLayout.footerReferenceSize = CGSizeZero;
         flowLayout.sectionInset = UIEdgeInsetsZero;

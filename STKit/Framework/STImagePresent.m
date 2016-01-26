@@ -24,6 +24,8 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    self.view.backgroundColor = [UIColor clearColor];
     self.view.frame = [UIScreen mainScreen].bounds;
     self.backgroundView = [[UIView alloc] initWithFrame:self.view.bounds];
     self.backgroundView.backgroundColor = [UIColor blackColor];
@@ -62,21 +64,16 @@
 
 @implementation _STImagePresentWindow
 
-- (void)dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-}
-
 - (instancetype)initWithFrame:(CGRect)frame {
-    if (CGRectIsEmpty(frame)) {
-        frame = [UIScreen mainScreen].bounds;
-    }
     self = [super initWithFrame:frame];
     if (self) {
-        self.backgroundColor = [UIColor clearColor];
-        _STImagePresentViewController *viewController = [[_STImagePresentViewController alloc] initWithNibName:nil bundle:nil];
-        self.rootViewController = viewController;
+        _STImagePresentViewController *viewController = [[_STImagePresentViewController alloc] init];
         viewController.view.frame = self.bounds;
         self.viewController = viewController;
+        self.rootViewController = viewController;
+        self.frame = [UIScreen mainScreen].bounds;
+        viewController.view.frame = self.bounds;
+        self.backgroundColor = [UIColor clearColor];
     }
     return self;
 }
@@ -180,7 +177,7 @@ static STImagePresent *_previousImagePresent;
     } else {
         [self _fadeInAnimated:YES];
     }
-    [window makeKeyAndVisible];
+    window.hidden = NO;
 }
 
 - (void)dismissAnimated:(BOOL)animated {
@@ -280,16 +277,18 @@ static STImagePresent *_previousImagePresent;
     CGRect imageViewFrame = [imageView.superview convertRect:imageView.frame toView:self.window.viewController.collectionView.imageScrollView];
     self.window.viewController.collectionView.imageScrollView.roundProgressView.hidden = YES;
 
+    _STImagePresentViewController *presentViewController = self.window.viewController;
     void (^animations)(void) = ^{
-        self.window.viewController.backgroundView.alpha = 0.1f;
-        self.window.viewController.collectionView.imageScrollView.imageView.frame = imageViewFrame;
+        presentViewController.backgroundView.alpha = 0.1f;
+        presentViewController.collectionView.imageScrollView.imageView.frame = imageViewFrame;
         imageView.window.transform = CGAffineTransformIdentity;
     };
     void (^completion)(BOOL) = ^(BOOL finished) {
-        self.window = nil;
-        _previousImagePresent = nil;
+        [_window removeAllSubviews];
+        _window = nil;
         _presentedImageView = nil;
     };
+    _previousImagePresent = nil;
     if (animated) {
         imageView.window.transform = CGAffineTransformMakeScale(0.95, 0.95);
         [UIView animateWithDuration:0.25 animations:animations completion:completion];
@@ -315,7 +314,8 @@ static STImagePresent *_previousImagePresent;
 - (void)_fadeOutAnimated:(BOOL)animated {
     void (^animations)(void) = ^{ self.window.alpha = 0.1; };
     void (^completion)(BOOL) = ^(BOOL finished) {
-        self.window = nil;
+        [_window removeAllSubviews];
+        _window = nil;
         _presentedImageView = nil;
     };
     if (animated) {
@@ -331,6 +331,7 @@ static STImagePresent *_previousImagePresent;
         _window = [[_STImagePresentWindow alloc] init];
         _window.windowLevel = UIWindowLevelStatusBar + 1;
         _window.viewController.collectionView.delegate = self;
+        _window.backgroundColor = [UIColor clearColor];
     }
     return _window;
 }
