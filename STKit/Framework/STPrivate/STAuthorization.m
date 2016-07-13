@@ -143,19 +143,12 @@ static UIWindow *_displayWindow;
         if ([[UIApplication sharedApplication] isIgnoringInteractionEvents]) {
             [[UIApplication sharedApplication] endIgnoringInteractionEvents];
         }
-        if (NSClassFromString(@"UIAlertController")) {
-            UIAlertController *alertController = [[UIAlertController alloc] init];
-            alertController.title = title;
-            alertController.message = message;
-            [alertController addAction:[UIAlertAction actionWithTitle:confirm style:UIAlertActionStyleDefault handler:nil]];
-            [alertController addAction:[UIAlertAction actionWithTitle:cancel style:UIAlertActionStyleCancel handler:nil]];
-            [[STApplicationContext sharedContext].topmostViewController presentViewController:alertController animated:true completion:nil];
-        } else {
-            UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:title message:message delegate:nil cancelButtonTitle:cancel otherButtonTitles:confirm, nil];
-            [alertView st_showWithDismissBlock:^(UIAlertView *alertView, NSUInteger dismissIndex) {
-                
-            }];
-        }
+        UIAlertController *alertController = [[UIAlertController alloc] init];
+        alertController.title = title;
+        alertController.message = message;
+        [alertController addAction:[UIAlertAction actionWithTitle:confirm style:UIAlertActionStyleDefault handler:nil]];
+        [alertController addAction:[UIAlertAction actionWithTitle:cancel style:UIAlertActionStyleCancel handler:nil]];
+        [[STApplicationContext sharedContext].topmostViewController presentViewController:alertController animated:true completion:nil];
     }
     if (STGetBitOffset(op, 1)) {
         NSMutableDictionary *notificationInfo = [NSMutableDictionary dictionaryWithCapacity:5];

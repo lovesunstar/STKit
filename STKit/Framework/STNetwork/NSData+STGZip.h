@@ -9,13 +9,20 @@
 #import <Foundation/Foundation.h>
 
 // 需要引入 zib
-#define STKit_STDefines_GZip 0
+#define STKit_STDefines_GZip 1
 #if STKit_STDefines_GZip
 #import <zlib.h>
 @interface NSData (STGZip)
 
-- (NSData *)st_compressDataUsingGZip;
-+ (NSData *)st_dataWithZipCompressedData:(NSData *)data;
+- (NSData *)st_gzipCompressedDataWithError:(NSError * __autoreleasing *)error;
+
+- (NSData *)st_gzipDecompressedDataWithError:(NSError * __autoreleasing *)error;
 
 @end
+
+extern NSInteger const STGZipChunkSize;
+extern NSInteger const STGZipDefaultMemoryLevel;
+extern NSInteger const STGZipDefaultWindowBits;
+
+extern NSString *const STGZipErrorDomain;
 #endif

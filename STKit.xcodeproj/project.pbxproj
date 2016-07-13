@@ -33,9 +33,6 @@
 		0606EB73191B78B300FA9FB0 /* STCollectionViewFlowLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 0606EB71191B78B300FA9FB0 /* STCollectionViewFlowLayout.m */; };
 		061658BB1AC432C6004EB9AD /* NSData+STGZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 061658B91AC432C6004EB9AD /* NSData+STGZip.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		061658BC1AC432C6004EB9AD /* NSData+STGZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 061658BA1AC432C6004EB9AD /* NSData+STGZip.m */; };
-		0621CA011A03634400CB0715 /* UIAlertView+STBlock.h in Headers */ = {isa = PBXBuildFile; fileRef = 0621C9FF1A03634400CB0715 /* UIAlertView+STBlock.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		0621CA021A03634400CB0715 /* UIAlertView+STBlock.m in Sources */ = {isa = PBXBuildFile; fileRef = 0621CA001A03634400CB0715 /* UIAlertView+STBlock.m */; };
-		0621CA041A03635C00CB0715 /* STCategories.h in Headers */ = {isa = PBXBuildFile; fileRef = 0621CA031A03635C00CB0715 /* STCategories.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0623952919B6D3F500FFDD96 /* STPayManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 0623952719B6D3F500FFDD96 /* STPayManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0623952A19B6D3F500FFDD96 /* STPayManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 0623952819B6D3F500FFDD96 /* STPayManager.m */; };
 		0623952D19B6D49B00FFDD96 /* STPayViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 0623952B19B6D49B00FFDD96 /* STPayViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -214,9 +211,6 @@
 		0606EB71191B78B300FA9FB0 /* STCollectionViewFlowLayout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STCollectionViewFlowLayout.m; sourceTree = "<group>"; };
 		061658B91AC432C6004EB9AD /* NSData+STGZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSData+STGZip.h"; sourceTree = "<group>"; };
 		061658BA1AC432C6004EB9AD /* NSData+STGZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSData+STGZip.m"; sourceTree = "<group>"; };
-		0621C9FF1A03634400CB0715 /* UIAlertView+STBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIAlertView+STBlock.h"; sourceTree = "<group>"; };
-		0621CA001A03634400CB0715 /* UIAlertView+STBlock.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIAlertView+STBlock.m"; sourceTree = "<group>"; };
-		0621CA031A03635C00CB0715 /* STCategories.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STCategories.h; sourceTree = "<group>"; };
 		0623952719B6D3F500FFDD96 /* STPayManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPayManager.h; sourceTree = "<group>"; };
 		0623952819B6D3F500FFDD96 /* STPayManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPayManager.m; sourceTree = "<group>"; };
 		0623952B19B6D49B00FFDD96 /* STPayViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPayViewController.h; sourceTree = "<group>"; };
@@ -410,16 +404,6 @@
 				060164901A03E63800B7B790 /* STVisualBlurView.m */,
 			);
 			path = STPrivate;
-			sourceTree = "<group>";
-		};
-		0621C9FE1A03634400CB0715 /* STCategories */ = {
-			isa = PBXGroup;
-			children = (
-				0621CA031A03635C00CB0715 /* STCategories.h */,
-				0621C9FF1A03634400CB0715 /* UIAlertView+STBlock.h */,
-				0621CA001A03634400CB0715 /* UIAlertView+STBlock.m */,
-			);
-			path = STCategories;
 			sourceTree = "<group>";
 		};
 		0626CD9A19A0FAFD00B84A8C /* STAudio */ = {
@@ -625,7 +609,6 @@
 			isa = PBXGroup;
 			children = (
 				0601648A1A03E63800B7B790 /* STPrivate */,
-				0621C9FE1A03634400CB0715 /* STCategories */,
 				062E9AF219CC227700ADB552 /* STSecurity */,
 				06E9524319C93960001762A5 /* STControl */,
 				0688662B19B852FA00E2764F /* STSearch */,
@@ -794,8 +777,6 @@
 				062E9AF919CC292200ADB552 /* STRSACryptor.h in Headers */,
 				0672CD5819D7F6850055189C /* STAlbumManager.h in Headers */,
 				069BC15519F23070005906BF /* STNetworkConfiguration.h in Headers */,
-				0621CA011A03634400CB0715 /* UIAlertView+STBlock.h in Headers */,
-				0621CA041A03635C00CB0715 /* STCategories.h in Headers */,
 				060164931A03E63800B7B790 /* STResourceManager.h in Headers */,
 				06FE37B71A0DF998002CF174 /* STGIFGenerator.h in Headers */,
 				0604498F1A1F0C9B00D0DAF9 /* STSOAPNetwork.h in Headers */,
@@ -998,7 +979,6 @@
 				0672CD5919D7F6850055189C /* STAlbumManager.m in Sources */,
 				0675CFEC19AAF11300AD8B32 /* STImageCollectionView.m in Sources */,
 				F62DEF7F187BEF4E00C7A1D8 /* STTextView.m in Sources */,
-				0621CA021A03634400CB0715 /* UIAlertView+STBlock.m in Sources */,
 				065D78E71A848C0C0083D058 /* STHTTPRequest.m in Sources */,
 				F61E22D11857F3B00013A6D5 /* STNotificationWindow.m in Sources */,
 				062E9AF619CC22A100ADB552 /* STAESCryptor.m in Sources */,

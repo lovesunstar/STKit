@@ -86,14 +86,14 @@ void STPrintClassMethods(Class cls) {
         NSLog(@"%@", NSStringFromSelector(description->name));
     }
 }
-extern void _STClassGetAllProperities(Class class, NSMutableSet *mutableSet);
-extern void STPrintClassProperities(Class cls) {
+extern void _STClassGetAllProperties(Class class, NSMutableSet *mutableSet);
+extern void STPrintClassProperties(Class cls) {
     NSMutableSet *set = [NSMutableSet setWithCapacity:5];
-    _STClassGetAllProperities(cls, set);
+    _STClassGetAllProperties(cls, set);
     NSLog(@"%@", set);
 }
 
-void _STClassGetAllProperities(Class class, NSMutableSet *mutableSet) {
+void _STClassGetAllProperties(Class class, NSMutableSet *mutableSet) {
     if (!class) {
         return;
     }
@@ -105,7 +105,7 @@ void _STClassGetAllProperities(Class class, NSMutableSet *mutableSet) {
         [mutableSet addObject:[NSString stringWithUTF8String:name]];
     }
     free(properties);
-    _STClassGetAllProperities(class_getSuperclass(class), mutableSet);
+    _STClassGetAllProperties(class_getSuperclass(class), mutableSet);
 }
 
 
@@ -1104,7 +1104,7 @@ inline NSInteger STCleanBitOffset(NSInteger value, NSInteger bit) { return (valu
     [patterns enumerateObjectsUsingBlock:^(NSString *pattern, NSUInteger idx, BOOL *stop) {
         NSArray *parts = [pattern componentsSeparatedByString:@"="];
         if (parts.count == 2) {
-            NSString *key = parts[0];
+            NSString *key = [parts[0] st_stringByURLEncoded];
             NSString *value = [parts[1] st_stringByURLDecoded];
             [result setValue:value forKey:key];
         }

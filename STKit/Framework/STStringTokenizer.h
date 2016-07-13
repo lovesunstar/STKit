@@ -27,3 +27,9 @@
 - (void)setMarkedText:(NSString *)markedText;
 
 @end
+
+@interface NSString (STStringTokenizer)
+
+- (NSString *)st_stringByTrimingQuotation;
+
+@end

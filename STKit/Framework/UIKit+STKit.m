@@ -822,29 +822,6 @@ static char *const STTableViewDidReloadInvokeBlockKey = "STCollectionViewDidRelo
 
 @end
 
-
-@implementation UIActionSheet (STKit)
-
-- (instancetype)initWithTitle:(NSString *)title
-                     delegate:(id<UIActionSheetDelegate>)delegate
-            cancelButtonTitle:(NSString *)cancelButtonTitle
-       destructiveButtonTitle:(NSString *)destructiveButtonTitle
-        otherButtonTitleArray:(NSArray *)otherButtonTitleArray {
-    self = [self initWithTitle:title
-                      delegate:delegate
-             cancelButtonTitle:cancelButtonTitle
-        destructiveButtonTitle:destructiveButtonTitle
-             otherButtonTitles:nil, nil];
-    [otherButtonTitleArray enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-        if ([obj isKindOfClass:[NSString class]]) {
-            [self addButtonWithTitle:obj];
-        }
-    }];
-    return self;
-}
-
-@end
-
 @implementation UIImage (STSubimage)
 
 - (UIImage *)st_fixedOrientationImage {

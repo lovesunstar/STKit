@@ -373,18 +373,6 @@ ST_ASSUME_NONNULL_BEGIN
 ST_ASSUME_NONNULL_END
 
 ST_ASSUME_NONNULL_BEGIN
-@interface UIActionSheet (STKit)
-
-- (instancetype)initWithTitle:(STNULLABLE NSString *)title
-                     delegate:(STNULLABLE id<UIActionSheetDelegate>)delegate
-            cancelButtonTitle:(STNULLABLE NSString *)cancelButtonTitle
-       destructiveButtonTitle:(STNULLABLE NSString *)destructiveButtonTitle
-        otherButtonTitleArray:(STNULLABLE NSArray *)otherButtonTitleArray;
-
-@end
-ST_ASSUME_NONNULL_END
-
-ST_ASSUME_NONNULL_BEGIN
 @interface UIImage (STSubimage)
 
 - (UIImage *)st_fixedOrientationImage;

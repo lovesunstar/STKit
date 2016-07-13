@@ -147,8 +147,7 @@ ST_INLINE CGRect STRunGetRect(CTLineRef line, CTRunRef run, CGPoint lineOrigin) 
                                               linkObject.value = [attrs valueForKey:@"value"];
                                               if ([attrs valueForKey:@"href"]) {
                                                   linkObject.URL =
-                                                      [NSURL URLWithString:[[attrs valueForKey:@"href"]
-                                                                               stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+                                                      [NSURL URLWithString:[attrs valueForKey:@"href"]];
                                               }
                                               NSString *colorString = [attrs valueForKey:@"color"];
                                               if (colorString.length > 0) {

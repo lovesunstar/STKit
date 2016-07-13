@@ -15,12 +15,14 @@
     BOOL _isObservingContentOffset;
 }
 
-@property(nonatomic, assign) CGFloat contentInsetTop;
+@property(nonatomic) CGFloat contentInsetTop;
+@property(nonatomic) CGFloat notifyHeight;
 
-@property(nonatomic, assign) STRefreshControlState refreshControlState;
+@property(nonatomic) STRefreshControlState refreshControlState;
 
 @property(nonatomic, weak) UIScrollView *scrollView;
 @property(nonatomic, strong) NSDate     *startLoadingDate;
+
 
 @end
 
@@ -56,15 +58,23 @@
     });
 }
 
+- (void)notifyResultsWithHeight:(CGFloat)height {
+    if (self.refreshControlState != STRefreshControlStateLoading && self.refreshControlState != STRefreshControlStateNormal) {
+        return;
+    }
+    self.notifyHeight = height;
+    [self _changedRefreshControlToState:STRefreshControlStateNotifyingResults animated:NO];
+}
+
 - (void)endRefreshing {
     NSTimeInterval duration = self.minimumLoadingDuration;
     if (self.startLoadingDate) {
         duration = [[NSDate date] timeIntervalSinceDate:self.startLoadingDate];
     }
-    CGFloat delay = MAX(0, self.minimumLoadingDuration - duration);
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//    CGFloat delay = MAX(0, self.minimumLoadingDuration - duration);
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
        [self _changedRefreshControlToState:STRefreshControlStateNormal animated:YES];
-    });
+//    });
 }
 
 - (void)refreshControlWillChangedToState:(STRefreshControlState)refreshControlState {
@@ -75,8 +85,8 @@
 }
 
 - (void)_changedRefreshControlToState:(STRefreshControlState)refreshControlState animated:(BOOL)animated {
-    if (_refreshControlState != STRefreshControlStateLoading) {
-        /// 如果不是刷新状态，则一定读取到正确的contentInset
+    if (_refreshControlState != STRefreshControlStateLoading && _refreshControlState != STRefreshControlStateNotifyingResults) {
+        /// 如果不是刷新/Notify状态，则一定读取到正确的contentInset
         self.contentInsetTop = self.scrollView.contentInset.top;
     }
     if (_refreshControlState == refreshControlState) {
@@ -87,6 +97,7 @@
         CGFloat height = CGRectGetHeight(self.frame);
         UIEdgeInsets inset = scrollView.contentInset;
         if (refreshControlState == STRefreshControlStateLoading) {
+            // 如果要变成刷新状态，则改变inset.top
             inset.top = self.contentInsetTop + height;
             if (_isObservingContentOffset) {
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -98,7 +109,18 @@
             } else {
                 scrollView.contentOffset = CGPointMake(0, -inset.top);
             }
-
+        } else if (refreshControlState == STRefreshControlStateNotifyingResults) {
+            inset.top = self.contentInsetTop + self.notifyHeight;
+            if (_isObservingContentOffset) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self stopObservingContentOffset];
+                    scrollView.contentOffset = CGPointMake(0, -inset.top);
+                    [self startObservingContentOffset];
+                    
+                });
+            } else {
+                scrollView.contentOffset = CGPointMake(0, -inset.top);
+            }
         } else {
             inset.top = self.contentInsetTop;
         }
@@ -109,7 +131,6 @@
         } else {
             scrollView.contentInset = inset;
         }
-        
         [self refreshControlWillChangedToState:refreshControlState];
     };
     _refreshControlState = refreshControlState;
@@ -314,12 +335,17 @@
             break;
         case STRefreshControlStateLoading:
             self.arrowImageView.hidden = YES;
+            self.arrowImageView.transform = CGAffineTransformIdentity;
             shouldAnimating = YES;
             break;
         case STRefreshControlStateNormal:
-        default:
             shouldAnimating = NO;
             self.arrowImageView.hidden = NO;
+            self.arrowImageView.transform = CGAffineTransformIdentity;
+            break;
+        case STRefreshControlStateNotifyingResults:
+            shouldAnimating = NO;
+            self.arrowImageView.hidden = YES;
             self.arrowImageView.transform = CGAffineTransformIdentity;
             break;
     }

@@ -41,13 +41,13 @@
 
 #pragma mark - Private Method
 + (NSDictionary *)dictionaryWithMarkedString:(NSString *)markedString {
-    NSArray *attributeArray = [[markedString stringByReplacingOccurrencesOfString:@"\"" withString:@""] st_componentsSeparatedByRegex:@"\\s+"];
+    NSArray *attributeArray = [markedString st_componentsSeparatedByRegex:@"\\s+"];
     NSMutableDictionary *attributeDict = [NSMutableDictionary dictionaryWithCapacity:2];
     [attributeArray enumerateObjectsUsingBlock:^(NSString *obj, NSUInteger idx, BOOL *stop) {
         NSRange range = [obj rangeOfString:@"="];
         if (range.location != NSNotFound) {
-            NSString *key = [[obj substringToIndex:range.location] st_stringByTrimingWhitespace];
-            NSString *value = [[obj substringFromIndex:range.location + 1] st_stringByTrimingWhitespace];
+            NSString *key = [[[obj substringToIndex:range.location] st_stringByTrimingWhitespace] st_stringByTrimingQuotation];
+            NSString *value = [[[obj substringFromIndex:range.location + 1] st_stringByTrimingWhitespace] st_stringByTrimingQuotation];
             if (key.length > 0 && value.length > 0) {
                 [attributeDict setValue:value forKey:key];
             }
@@ -106,6 +106,21 @@
     if ([UILabel instancesRespondToSelector:@selector(setAttributedText:)]) {
         self.attributedText = [STStringTokenizer attributedStringWithMarkedString:markedString];
     }
+}
+
+@end
+
+@implementation NSString (STStringTokenizer)
+
+- (NSString *)st_stringByTrimingQuotation {
+    NSString *results = self;
+    if ([results hasPrefix:@"\""] || [results hasPrefix:@"'"]) {
+        results = [results substringFromIndex:1];
+    }
+    if ([results hasSuffix:@"\""] || [results hasSuffix:@"'"]) {
+        results = [results substringToIndex:results.length - 1];
+    }
+    return results;
 }
 
 @end

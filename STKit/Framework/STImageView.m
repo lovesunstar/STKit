@@ -19,15 +19,17 @@
 
 @property(nonatomic, strong) STRoundProgressView *progressView;
 @property(nonatomic, strong) NSTimer             *displayTimer;
-@property (nonatomic, strong) NSString   *playInMode;
+@property(nonatomic, strong) NSString            *playInMode;
 
 /// GIF是否循环播放
-@property (nonatomic, assign) BOOL  repeats;
+@property(nonatomic, assign) BOOL  repeats;
 /// 是否正在播放GIF
-@property (nonatomic, assign, getter=isPlaying) BOOL  playing;
-@property (nonatomic, assign) BOOL  automaticallyPlay;
-@property (nonatomic, strong) void (^completionHandler)(STImageView *imageView, BOOL finished);
-@property (nonatomic, assign) NSInteger     currentPlayIndex;
+@property(nonatomic, assign, getter=isPlaying) BOOL  playing;
+@property(nonatomic, assign) BOOL  automaticallyPlay;
+@property(nonatomic, strong) void (^GIFPlayCompletionHandler)(STImageView *imageView, BOOL finished);
+@property(nonatomic, assign) NSInteger     currentPlayIndex;
+
+@property(nonatomic, assign) NSTimeInterval  repeatTimeInterval;
 
 @end
 
@@ -47,12 +49,12 @@
 }
 
 - (void)setImage:(UIImage *)image {
+    [super setImage:image];
     if (image == _gifImage) {
         return;
     }
     if (!image) {
         _gifImage = nil;
-        [super setImage:nil];
         if (self.displayTimer) {
             [self.displayTimer invalidate];
             self.displayTimer = nil;
@@ -62,13 +64,11 @@
     if ([image isKindOfClass:[STImage class]]) {
         _gifImage = (STImage *)image;
         _currentPlayIndex = 0;
-        [super setImage:_gifImage];
         if (self.automaticallyPlay) {
             [self play];
         }
     } else {
         _gifImage = nil;
-        [super setImage:image];
     }
 }
 
@@ -154,11 +154,7 @@
             [self _stopCausedByUser:NO];
         } else {
             self.currentPlayIndex = 0;
-            NSTimeInterval duration;
-            UIImage *image = [_gifImage imageAtIndex:self.currentPlayIndex duration:&duration];
-            [super setImage:image];
-            self.currentPlayIndex ++;
-            self.displayTimer = [NSTimer timerWithTimeInterval:duration target:self selector:@selector(_playNextFrame) userInfo:nil repeats:NO];
+            self.displayTimer = [NSTimer timerWithTimeInterval:self.repeatTimeInterval target:self selector:@selector(_playNextFrame) userInfo:nil repeats:NO];
             [[NSRunLoop currentRunLoop] addTimer:self.displayTimer forMode:self.playInMode];
         }
     }
@@ -198,15 +194,15 @@
     if (!self.playing) {
         if (self.currentPlayIndex != 0) {
             // 如果没有到第0桢，就说明现在被暂停了
-            if (self.completionHandler) {
-                self.completionHandler(self, NO);
+            if (self.GIFPlayCompletionHandler) {
+                self.GIFPlayCompletionHandler(self, NO);
             }
         }
     } else {
         [self.displayTimer invalidate];
         self.displayTimer = nil;
-        if (self.completionHandler) {
-            self.completionHandler(self, !causedByUser);
+        if (self.GIFPlayCompletionHandler) {
+            self.GIFPlayCompletionHandler(self, !causedByUser);
         }
     }
     self.playing = NO;

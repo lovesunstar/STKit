@@ -28,6 +28,30 @@
         CFRelease(_imageSource);
     }
 }
+
+- (instancetype)initWithData:(NSData *)data {
+    STImageDataType imageType = [data imageType];
+    if (imageType != STImageDataTypeGIF) {
+        return [super initWithData:data];
+    }
+    CGImageSourceRef imageSource = CGImageSourceCreateWithData((__bridge CFDataRef)data, NULL);
+    NSInteger imageCount = CGImageSourceGetCount(imageSource);
+    CGImageRef image = CGImageSourceCreateImageAtIndex(imageSource, 0, NULL);
+    self = [super initWithCGImage:image];
+    if (image) {
+        CFRelease(image);
+    }
+    if (self) {
+        _imageData = data;
+        _imageSource = imageSource;
+        self.numberOfImages = imageCount;
+        self.GIFImage = YES;
+    } else {
+        CFRelease(imageSource);
+    }
+    return self;
+}
+
 - (instancetype)initWithData:(NSData *)data scale:(CGFloat)scale {
     STImageDataType imageType = [data imageType];
     if (imageType != STImageDataTypeGIF) {
@@ -60,7 +84,7 @@
     return [self initWithData:data scale:[UIScreen mainScreen].scale];
 }
 
-- (UIImage *) imageAtIndex:(NSInteger)index duration:(NSTimeInterval *)duration {
+- (UIImage *)imageAtIndex:(NSInteger)index duration:(NSTimeInterval *)duration {
     if (index >= self.numberOfImages) {
         if (duration) {
             *duration = 0.0;
@@ -112,7 +136,7 @@
 
 @implementation UIImage (STGIFImage)
 
-- (UIImage *) imageAtIndex:(NSInteger)index duration:(NSTimeInterval *)duration {
+- (UIImage *)imageAtIndex:(NSInteger)index duration:(NSTimeInterval *)duration {
     if (duration) {
         *duration = 0.0;
     }

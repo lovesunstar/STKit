@@ -22,6 +22,8 @@
 
 - (void)endRefreshing;
 
+- (void)notifyResultsWithHeight:(CGFloat)height;
+
 /// 下拉刷新组件当前状态
 @property(nonatomic, assign, readonly) STRefreshControlState refreshControlState;
 

@@ -15,11 +15,13 @@
  * @constant    STRefreshControlStateNormal           默认情况下的状态
  * @constant    STRefreshControlStateReachedThreshold 达到临界条件，即将触发刷新事件
  * @constant    STRefreshControlStateRefreshing       正在刷新
+ * @constant    STRefreshControlStateNotifyingResults 刷新完毕之后停留
  */
 typedef NS_ENUM(NSInteger, STRefreshControlState) {
     STRefreshControlStateNormal,
     STRefreshControlStateReachedThreshold,
-    STRefreshControlStateLoading
+    STRefreshControlStateLoading,
+    STRefreshControlStateNotifyingResults
 };
 
 

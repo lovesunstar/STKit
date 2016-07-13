@@ -29,13 +29,15 @@ typedef enum STImageViewState {
 /// 支持GIF播放的ImageView
 @interface STImageView (STGIFImage)
 /// GIF是否循环播放
-@property (nonatomic, assign) BOOL  repeats;
+@property(nonatomic, assign) BOOL  repeats;
+/// GIF 循环播放时候的时间间隔 （播放完成之后停顿时间）
+@property(nonatomic, assign) NSTimeInterval  repeatTimeInterval;
 /// 是否正在播放GIF
-@property (nonatomic, assign, readonly, getter=isPlaying) BOOL  playing;
-@property (nonatomic, assign) BOOL  automaticallyPlay;
-@property (nonatomic, strong) void (^completionHandler)(STImageView *imageView, BOOL finished);
+@property(nonatomic, assign, readonly, getter=isPlaying) BOOL  playing;
+@property(nonatomic, assign) BOOL  automaticallyPlay;
+@property(nonatomic, strong) void (^GIFPlayCompletionHandler)(STImageView *imageView, BOOL finished);
 /// Default NSRunLoopCommonModes
-@property (nonatomic, strong) NSString   *playInMode;
+@property(nonatomic, strong) NSString   *playInMode;
 
 - (void)play;
 - (void)pause;

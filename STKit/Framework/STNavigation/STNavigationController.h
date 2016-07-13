@@ -81,6 +81,8 @@ extern CGFloat const STTransitionViewControllerAnimationDuration;
 /// @li 从最左侧开始生效返回手势，这个变量决定距离左侧多少可以激活手势，设置为0，则禁止左滑跟随返回
 /// @li 有些套了手机壳的手机，壳边缘比较厚，设置比较小的话，影响操作，很难触发。
 @property(nonatomic, setter=st_setMaximumInteractivePopEdgeDistance:) CGFloat st_maximumInteractivePopEdgeDistance; // 默认 30pt,系统默认13。
+/// 上面距离多少可点 default 0
+@property(nonatomic, setter=st_setInteractivePopTopEdgeDistance:) CGFloat st_interactivePopTopEdgeOffset;
 /// Pop/Push ViewController时，前一个ViewController's view的偏移量（iOS7的返回效果）。
 /// 变量应该为Unsigned
 @property(nonatomic, setter=st_setInteractivePopTransitionOffset:) CGFloat st_interactivePopTransitionOffset; // default 80pt
@@ -121,5 +123,9 @@ shouldBeginTransitionContext:(STNavigationControllerTransitionContext * ST_NONNU
 
 - (void)st_setNavigationBarHidden:(BOOL)st_navigationBarHidden animated:(BOOL)animated;
 - (void)st_setNavigationBarHidden:(BOOL)st_navigationBarHidden animated:(BOOL)animated alongWithAnimations:(nullable void(^)(void))animations;
+
+- (void)st_updateDisplayContext;
+
+@property(nonatomic, setter=st_setNavigationBarOffset:) CGFloat st_navigationBarOffset;
 
 @end

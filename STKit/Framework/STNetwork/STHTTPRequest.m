@@ -229,9 +229,9 @@ static NSArray *STQueryComponents(NSString *key, id value);
         if (compressed) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-            SEL selector = NSSelectorFromString(@"st_compressDataUsingGZip");
+            SEL selector = NSSelectorFromString(@"st_gzipCompressedDataWithError:");
             if ([postData respondsToSelector:selector]) {
-                body = [postData performSelector:selector];
+                body = [postData st_performSelector:selector withObjects:nil, nil];
             }
             if (!body) {
                 body = postData;
@@ -272,7 +272,7 @@ static NSArray *STQueryComponents(NSString *key, id value);
 + (BOOL)supportGZipCompress {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-    SEL selector = NSSelectorFromString(@"st_compressDataUsingGZip");
+    SEL selector = NSSelectorFromString(@"st_gzipCompressedDataWithError:");
     return [NSData instancesRespondToSelector:selector];
 #pragma clang diagnostic pop
 }

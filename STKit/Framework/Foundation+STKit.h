@@ -23,7 +23,7 @@ ST_EXTERN NSValue *STCreateValueFromPrimitivePointer(void *pointer, const char *
 ST_EXTERN BOOL STClassRespondsToSelector(Class class, SEL aSelector);
 
 ST_EXTERN void STPrintClassMethods(Class cls);
-ST_EXTERN void STPrintClassProperities(Class cls);
+ST_EXTERN void STPrintClassProperties(Class cls);
 
 #pragma mark - STRadian Degree
 ST_EXTERN CGFloat STRadianToDegree(CGFloat radian);

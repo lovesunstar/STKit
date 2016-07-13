@@ -186,6 +186,62 @@ static char *const STViewControllerWrapperControllerKey = "_STViewControllerWrap
 
 @end
 
+
+@interface UIViewController (_STViewControllerAppearLifeCycle)
+
+@property(nonatomic, assign, setter=st_setShouldNotifyAppearState:, getter=st_shouldNotifyAppearState) BOOL st_shouldNotifyAppearState;
+
+@end
+
+@implementation UIViewController (_STViewControllerAppearLifeCycle)
+
+static char *const STViewControllerShouldCallbackAppearLifeCycle = "_STViewControllerShouldCallbackAppearLifeCycle";
+
++ (void)load {
+    STExchangeSelectors(self, @selector(viewWillAppear:), @selector(st_viewWillAppear:));
+    STExchangeSelectors(self, @selector(viewDidAppear:), @selector(st_viewDidAppear:));
+    STExchangeSelectors(self, @selector(viewWillDisappear:), @selector(st_viewWillDisappear:));
+    STExchangeSelectors(self, @selector(viewDidDisappear:), @selector(st_viewDidDisappear:));
+}
+
+- (void)st_setShouldNotifyAppearState:(BOOL)shouldNotify {
+    objc_setAssociatedObject(self, STViewControllerShouldCallbackAppearLifeCycle, @(shouldNotify), OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
+
+- (BOOL)st_shouldNotifyAppearState {
+    NSNumber *shouldValue = objc_getAssociatedObject(self, STViewControllerShouldCallbackAppearLifeCycle);
+    if ([shouldValue isKindOfClass:[NSNumber class]]) {
+        return shouldValue.boolValue;
+    }
+    return YES;
+}
+
+- (void)st_viewWillAppear:(BOOL)animated {
+    if (self.st_shouldNotifyAppearState) {
+//        [self st_viewWillAppear:animated];
+    }
+}
+
+- (void)st_viewDidAppear:(BOOL)animated {
+    if (self.st_shouldNotifyAppearState) {
+//        [self st_viewDidAppear:animated];
+    }
+}
+
+- (void)st_viewWillDisappear:(BOOL)animated {
+    if (self.st_shouldNotifyAppearState) {
+//        [self st_viewWillDisappear:animated];
+    }
+}
+
+- (void)st_viewDidDisappear:(BOOL)animated {
+    if (self.st_shouldNotifyAppearState) {
+//        [self st_viewDidDisappear:animated];
+    }
+}
+
+@end
+
 #pragma mark - STNavigationController
 
 @interface STNavigationController () <UIGestureRecognizerDelegate> {
@@ -276,8 +332,11 @@ static char *const STViewControllerWrapperControllerKey = "_STViewControllerWrap
 
     UIViewController *viewController = [self _wrapperViewController:self.topViewController];
     UIView *view = [self _wrapperViewForController:viewController];
+    self.topViewController.st_shouldNotifyAppearState = NO;
+    [self.topViewController viewWillAppear:NO];
     [self.transitionView addSubview:view];
-
+    [self.topViewController viewDidAppear:NO];
+    
     __weak STNavigationController *weakSelf = self;
     self.transitionView.hitTestBlock = ^(CGPoint point, UIEvent *event, BOOL *returnSuper) {
         /// WebView 需要做特殊处理
@@ -289,7 +348,7 @@ static char *const STViewControllerWrapperControllerKey = "_STViewControllerWrap
         UIViewController *topVC = [weakSelf.viewControllers lastObject];
         CGFloat maximumDistance = topVC.st_maximumInteractivePopEdgeDistance;
 
-        if (point.x < MIN(15, maximumDistance) && point.y > 64 * !(topVC.st_navigationBarHidden)) {
+        if (point.x < MIN(15, maximumDistance) && point.y > 64 * !(topVC.st_navigationBarHidden) && point.y > topVC.st_interactivePopTopEdgeOffset) {
             return (UIView *)weakSelf.transitionView;
         }
         *returnSuper = YES;
@@ -331,28 +390,33 @@ static char *const STViewControllerWrapperControllerKey = "_STViewControllerWrap
     if (!viewController || [viewController isKindOfClass:[STNavigationController class]] || [_viewControllers containsObject:viewController]) {
         return;
     }
+    viewController.st_shouldNotifyAppearState = NO;
     [_viewControllers addObject:viewController];
     [self setCustomNavigationController:self forController:viewController];
 
     UIViewController *fromWrapperViewController = self.visibleWrapperViewController;
     UIViewController *toWrapperViewController = [self _wrapperViewController:viewController];
-
+    UIViewController *disappearedVC = [self _unwrapViewController:fromWrapperViewController];
+    disappearedVC.st_shouldNotifyAppearState = NO;
     if (!self.isViewLoaded) {
         [self addChildViewController:toWrapperViewController];
         [toWrapperViewController didMoveToParentViewController:self];
         return;
     }
-
     void (^transition)(void) = ^{
         UIView *view = [self _wrapperViewForController:toWrapperViewController];
         [self.transitionView addSubview:view];
         view.frame = self.transitionView.bounds;
         [self addChildViewController:toWrapperViewController];
+        [viewController st_viewWillAppear:YES];
+        [disappearedVC st_viewWillDisappear:YES];
     };
 
     void (^completion)(BOOL) = ^(BOOL finished) {
         [toWrapperViewController didMoveToParentViewController:self];
+        [viewController st_viewDidAppear:YES];
         [fromWrapperViewController.view removeFromSuperview];
+        [disappearedVC st_viewDidDisappear:YES];
     };
     if (self.st_tabBarController) {
         [self _layoutTabBarFromViewController:fromWrapperViewController toViewController:toWrapperViewController];
@@ -429,7 +493,7 @@ static char *const STViewControllerWrapperControllerKey = "_STViewControllerWrap
         [fromWrapperViewController.view removeFromSuperview];
         [fromWrapperViewController removeFromParentViewController];
         toWrapperViewController.view.frame = self.transitionView.bounds;
-        [self setCustomNavigationController:nil forController:[self unwrapViewController:fromWrapperViewController]];
+        [self setCustomNavigationController:nil forController:[self _unwrapViewController:fromWrapperViewController]];
         for (UIViewController *viewController in popedViewControllers) {
             if ([viewController respondsToSelector:@selector(st_didPopViewControllerAnimated:)]) {
                 [viewController st_didPopViewControllerAnimated: animated];
@@ -635,8 +699,8 @@ static char *const STViewControllerWrapperControllerKey = "_STViewControllerWrap
     panToView.userInteractionEnabled = NO;
     
     STNavigationControllerTransitionContext *transitionContext = [[STNavigationControllerTransitionContext alloc] init];
-    transitionContext->_st_fromViewController = [self unwrapViewController:self.panFromViewController];
-    transitionContext->_st_toViewController = [self unwrapViewController:self.panTargetViewController];
+    transitionContext->_st_fromViewController = [self _unwrapViewController:self.panFromViewController];
+    transitionContext->_st_toViewController = [self _unwrapViewController:self.panTargetViewController];
     transitionContext->_st_fromView = panFromView;
     transitionContext->_st_toView = panToView;
     transitionContext->_st_transitionType = STViewControllerTransitionTypePop;
@@ -671,8 +735,8 @@ static char *const STViewControllerWrapperControllerKey = "_STViewControllerWrap
     CGFloat dX = MAX(currentPoint.x - _panGestureStartPoint.x, 0);
     CGFloat completion = MIN(MAX(dX / CGRectGetWidth(self.transitionView.bounds), 0), 1.0);
     STNavigationControllerTransitionContext *transitionContext = [[STNavigationControllerTransitionContext alloc] init];
-    transitionContext->_st_fromViewController = [self unwrapViewController:self.panTargetViewController];
-    transitionContext->_st_toViewController = [self unwrapViewController:self.panTargetViewController];
+    transitionContext->_st_fromViewController = [self _unwrapViewController:self.panTargetViewController];
+    transitionContext->_st_toViewController = [self _unwrapViewController:self.panTargetViewController];
     transitionContext->_st_fromView = panFromView;
     transitionContext->_st_toView = panToView;
     transitionContext->_st_transitionType = STViewControllerTransitionTypePop;
@@ -723,8 +787,8 @@ static char *const STViewControllerWrapperControllerKey = "_STViewControllerWrap
         options:UIViewAnimationOptionCurveEaseInOut
         animations:^{
             STNavigationControllerTransitionContext *transitionContext = [[STNavigationControllerTransitionContext alloc] init];
-            transitionContext->_st_fromViewController = [self unwrapViewController:self.panFromViewController];
-            transitionContext->_st_toViewController = [self unwrapViewController:self.panTargetViewController];
+            transitionContext->_st_fromViewController = [self _unwrapViewController:self.panFromViewController];
+            transitionContext->_st_toViewController = [self _unwrapViewController:self.panTargetViewController];
             transitionContext->_st_fromView = panFromView;
             transitionContext->_st_toView = panTargetView;
             transitionContext->_st_transitionType = STViewControllerTransitionTypePop;
@@ -738,8 +802,8 @@ static char *const STViewControllerWrapperControllerKey = "_STViewControllerWrap
         }
         completion:^(BOOL finished) {
             STNavigationControllerTransitionContext *transitionContext = [[STNavigationControllerTransitionContext alloc] init];
-            transitionContext->_st_fromViewController = [self unwrapViewController:self.panFromViewController];
-            transitionContext->_st_toViewController = [self unwrapViewController:self.panTargetViewController];
+            transitionContext->_st_fromViewController = [self _unwrapViewController:self.panFromViewController];
+            transitionContext->_st_toViewController = [self _unwrapViewController:self.panTargetViewController];
             transitionContext->_st_fromView = panFromView;
             transitionContext->_st_toView = panTargetView;
             transitionContext->_st_transitionType = STViewControllerTransitionTypePop;
@@ -755,7 +819,7 @@ static char *const STViewControllerWrapperControllerKey = "_STViewControllerWrap
             
             [panFromView removeFromSuperview];
             [self.panFromViewController removeFromParentViewController];
-            UIViewController *viewController = [self unwrapViewController:self.panFromViewController];
+            UIViewController *viewController = [self _unwrapViewController:self.panFromViewController];
             if ([viewController respondsToSelector:@selector(st_didPopViewControllerAnimated:)]) {
                 [viewController st_didPopViewControllerAnimated:true];
             }
@@ -781,8 +845,8 @@ static char *const STViewControllerWrapperControllerKey = "_STViewControllerWrap
         options:UIViewAnimationOptionCurveEaseInOut
         animations:^{
             STNavigationControllerTransitionContext *transitionContext = [[STNavigationControllerTransitionContext alloc] init];
-            transitionContext->_st_fromViewController = [self unwrapViewController:self.panFromViewController];
-            transitionContext->_st_toViewController = [self unwrapViewController:self.panTargetViewController];
+            transitionContext->_st_fromViewController = [self _unwrapViewController:self.panFromViewController];
+            transitionContext->_st_toViewController = [self _unwrapViewController:self.panTargetViewController];
             transitionContext->_st_fromView = panFromView;
             transitionContext->_st_toView = panTargetView;
             transitionContext->_st_transitionType = STViewControllerTransitionTypePop;
@@ -797,8 +861,8 @@ static char *const STViewControllerWrapperControllerKey = "_STViewControllerWrap
         }
         completion:^(BOOL finished) {
             STNavigationControllerTransitionContext *transitionContext = [[STNavigationControllerTransitionContext alloc] init];
-            transitionContext->_st_fromViewController = [self unwrapViewController:self.panFromViewController];
-            transitionContext->_st_toViewController = [self unwrapViewController:self.panTargetViewController];
+            transitionContext->_st_fromViewController = [self _unwrapViewController:self.panFromViewController];
+            transitionContext->_st_toViewController = [self _unwrapViewController:self.panTargetViewController];
             transitionContext->_st_fromView = panFromView;
             transitionContext->_st_toView = panTargetView;
             transitionContext->_st_transitionType = STViewControllerTransitionTypePop;
@@ -933,7 +997,7 @@ static char *const STViewControllerWrapperControllerKey = "_STViewControllerWrap
     self.animating = YES;
     
     UIViewController *fromWrapperViewController = self.visibleWrapperViewController;
-    UIViewController *fromViewController = [self unwrapViewController:fromWrapperViewController], *toViewController = [self unwrapViewController:toWrapperViewController];
+    UIViewController *fromViewController = [self _unwrapViewController:fromWrapperViewController], *toViewController = [self _unwrapViewController:toWrapperViewController];
     UIView *fromView = [self _wrapperViewForController:fromWrapperViewController], *toView = [self _wrapperViewForController:toWrapperViewController];
     
     STNavigationControllerTransitionContext *transitionContext = [[STNavigationControllerTransitionContext alloc] init];
@@ -1049,7 +1113,7 @@ static char *const STViewControllerWrapperControllerKey = "_STViewControllerWrap
     return wrapperViewController;
 }
 
-- (UIViewController *)unwrapViewController:(UIViewController *)viewController {
+- (UIViewController *)_unwrapViewController:(UIViewController *)viewController {
     if (!viewController) {
         return nil;
     }
@@ -1121,6 +1185,7 @@ static NSString *const STNavigationControllerKey = @"STNavigationControllerKey";
 
 static NSString *const STNavigationControllerSideOffsetKey = @"STNavigationControllerSideOffsetKey";
 static NSString *const STNavigationControllerTransitionOffsetKey = @"STNavigationControllerTransitionOffsetKey";
+static NSString *const STNavigationControllerTransitionTopOffsetKey = @"STNavigationControllerTransitionTopOffsetKey";
 
 @implementation UIViewController (STNavigationController)
 
@@ -1159,13 +1224,25 @@ static NSString *const STNavigationControllerTransitionOffsetKey = @"STNavigatio
 
 - (CGFloat)st_maximumInteractivePopEdgeDistance {
     NSNumber *maxNumber = objc_getAssociatedObject(self, (__bridge const void *)(STNavigationControllerSideOffsetKey));
-    if (!maxNumber) {
+    if (![maxNumber isKindOfClass:[NSNumber class]]) {
         return STMaximumInteractivePopEdgeDistance;
     }
     return maxNumber.floatValue;
 }
 
-//
+- (void)st_setInteractivePopTopEdgeDistance:(CGFloat)interactivePopTopEdgeDistance {
+    objc_setAssociatedObject(self, (__bridge const void *)(STNavigationControllerTransitionTopOffsetKey), @(interactivePopTopEdgeDistance),
+                             OBJC_ASSOCIATION_COPY);
+}
+
+- (CGFloat)st_interactivePopTopEdgeOffset {
+    NSNumber *maxNumber = objc_getAssociatedObject(self, (__bridge const void *)(STNavigationControllerTransitionTopOffsetKey));
+    if (![maxNumber isKindOfClass:[NSNumber class]]) {
+        return 0;
+    }
+    return maxNumber.floatValue;
+}
+
 - (void)st_setInteractivePopTransitionOffset:(CGFloat)interactivePopTransitionOffset {
     objc_setAssociatedObject(self, (__bridge const void *)(STNavigationControllerTransitionOffsetKey), @(ABS(interactivePopTransitionOffset)),
                              OBJC_ASSOCIATION_COPY);
@@ -1173,7 +1250,7 @@ static NSString *const STNavigationControllerTransitionOffsetKey = @"STNavigatio
 
 - (CGFloat)st_interactivePopTransitionOffset {
     NSNumber *maxNumber = objc_getAssociatedObject(self, (__bridge const void *)(STNavigationControllerTransitionOffsetKey));
-    if (!maxNumber) {
+    if (![maxNumber isKindOfClass:[NSNumber class]]) {
         return STInteractivePopTransitionOffset;
     }
     return maxNumber.floatValue;
@@ -1456,6 +1533,7 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
     } else {
         height = 64;
     }
+    rect.origin.y = self.rootViewController.st_navigationBarOffset;
     rect.size.height = height - (height * self.st_navigationBarHidden);
     return rect;
 }
@@ -1464,6 +1542,7 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
     CGRect rect = CGRectZero;
     rect.size.width = CGRectGetWidth(self.view.frame);
     CGFloat height = 64;
+    rect.origin.y = self.rootViewController.st_navigationBarOffset;
     rect.size.height = height - (height * self.st_navigationBarHidden);
     return rect;
 }
@@ -1549,7 +1628,9 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
             scrollView.contentInset = contentInset;
             scrollView.scrollIndicatorInsets = contentInset;
             if ([scrollView st_contentInsetTopByNavigation] == 0 && topInset != 0) {
-                scrollView.contentOffset = CGPointMake(0, - contentInset.top);
+                if (scrollView.contentOffset.y <= -contentInset.top) {
+                    scrollView.contentOffset = CGPointMake(0, -contentInset.top);
+                }
             }
             [scrollView st_setContentInsetTopByNavigation:topInset];
         }
@@ -1722,6 +1803,7 @@ static NSString *const STScrollViewContentInsetBottom = @"com.suen.STScrollViewC
 
 - (void)willTransitionToTraitCollection:(UITraitCollection *)newCollection withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
     [super willTransitionToTraitCollection:newCollection withTransitionCoordinator:coordinator];
+    self.rootViewController.st_navigationBarOffset = 0;
     [self customLayoutSubviewsWithTraitCollection:newCollection];
 }
 
@@ -1768,6 +1850,25 @@ static char *const STViewControllerSuperview = "STViewControllerSuperview";
     if ([self.st_wrapperViewController isKindOfClass:[_STWrapperViewController class]]) {
         [self.st_wrapperViewController setNavigationBarHidden:st_navigationBarHidden animated:animated customAnimations:animations];
     }
+}
+
+- (void)st_updateDisplayContext {
+    [self.st_wrapperViewController fitsIOS7EdgeExtendedLayout];
+}
+
+
+static char *const STNavigationBarOffset = "STNavigationBarOffset";
+
+- (CGFloat)st_navigationBarOffset {
+    NSNumber *offsetValue = objc_getAssociatedObject(self, STNavigationBarOffset);
+    if (![offsetValue isKindOfClass:[NSNumber class]]) {
+        return 0;
+    }
+    return offsetValue.floatValue;
+}
+
+- (void)st_setNavigationBarOffset:(CGFloat)offset {
+    objc_setAssociatedObject(self, STNavigationBarOffset, @(offset), OBJC_ASSOCIATION_COPY_NONATOMIC);
 }
 
 @end
