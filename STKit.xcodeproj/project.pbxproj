@@ -104,8 +104,6 @@
 		06A3075419B3624E00B53144 /* STObjectTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 06A3075319B3624E00B53144 /* STObjectTestCase.m */; };
 		06A3736B192F8DC700DC7E56 /* STPopoverView.h in Headers */ = {isa = PBXBuildFile; fileRef = 06A37369192F8DC700DC7E56 /* STPopoverView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		06A3736C192F8DC700DC7E56 /* STPopoverView.m in Sources */ = {isa = PBXBuildFile; fileRef = 06A3736A192F8DC700DC7E56 /* STPopoverView.m */; };
-		06A4A69B19EF76710020CA40 /* STJavaScriptBridge.h in Headers */ = {isa = PBXBuildFile; fileRef = 06A4A69919EF76710020CA40 /* STJavaScriptBridge.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		06A4A69C19EF76710020CA40 /* STJavaScriptBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 06A4A69A19EF76710020CA40 /* STJavaScriptBridge.m */; };
 		06A6FEB919CEDD85005263D7 /* STImagePresent.h in Headers */ = {isa = PBXBuildFile; fileRef = 06A6FEB719CEDD85005263D7 /* STImagePresent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		06A6FEBA19CEDD85005263D7 /* STImagePresent.m in Sources */ = {isa = PBXBuildFile; fileRef = 06A6FEB819CEDD85005263D7 /* STImagePresent.m */; };
 		06A75901199C982D00AE98A2 /* STApplicationContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 06A758FF199C982D00AE98A2 /* STApplicationContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -287,8 +285,6 @@
 		06A3075319B3624E00B53144 /* STObjectTestCase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STObjectTestCase.m; sourceTree = "<group>"; };
 		06A37369192F8DC700DC7E56 /* STPopoverView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPopoverView.h; sourceTree = "<group>"; };
 		06A3736A192F8DC700DC7E56 /* STPopoverView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPopoverView.m; sourceTree = "<group>"; };
-		06A4A69919EF76710020CA40 /* STJavaScriptBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STJavaScriptBridge.h; sourceTree = "<group>"; };
-		06A4A69A19EF76710020CA40 /* STJavaScriptBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STJavaScriptBridge.m; sourceTree = "<group>"; };
 		06A6FEB719CEDD85005263D7 /* STImagePresent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STImagePresent.h; sourceTree = "<group>"; };
 		06A6FEB819CEDD85005263D7 /* STImagePresent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STImagePresent.m; sourceTree = "<group>"; };
 		06A758FF199C982D00AE98A2 /* STApplicationContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STApplicationContext.h; sourceTree = "<group>"; };
@@ -694,8 +690,6 @@
 				0623952819B6D3F500FFDD96 /* STPayManager.m */,
 				0623952B19B6D49B00FFDD96 /* STPayViewController.h */,
 				0623952C19B6D49B00FFDD96 /* STPayViewController.m */,
-				06A4A69919EF76710020CA40 /* STJavaScriptBridge.h */,
-				06A4A69A19EF76710020CA40 /* STJavaScriptBridge.m */,
 				06FE37B51A0DF998002CF174 /* STGIFGenerator.h */,
 				06FE37B61A0DF998002CF174 /* STGIFGenerator.m */,
 				06E6EAD51A6D60A800DC84A0 /* STTableViewCell.h */,
@@ -793,7 +787,6 @@
 				06FE37C51A0E60BE002CF174 /* STImage.h in Headers */,
 				060164951A03E63800B7B790 /* STVisualBlurView.h in Headers */,
 				06A6FEB919CEDD85005263D7 /* STImagePresent.h in Headers */,
-				06A4A69B19EF76710020CA40 /* STJavaScriptBridge.h in Headers */,
 				062E9AB319CAEAE600ADB552 /* STRateControl.h in Headers */,
 				F65D3F291845E718007DF355 /* STWebViewController.h in Headers */,
 			);
@@ -954,7 +947,6 @@
 				069BC15619F23070005906BF /* STNetworkConfiguration.m in Sources */,
 				0626CDCA19A0FBDA00B84A8C /* STImageLoader.m in Sources */,
 				F65A3F3018ACCD530084D96E /* STTabBar.m in Sources */,
-				06A4A69C19EF76710020CA40 /* STJavaScriptBridge.m in Sources */,
 				0626CDC819A0FBDA00B84A8C /* STImageCache.m in Sources */,
 				F69816331860518C004C5B64 /* STModel.m in Sources */,
 				F65A3F1B18ACCAF60084D96E /* STTabBarController.m in Sources */,
